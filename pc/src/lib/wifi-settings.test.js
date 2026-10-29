@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { connectionLabel, wifiSetupState, configureInput } from "./wifi-settings.js";
+import { connectionLabel, wifiSetupState, configureInput, networkStateLabel } from "./wifi-settings.js";
 
 test("active Wi-Fi remains distinct from remembered USB preference", () => {
   assert.equal(connectionLabel({ connected: true, transport: "wifi" }), "Wi-Fi");
@@ -19,4 +19,10 @@ test("hidden SSIDs preserve literal whitespace and invalid UTF-8 byte budgets fa
   assert.deepEqual(configureInput("s3-a", "  hidden  ", "password"), { expectedBoardDeviceId: "s3-a", ssid: "  hidden  ", password: "password" });
   assert.throws(() => configureInput("s3-a", "中".repeat(11), "password"));
   assert.throws(() => configureInput("", "wifi", "password"));
+});
+
+test("wrong password and disabled Wi-Fi cannot masquerade as waiting to connect", () => {
+  assert.equal(networkStateLabel({ state: "wrong_password", configured: true }), "密码错误，请通过 USB 修改配网");
+  assert.equal(networkStateLabel({ state: "disabled", configured: true }), "Wi-Fi 已关闭");
+  assert.equal(networkStateLabel({ state: "disconnected", configured: true }), "未连接路由器，请检查网络与信号");
 });

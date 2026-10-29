@@ -200,3 +200,16 @@ pub async fn device_set_transport_preference(app:tauri::AppHandle,manager:tauri:
         Ok(manager.status())
     }).await.map_err(|_|"切换设备连接失败")?
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn wifi_connection_attempt_serializes_background_probe_with_manual_switch() {
+        let active=begin_switch().unwrap();
+        let concurrent=std::thread::spawn(||begin_switch().is_err()).join().unwrap();
+        assert!(concurrent,"background attempt must not enter a manual switch");
+        drop(active);
+        assert!(begin_switch().is_ok(),"completed attempt must release priority lock");
+    }
+}

@@ -54,6 +54,16 @@ fn wifi_switch_is_blocked_during_capture_and_resource_transactions() {
     assert!(manager.ensure_transport_switch_idle().is_err());
 }
 
+#[test]
+fn wifi_s3_unsupported_builtin_install_fails_before_any_device_write() {
+    let manager=UsbSerialManager::new();let mut peer=install(&manager,|_,_|{});
+    peer.set_read_timeout(Some(Duration::from_millis(100))).unwrap();
+    let empty=tempfile::tempdir().unwrap();
+    let result=manager.install_widget_clawpkg_on_board("s3-shared","fresh-fruit-slice",empty.path(),&HashMap::new(),|_,_,_|{});
+    assert!(result.unwrap_err().contains("不支持 S3 三键"));
+    assert!(peer.read(&mut [0u8;16]).is_err(),"unsupported package must not enter begin/erase");
+}
+
 type TlsPeer=rustls::StreamOwned<rustls::ServerConnection,TcpStream>;
 fn read_frame(peer:&mut TlsPeer)->serde_json::Value {
     crate::wifi_transport::read_json_line(peer,32768,Instant::now()+Duration::from_secs(4)).unwrap()

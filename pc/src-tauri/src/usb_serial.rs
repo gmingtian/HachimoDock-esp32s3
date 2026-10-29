@@ -4100,7 +4100,10 @@ impl UsbSerialManager {
             .asset_transfer_guard
             .lock()
             .map_err(|error| error.to_string())?;
-        let (_,connection_id)=self.connected_board_snapshot(expected_board_device_id)?;
+        let (status,connection_id)=self.connected_board_snapshot(expected_board_device_id)?;
+        if !crate::s3_components::allowed(&status.runtime,widget_id) {
+            return Err("此内置项目不支持 S3 三键直接操作，未写入设备".into());
+        }
         let extension_path=widget_dir.join("pc/extension.json");
         if extension_path.is_file() {
             if extension_path.metadata().map_err(|_|"无法读取媒体扩展")?.len()>16384 {return Err("媒体扩展超过安全上限".into());}

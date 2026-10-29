@@ -1,7 +1,7 @@
 /** S3 USB provisioning and paired TLS network connection. Secrets never persist in UI storage. */
 import React, { useCallback, useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { connectionLabel, configureInput, wifiSetupState } from "./lib/wifi-settings.js";
+import { connectionLabel, configureInput, wifiSetupState, networkStateLabel } from "./lib/wifi-settings.js";
 
 export default function WifiSettings({ status, boardDeviceId }) {
   const [settings, setSettings] = useState({ devices: [] });
@@ -21,7 +21,18 @@ export default function WifiSettings({ status, boardDeviceId }) {
     setSettings(next);
     return next;
   }, []);
-  useEffect(() => { let mounted = true; invoke("device_wifi_get_status").then((next) => { if (mounted) setSettings(next); }).catch(() => {}); return () => { mounted = false; }; }, [status?.connected, status?.transport, status?.boardDeviceId]);
+  useEffect(() => {
+    let mounted = true; let inFlight = false;
+    const check = async () => {
+      if (inFlight || busy) return;
+      inFlight = true;
+      try { const next = await invoke("device_wifi_get_status"); if (mounted) setSettings(next); }
+      catch { /* Retain last status while a resource transaction owns the link. */ }
+      finally { inFlight = false; }
+    };
+    check(); const timer = setInterval(check, 4000);
+    return () => { mounted = false; clearInterval(timer); };
+  }, [busy, status?.connected, status?.transport, status?.boardDeviceId]);
   const run = async (work, success) => {
     if (busy) return;
     setBusy(true); setMessage(""); setFailed(false);
@@ -43,7 +54,7 @@ export default function WifiSettings({ status, boardDeviceId }) {
       <button style={control} disabled={busy} onClick={() => run(async () => { const found = await invoke("device_wifi_list_devices"); setSettings((s) => ({ ...s, devices: found.devices })); }, "已更新已绑定设备地址")}>查找无线设备</button>
       <input style={control} aria-label="设备局域网 IP" value={ip} onChange={(e) => setIp(e.target.value)} placeholder="设备 IP（发现失败时填写）" />
     </div>
-    {settings.network && <p style={{ fontSize: 13 }}>网络：{settings.network.ssid || "未配网"}　{settings.network.connected ? `已连接 · ${settings.network.ip} · ${settings.network.rssi} dBm` : settings.network.configured ? "等待连接路由器" : "未配置"}</p>}
+    {settings.network && <p style={{ fontSize: 13 }}>网络：{settings.network.ssid || "未配网"}　{networkStateLabel(settings.network)}</p>}
     <details style={{ marginTop: 16 }}>
       <summary>Wi-Fi 配网与绑定（通过 USB）</summary>
       <p style={{ fontSize: 13 }}>连接设备 USB，填写 2.4GHz Wi-Fi。电脑和设备需处于可互访的局域网；其他电脑首次使用也需通过 USB 绑定。</p>

@@ -2,13 +2,14 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import vm from "node:vm";
+import { componentSupportedOnTarget } from "../lib/s3-components.js";
 import { parseSync } from "@babel/core";
 import traverseModule from "@babel/traverse";
 
 const source = readFileSync(new URL("../ComponentCenter.jsx", import.meta.url), "utf8");
 const ast = parseSync(source, { sourceType: "module", parserOpts: { plugins: ["jsx"] } });
 const declaration = ast.program.body.find(node => node.type === "FunctionDeclaration" && node.id.name === "gameInstallBlockedReason");
-const check = vm.runInNewContext(`(${source.slice(declaration.start, declaration.end)})`);
+const check = vm.runInNewContext(`(${source.slice(declaration.start, declaration.end)})`, { componentSupportedOnTarget });
 const usb = { capabilities: { widgetLyrics: "p4-lrc-v1", widgetMedia: "p4-media-v1", widgetData: "p4-data-list-v1", widgetRuntime: "p4-bounded-runtime-v4", widgetScene: "p4-scene-v1" } };
 test("automatic media never silently truncates on old firmware",()=>{
  const c={pcExtension:{discovery:{autoPlayOnEnter:true}}};

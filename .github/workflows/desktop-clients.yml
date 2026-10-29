@@ -130,6 +130,7 @@ jobs:
             export CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_RUNNER='python ../scripts/run-windows-tests.py'
           fi
           cargo test --locked --release --target ${{ matrix.target == 'windows' && 'x86_64-pc-windows-msvc' || 'aarch64-apple-darwin' }} --lib s3_ -- --nocapture
+          cargo test --locked --release --target ${{ matrix.target == 'windows' && 'x86_64-pc-windows-msvc' || 'aarch64-apple-darwin' }} --lib wifi_ -- --nocapture
       - name: Diagnose Windows native loader failure
         if: failure() && matrix.target == 'windows'
         run: python pc/scripts/diagnose-windows-loader.py

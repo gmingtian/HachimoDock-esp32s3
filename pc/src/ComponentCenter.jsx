@@ -75,6 +75,7 @@ import './component-center/center-workflow.css';
 import {devicePackageState, readCenterPreference, saveCenterPreference} from './component-center/catalog-state.js';
 import { isRoutedWidgetBinding } from "./component-center/binding-labels.js";
 import { isComponentVisible, mergeComponentCatalog, sortComponentsByCreatedAt } from "./component-center/library-order.js";
+import { componentSupportedOnTarget, filterTargetComponents } from "./lib/s3-components.js";
 import {
   COMPONENT_CONTROL_OPTIONS,
   componentInputEventSlots,
@@ -115,6 +116,7 @@ const CONTROL_HELP = Object.fromEntries(
 );
 
 function gameInstallBlockedReason(component, usb) {
+  if (!componentSupportedOnTarget(component?.id, usb?.runtime || "esp-s3")) return "此内置项目不支持 S3 三键直接操作，已从 S3 组件列表移除";
   if(component?.pcExtension?.discovery && (Number(usb?.capabilities?.widgetMediaQueueMax||20)<128 || usb?.capabilities?.widgetMediaLifecycle!=="p4-media-lifecycle-v1")) return "自动电台列表需要升级设备固件（媒体队列与进入自动播放能力）";
   if ((component?.inputPolicy || component?.appRuntime?.input) && usb?.capabilities?.widgetInput !== "p4-input-v1") return "需要新版触屏、按键与摇杆交互能力，请先升级设备固件";
   if(component?.appRuntime?.lifecycle&&usb?.capabilities?.widgetLifecycle!=="p4-lifecycle-v1")return "需要游戏暂停与成绩存档能力，请先升级设备固件";
@@ -812,9 +814,9 @@ export default function ComponentCenter({ active = true }) {
         .filter((entry) => !PROMOTED_BUILTIN_SOURCE_HASHES.has(entry.versionHash))
         .map((entry) => buildLibraryComponent(entry)),
     );
-    return mergeComponentCatalog(publishedItems, builtins);
+    return filterTargetComponents(mergeComponentCatalog(publishedItems, builtins), usb.runtime || "esp-s3");
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [localComponents]);
+  }, [localComponents, usb.runtime]);
 
   /** Packages reported by the board but absent from this PC are folded into the
    *  same grid. They remain removable, but cannot be installed or edited locally. */
@@ -824,8 +826,8 @@ export default function ComponentCenter({ active = true }) {
     const deviceOnlyItems = deviceInventory.items
       .filter((item) => isComponentVisible(item) && !catalogIds.has(item.id))
       .map((item) => buildUnknownInventoryComponent(item));
-    return [...catalogItems, ...deviceOnlyItems];
-  }, [catalogItems, deviceInventory.freshness, deviceInventory.items]);
+    return filterTargetComponents([...catalogItems, ...deviceOnlyItems], usb.runtime || "esp-s3");
+  }, [catalogItems, deviceInventory.freshness, deviceInventory.items, usb.runtime]);
 
   /* A successful live inventory is the device truth. Reconcile the small
      target-scoped local record so ContextRail and the library marker follow

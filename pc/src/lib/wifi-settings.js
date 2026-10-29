@@ -17,3 +17,10 @@ export function configureInput(board, ssid, password) {
   }
   return { expectedBoardDeviceId: board, ssid, password };
 }
+export function networkStateLabel(network) {
+  if (!network?.configured) return "未配网";
+  if (network.state === "wrong_password") return "密码错误，请通过 USB 修改配网";
+  if (network.state === "disabled" || network.enabled === false) return "Wi-Fi 已关闭";
+  if (network.connected) return `已连接 · ${network.ip || ""} · ${network.rssi ?? "—"} dBm`;
+  return "未连接路由器，请检查网络与信号";
+}

@@ -114,6 +114,8 @@ mod wifi_transport;
 mod wifi_devices;
 mod wifi_discovery;
 mod wifi_commands;
+mod connection_policy;
+mod s3_components;
 mod voice_chat_settings;
 mod volcengine_asr;
 
@@ -364,7 +366,7 @@ fn reconnect_usb_serial_to_expected_board(
         return Err("expectedBoardDeviceId is required".to_string());
     }
     let before = usb_manager.status();
-    if before.transport == "wifi" || wifi_commands::prefers_wifi(app_handle,expected_board_device_id) {
+    if before.transport == "wifi" {
         usb_manager.disconnect();
         thread::sleep(Duration::from_millis(250));
         return wifi_commands::connect_board(app_handle,usb_manager,expected_board_device_id,None,false);
@@ -6620,6 +6622,7 @@ async fn run_usb_firmware_update(
     let reconnect_manager = manager.clone();
     let reconnect_app = app_handle.clone();
     let reconnect_board_device_id = expected_board_device_id.clone();
+    let update_transport = connection_policy::update_reconnect_transport(&manager.status().transport);
     tauri::async_runtime::spawn_blocking(move || {
         manager.update_firmware(
             &firmware_path,
@@ -6641,7 +6644,7 @@ async fn run_usb_firmware_update(
                 );
             },
             || {
-                if reconnect_manager.status().transport == "wifi" || wifi_commands::prefers_wifi(&reconnect_app,&reconnect_board_device_id) {
+                if update_transport == "wifi" {
                     wifi_commands::reconnect_after_update(&reconnect_app,&reconnect_manager,&reconnect_board_device_id)
                 } else {
                     reconnect_usb_serial_to_expected_board(&reconnect_app,&reconnect_manager,&reconnect_board_device_id)
@@ -10125,6 +10128,10 @@ fn start_usb_auto_connect(usb_manager: usb_serial::UsbSerialManager, app_handle:
                     devices.iter().map(usb_auto_probe_key).collect();
                 failed_probes.retain(|key, _| present_keys.contains(key));
                 for dev in devices {
+                    // Serialize each complete probe with manual switching. A probe
+                    // may not disconnect a stream installed by another attempt.
+                    let Ok(_attempt) = wifi_commands::begin_switch() else { break; };
+                    if usb_manager.status().connected { break; }
                     let probe_key = usb_auto_probe_key(&dev);
                     if failed_probes
                         .get(&probe_key)
@@ -10175,7 +10182,6 @@ fn start_usb_auto_connect(usb_manager: usb_serial::UsbSerialManager, app_handle:
                             failed_probes
                                 .insert(probe_key, (failure_count, Instant::now() + retry_delay));
                             eprintln!("[usb-auto] rejected {}: {}", port_name, e);
-                            usb_manager.disconnect();
                         }
                     }
                 }

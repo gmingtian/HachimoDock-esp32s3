@@ -189,7 +189,7 @@ test("device-only inventory packages join the grid as removable read-only cards"
     /previewComponent\.isDeviceOnly[\s\S]*\? undefined[\s\S]*syncSelectedComponent/,
   );
   assert.match(component, /buildUnknownInventoryComponent/);
-  assert.match(component, /return \[\.\.\.catalogItems, \.\.\.deviceOnlyItems\]/);
+  assert.match(component, /return filterTargetComponents\(\[\.\.\.catalogItems, \.\.\.deviceOnlyItems\]/);
 });
 
 test("preview modal confirms and immediately syncs the selected component", () => {

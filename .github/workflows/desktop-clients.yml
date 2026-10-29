@@ -120,9 +120,15 @@ jobs:
             python pc/scripts/test-s3-ffmpeg-build.py
           fi
           npm --prefix pc run build:web
+      - name: Inspect cached Windows native imports
+        if: matrix.target == 'windows'
+        run: python pc/scripts/diagnose-windows-loader.py
       - name: Native S3 routing regression tests
         working-directory: pc/src-tauri
         run: cargo test --locked --release --target ${{ matrix.target == 'windows' && 'x86_64-pc-windows-msvc' || 'aarch64-apple-darwin' }} --lib s3_ -- --nocapture
+      - name: Diagnose Windows native loader failure
+        if: failure() && matrix.target == 'windows'
+        run: python pc/scripts/diagnose-windows-loader.py
       - name: Build Windows installer
         if: matrix.target == 'windows'
         working-directory: pc

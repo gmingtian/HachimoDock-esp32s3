@@ -7,7 +7,8 @@ test("OTA validation preserves a working serial handle and bounds reopen after b
   const body=source.slice(source.indexOf("fn wait_for_firmware_validation"),source.indexOf("fn best_effort_firmware_abort"));
   assert.match(body,/let mut force_reconnect = false;/);
   assert.match(body,/started\.elapsed\(\) < Duration::from_secs\(20\)/);
-  assert.ok(body.indexOf("Duration::from_secs(20)") < body.indexOf("reconnect()"));
+  assert.match(body,/reconnect\(update_transport\)/);
+  assert.ok(body.indexOf("Duration::from_secs(20)") < body.indexOf("reconnect(update_transport)"));
   assert.ok(body.indexOf("Duration::from_secs(20)") < body.indexOf("self.query_diagnostics"));
   assert.match(body,/validation_query_failed[\s\S]*force_reconnect = true;/);
   assert.match(body,/evaluate_firmware_validation/);

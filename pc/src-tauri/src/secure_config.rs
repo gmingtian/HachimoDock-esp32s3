@@ -84,6 +84,7 @@ fn encrypted_configs(dir: &Path) -> Result<Vec<(serde_json::Value, &'static str)
         ("voice-chat-settings.json", "voice-chat"),
         ("volcengine-device-asr.json", "speech-asr"),
         ("generation-providers.secure.json", "generation-providers"),
+        ("wifi-devices.secure.json", "wifi-devices"),
     ] {
         let path = dir.join(name);
         match fs::symlink_metadata(&path) {

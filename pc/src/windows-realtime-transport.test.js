@@ -32,7 +32,7 @@ test("CH343 live audio retains 64-byte bursts and never drains or pauses RX", ()
   assert.match(source, /write_serial_live_frame\(conn.writer.as_mut\(\), bytes,\s*paced_slice_bytes.unwrap_or\(bytes.len\(\)\), P4_CH343_SERIAL_WRITE_GAP\)/);
   const live = rust("usb_serial/live_audio_pacing.rs").split("#[cfg(test)]\nmod tests")[0];
   assert.doesNotMatch(live, /writer\.flush\(/);
-  assert.match(source, /\(!live_frame\).then\(\|\| SerialReaderPause/);
+  assert.match(source, /\(!live_frame && conn\.transport != "wifi"\).then\(\|\| SerialReaderPause/);
   assert.doesNotMatch(source, /live_write_plan/);
   assert.match(live,/writer.write\(&chunk\[offset\.\.\]\)/);
   assert.doesNotMatch(live,/writer.write_all\(/);

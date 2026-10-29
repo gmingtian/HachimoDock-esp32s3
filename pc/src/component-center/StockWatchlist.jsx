@@ -77,7 +77,7 @@ export default function StockWatchlist({ usb }) {
   return <details className="stock-watchlist" open>
     <summary>自选股行情 <span className="muted small">{symbols.length}/20 · 腾讯行情</span></summary>
     <div className="stock-watchlist__body">
-      <p className="muted small">添加股票后，打开设备上的「自选股行情」组件查看。PC 每 2 秒批量更新，请保持 Pet Manager 运行并连接 USB；各市场可能有行情延迟，以显示的行情时间为准。</p>
+      <p className="muted small">添加股票后，打开设备上的「自选股行情」组件查看。PC 每 2 秒批量更新，请保持 Pet Manager 运行并保持设备连接；各市场可能有行情延迟，以显示的行情时间为准。</p>
       {usb?.connected && usb?.capabilities?.widgetData !== "p4-data-list-v1" && <p className="stock-watchlist__notice">当前设备固件尚不支持实时数据组件，请先升级固件。</p>}
       <form className="stock-watchlist__add" onSubmit={add}>
         <select aria-label="股票市场" value={market} onChange={(e) => setMarket(e.target.value)} disabled={busy}>

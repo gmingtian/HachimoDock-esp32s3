@@ -6,7 +6,7 @@
  */
 
 import React, { useState } from "react";
-import { Monitor, RefreshCw, Usb } from "lucide-react";
+import { Monitor, RefreshCw, Usb, Wifi } from "lucide-react";
 import { useDeviceContext } from "../shell/DeviceContext.jsx";
 import { useToast } from "../shell/ToastStack.jsx";
 
@@ -56,8 +56,8 @@ export default function DeviceStatusBar() {
   const usbPortLabel = usb.connected ? usb.portName || savedUsbPortName || "已连接" : "未连接";
   const usbChip = {
     className: `dashboard-status-bar__chip dashboard-status-bar__chip--${usb.connected ? "ok" : "warn"}`,
-    icon: <Usb size={14} />,
-    label: usb.connected ? "USB 直连" : "USB 未连接",
+    icon: usb.transport === "wifi" ? <Wifi size={14} /> : <Usb size={14} />,
+    label: usb.connected ? (usb.transport === "wifi" ? "Wi-Fi 连接" : "USB 直连") : "设备未连接",
   };
   return (
     <div className="dashboard-status-bar">
@@ -67,7 +67,7 @@ export default function DeviceStatusBar() {
       <div className="dashboard-status-bar__copy">
         <strong className="dashboard-status-bar__board-id">{binding.boardDeviceId}</strong>
         <span className="dashboard-status-bar__sub">
-          USB: {usbPortLabel}
+          {usb.transport === "wifi" ? "Wi-Fi" : "USB"}: {usbPortLabel}
         </span>
       </div>
       <div className="dashboard-status-bar__chips">

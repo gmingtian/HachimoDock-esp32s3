@@ -110,6 +110,10 @@ mod reference_image;
 mod realtime_chat_log;
 mod usb_audio;
 mod usb_serial;
+mod wifi_transport;
+mod wifi_devices;
+mod wifi_discovery;
+mod wifi_commands;
 mod voice_chat_settings;
 mod volcengine_asr;
 
@@ -358,6 +362,12 @@ fn reconnect_usb_serial_to_expected_board(
     let expected_board_device_id = expected_board_device_id.trim();
     if expected_board_device_id.is_empty() {
         return Err("expectedBoardDeviceId is required".to_string());
+    }
+    let before = usb_manager.status();
+    if before.transport == "wifi" || wifi_commands::prefers_wifi(app_handle,expected_board_device_id) {
+        usb_manager.disconnect();
+        thread::sleep(Duration::from_millis(250));
+        return wifi_commands::connect_board(app_handle,usb_manager,expected_board_device_id,None,false);
     }
 
     usb_manager.disconnect();
@@ -6351,11 +6361,17 @@ async fn usb_connect(
     usb_manager: tauri::State<'_, usb_serial::UsbSerialManager>,
     port_name: String,
 ) -> Result<usb_serial::UsbConnectionStatus, String> {
-    let emitter = app_handle.clone();
-    usb_manager.connect(&port_name, move |topic, payload| {
-        handle_incoming_usb_message(&emitter, topic, payload);
-    })?;
-    Ok(usb_manager.status())
+    let manager=usb_manager.inner().clone();
+    tauri::async_runtime::spawn_blocking(move||{
+        let _guard=wifi_commands::begin_switch()?;
+        let current=manager.status();
+        if current.connected && current.transport=="usb" && current.port_name==port_name { return Ok(current); }
+        wifi_commands::release_current(&manager)?;
+        let emitter=app_handle.clone();
+        manager.connect(&port_name,move|topic,payload|handle_incoming_usb_message(&emitter,topic,payload))?;
+        wifi_commands::remember_usb(&app_handle,&manager.status().board_device_id)?;
+        Ok(manager.status())
+    }).await.map_err(|_|"USB 连接失败")?
 }
 
 #[tauri::command]
@@ -6625,11 +6641,11 @@ async fn run_usb_firmware_update(
                 );
             },
             || {
-                reconnect_usb_serial_to_expected_board(
-                    &reconnect_app,
-                    &reconnect_manager,
-                    &reconnect_board_device_id,
-                )
+                if reconnect_manager.status().transport == "wifi" || wifi_commands::prefers_wifi(&reconnect_app,&reconnect_board_device_id) {
+                    wifi_commands::reconnect_after_update(&reconnect_app,&reconnect_manager,&reconnect_board_device_id)
+                } else {
+                    reconnect_usb_serial_to_expected_board(&reconnect_app,&reconnect_manager,&reconnect_board_device_id)
+                }
             },
         )
     })
@@ -10097,8 +10113,13 @@ fn start_usb_auto_connect(usb_manager: usb_serial::UsbSerialManager, app_handle:
         // Wait for app to initialize
         thread::sleep(Duration::from_secs(2));
         loop {
+            if wifi_commands::connection_attempt_active() { thread::sleep(Duration::from_millis(200)); continue; }
             let status = usb_manager.status();
-            if !status.connected {
+            if !status.connected && usb_manager.ensure_transport_switch_idle().is_ok() {
+                if status.transport != "wifi" && wifi_commands::try_preferred_wifi(&app_handle,&usb_manager) {
+                    thread::sleep(Duration::from_secs(2)); continue;
+                }
+                let expected_board=wifi_commands::preferred_board(&app_handle);
                 let devices = usb_manager.scan_devices();
                 let present_keys: HashSet<String> =
                     devices.iter().map(usb_auto_probe_key).collect();
@@ -10114,9 +10135,11 @@ fn start_usb_auto_connect(usb_manager: usb_serial::UsbSerialManager, app_handle:
                     let port_name = dev.port_name.clone();
                     eprintln!("[usb-auto] probing {}", port_name);
                     let emitter = app_handle.clone();
-                    let result = usb_manager.connect_for_auto(&port_name, move |topic, payload| {
-                        handle_incoming_usb_message(&emitter, topic, payload);
-                    });
+                    let result = if let Some(expected)=expected_board.as_deref() {
+                        usb_manager.connect_expected(&port_name,expected,true,move|topic,payload|handle_incoming_usb_message(&emitter,topic,payload))
+                    } else {
+                        usb_manager.connect_for_auto(&port_name,move|topic,payload|handle_incoming_usb_message(&emitter,topic,payload))
+                    };
                     match result {
                         Ok(_) => {
                             failed_probes.remove(&probe_key);
@@ -10157,6 +10180,7 @@ fn start_usb_auto_connect(usb_manager: usb_serial::UsbSerialManager, app_handle:
                     }
                 }
             }
+            if !usb_manager.status().connected { let _=wifi_commands::try_preferred_wifi(&app_handle,&usb_manager); }
             thread::sleep(Duration::from_secs(3));
         }
     });
@@ -10332,6 +10356,15 @@ pub fn run() {
             open_external_url,
             usb_scan_devices,
             usb_connect,
+            wifi_commands::device_wifi_get_status,
+            wifi_commands::device_wifi_scan_networks,
+            wifi_commands::device_wifi_configure,
+            wifi_commands::device_wifi_pair,
+            wifi_commands::device_wifi_list_devices,
+            wifi_commands::device_wifi_connect,
+            wifi_commands::device_wifi_set_enabled,
+            wifi_commands::device_wifi_clear,
+            wifi_commands::device_set_transport_preference,
             usb_disconnect,
             usb_send_state,
             usb_send_speech,

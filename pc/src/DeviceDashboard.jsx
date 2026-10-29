@@ -33,6 +33,7 @@
  */
 
 import { s3ButtonRows } from "./lib/s3-controls.js";
+import WifiSettings from "./WifiSettings.jsx";
 import React, { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { RefreshCw } from "lucide-react";
@@ -1143,7 +1144,7 @@ export default function DeviceDashboard({ active = true, binding, onUnbind, onOp
     const requestedRuntimeVoiceEnabled = requested.voiceEnabled;
     const requestedVoiceTriggerId = requested.voiceButton;
     if (!usb.connected) {
-      setVoiceConfigOtaState({ pending: false, tone: "warning", message: "请先通过 USB 连接设备，再同步按键配置。" });
+      setVoiceConfigOtaState({ pending: false, tone: "warning", message: "请先连接设备，再同步按键配置。" });
       return;
     }
     const targetBoardDeviceId = onlineBoardDeviceId || usb.boardDeviceId || binding.boardDeviceId;
@@ -1178,8 +1179,8 @@ export default function DeviceDashboard({ active = true, binding, onUnbind, onOp
             action: "start",
             voiceButton: requestedVoiceTriggerId,
           });
-          if (!audio?.usbSent) throw new Error(audio?.usbError || "设备麦克风信令未通过 USB 送达");
-          voiceDispatch({ type: "set_audio_bridge_state", enabled: true, ok: true, message: "设备麦克风已通过 USB 接入" });
+          if (!audio?.usbSent) throw new Error(audio?.usbError || "设备麦克风信令未送达");
+          voiceDispatch({ type: "set_audio_bridge_state", enabled: true, ok: true, message: "设备麦克风已接入" });
         } else if (voiceState.audioBridgeEnabled) {
           await sendAudioBridgeSignal({
             boardDeviceId: targetBoardDeviceId,
@@ -1224,7 +1225,7 @@ export default function DeviceDashboard({ active = true, binding, onUnbind, onOp
       tone: usb.connected ? "" : "warning",
       message: usb.connected
         ? "正在切换语音输入的长按按钮并同步到设备..."
-        : "语音输入按键已保存到客户端；连接 USB 后同步到板端才会生效。",
+        : "语音输入按键已保存到客户端；连接设备后同步到板端才会生效。",
     });
     if (usb.connected) {
       await applyVoiceConfigOverUsb(next);
@@ -1244,7 +1245,7 @@ export default function DeviceDashboard({ active = true, binding, onUnbind, onOp
         ? enabled
           ? "正在启用语音输入并同步到设备..."
           : "正在关闭语音输入并同步到设备..."
-        : "已保存到客户端；连接 USB 后同步到板端才会生效。",
+        : "已保存到客户端；连接设备后同步到板端才会生效。",
     });
     if (usb.connected) {
       await applyVoiceConfigOverUsb(next);
@@ -1292,7 +1293,7 @@ export default function DeviceDashboard({ active = true, binding, onUnbind, onOp
           action: "start",
           voiceButton: activeVoiceTriggerId,
         });
-        if (!audio?.usbSent) throw new Error(audio?.usbError || "设备麦克风信令未通过 USB 送达");
+        if (!audio?.usbSent) throw new Error(audio?.usbError || "设备麦克风信令未送达");
         if (!cancelled) {
           voiceDispatch({ type: "set_audio_bridge_state", enabled: true, ok: true, message: "设备麦克风已自动恢复" });
         }
@@ -1337,7 +1338,7 @@ export default function DeviceDashboard({ active = true, binding, onUnbind, onOp
         action,
         voiceButton: activeVoiceTriggerId,
       });
-      const transports = res?.usbSent ? "USB" : "";
+      const transports = res?.usbSent ? (usb.transport === "wifi" ? "Wi-Fi" : "USB") : "";
       voiceDispatch({ type: "set_audio_bridge_state", enabled: requestedEnabled, ok: true, message: `已通过 ${transports || "USB"} 下发到板端` });
     } catch (err) {
       voiceDispatch({ type: "set_audio_bridge_state", enabled: !requestedEnabled, ok: false, message: `${action === "start" ? "启动" : "关闭"}板子音频失败: ${err}` });
@@ -1405,7 +1406,7 @@ export default function DeviceDashboard({ active = true, binding, onUnbind, onOp
   const onSendTest = useCallback(() => {
     const sendPromise = usb.connected
       ? invoke("usb_send_speech", { text: "hello from pet-manager" }).then(() => ({ ok: true })).catch((err) => ({ ok: false, error: String(err) }))
-      : Promise.resolve({ ok: false, error: "USB 未连接" });
+      : Promise.resolve({ ok: false, error: "设备未连接" });
     sendPromise.then((res) => {
       push(res.ok
         ? { tone: "success", title: "测试消息已发送" }
@@ -1501,6 +1502,7 @@ export default function DeviceDashboard({ active = true, binding, onUnbind, onOp
       <Card>
         <DeviceStatusBar />
       </Card>
+      {(usb.runtime === "esp-s3" || !usb.connected) && <WifiSettings status={usb} boardDeviceId={binding?.boardDeviceId} />}
 
       {typeof navigator !== "undefined" && /Linux/i.test(navigator.platform || navigator.userAgent || "") && <div role="status" className="message-banner">
         Linux 支持设备连接、会话监控、素材转换与板端语音；自动写入或发送到其他应用的前台输入框尚未支持。

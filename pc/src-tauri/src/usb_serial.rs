@@ -76,6 +76,8 @@ mod native_usb_protocol;
 mod transaction_waiters;
 mod transfer_log;
 mod widget_transaction;
+#[cfg(test)]
+mod wifi_connection_tests;
 
 use appearance_transaction::{
     asset_checksum_hex, build_asset_file_commit_payload, compute_p4_pack_id,
@@ -669,6 +671,13 @@ fn write_serial_bytes_paced(
         writer.flush()?;
         Ok(())
     }
+}
+
+fn write_transport_bytes(connection: &mut UsbConnection, bytes: &[u8], raw: bool) -> std::io::Result<()> {
+    if connection.transport == "wifi" { connection.writer.write_all(bytes) }
+    else { write_serial_bytes_paced(connection.writer.as_mut(),bytes,
+        if raw {P4_CH343_RAW_WRITE_SLICE_BYTES}else{P4_CH343_SERIAL_WRITE_SLICE_BYTES},
+        if raw {P4_CH343_RAW_WRITE_GAP}else{P4_CH343_SERIAL_WRITE_GAP}) }
 }
 
 fn observe_serial_capture(active: &AtomicBool, topic: &str, payload: &serde_json::Value) {
@@ -1297,9 +1306,12 @@ fn read_serial_line_lossy<R: BufRead>(
     reader: &mut R,
     buffer: &mut Vec<u8>,
 ) -> std::io::Result<Option<String>> {
+    read_serial_line_lossy_with_limit(reader, buffer, 256 * 1024)
+}
+
+fn read_serial_line_lossy_with_limit<R: BufRead>(reader: &mut R, buffer: &mut Vec<u8>, max_line_bytes: usize) -> std::io::Result<Option<String>> {
     // Keep incomplete frames across I/O timeouts, including during probing.
     // Bound both memory and work per call so noise cannot stall the probe loop.
-    const MAX_SERIAL_LINE_BYTES: usize = 256 * 1024;
     const READ_SLICE: Duration = Duration::from_millis(100);
     let started = Instant::now();
     loop {
@@ -1310,7 +1322,7 @@ fn read_serial_line_lossy<R: BufRead>(
         }
         let newline = bytes.iter().position(|byte| *byte == b'\n');
         let count = newline.map_or(bytes.len(), |index| index + 1);
-        if buffer.len().saturating_add(count) > MAX_SERIAL_LINE_BYTES {
+        if buffer.len().saturating_add(count) > max_line_bytes {
             buffer.clear();
             return Err(std::io::Error::new(
                 std::io::ErrorKind::InvalidData,
@@ -1457,20 +1469,27 @@ impl UsbSerialManager {
     where
         F: Fn(String, serde_json::Value) + Send + 'static,
     {
-        self.connect_with_probe_timeout(port_name, SERIAL_PROBE_TIMEOUT, on_message)
+        self.connect_with_probe_timeout(port_name, SERIAL_PROBE_TIMEOUT, None, on_message)
     }
 
     pub fn connect_for_auto<F>(&self, port_name: &str, on_message: F) -> Result<(), String>
     where
         F: Fn(String, serde_json::Value) + Send + 'static,
     {
-        self.connect_with_probe_timeout(port_name, SERIAL_AUTO_PROBE_TIMEOUT, on_message)
+        self.connect_with_probe_timeout(port_name, SERIAL_AUTO_PROBE_TIMEOUT, None, on_message)
+    }
+
+    pub(crate) fn connect_expected<F>(&self, port_name: &str, expected_board: &str, automatic: bool, on_message: F) -> Result<(), String>
+    where F: Fn(String, serde_json::Value) + Send + 'static,
+    {
+        self.connect_with_probe_timeout(port_name, if automatic { SERIAL_AUTO_PROBE_TIMEOUT } else { SERIAL_PROBE_TIMEOUT }, Some(expected_board), on_message)
     }
 
     fn connect_with_probe_timeout<F>(
         &self,
         port_name: &str,
         probe_timeout: Duration,
+        expected_board: Option<&str>,
         on_message: F,
     ) -> Result<(), String>
     where
@@ -1483,8 +1502,9 @@ impl UsbSerialManager {
         {
             let conn = self.connection.lock().map_err(|e| e.to_string())?;
             if let Some(existing) = conn.as_ref() {
-                if existing.connected && existing.port_name.eq_ignore_ascii_case(port_name) {
-                    return Ok(());
+                if existing.connected {
+                    if existing.port_name.eq_ignore_ascii_case(port_name) && existing.transport == "usb" { return Ok(()); }
+                    return Err("已有活动连接，请在设备页面切换连接方式".into());
                 }
             }
         }
@@ -1559,15 +1579,29 @@ impl UsbSerialManager {
             first_json_string(&probed.hello.payload, &["fw", "firmware", "version"])
         );
 
+        if expected_board.is_some_and(|expected| first_json_string(&probed.hello.payload, &["boardDeviceId", "localDeviceId", "deviceId"]) != expected) {
+            return Err("USB 设备与选中的绑定不一致".into());
+        }
+        self.install_verified_stream(port_name.to_string(), probed.baud, "usb", probed.writer,
+            probed.reader, probed.hello, Arc::new(AtomicBool::new(false)), on_message)
+    }
+
+    fn install_verified_stream<F>(
+        &self, port_name: String, baud_rate: u32, transport: &str,
+        writer: Box<dyn Write + Send>, reader_port: Box<dyn Read + Send>, hello: SerialMessage,
+        cancel_reader: Arc<AtomicBool>, on_message: F,
+    ) -> Result<(), String>
+    where F: Fn(String, serde_json::Value) + Send + 'static,
+    {
         let connection_id = self.next_connection_id.fetch_add(1, Ordering::SeqCst) + 1;
-        let cancel_reader = Arc::new(AtomicBool::new(false));
         let capture_active = Arc::new(AtomicBool::new(false));
 
         let mut connection = UsbConnection {
             connection_id,
-            port_name: port_name.to_string(),
-            baud_rate: probed.baud,
-            writer: probed.writer,
+            port_name,
+            transport: transport.to_string(),
+            baud_rate,
+            writer,
             board_device_id: String::new(),
             runtime: String::new(),
             device_model: String::new(),
@@ -1582,12 +1616,12 @@ impl UsbSerialManager {
             cancel_reader: Arc::clone(&cancel_reader),
             capture_active: Arc::clone(&capture_active),
         };
-        apply_hello_payload_to_connection(&mut connection, &probed.hello.payload);
-        let initial_hello = probed.hello.clone();
-        let reader_port = probed.reader;
+        apply_hello_payload_to_connection(&mut connection, &hello.payload);
+        let initial_hello = hello;
 
         {
             let mut conn = self.connection.lock().map_err(|e| e.to_string())?;
+            if let Some(old) = conn.as_ref() { old.cancel_reader.store(true, Ordering::Release); }
             *conn = Some(connection);
             cache_usb_status(&self.status_snapshot, conn.as_ref());
         }
@@ -1595,6 +1629,8 @@ impl UsbSerialManager {
 
         // Start reader thread
         let conn_ref = Arc::clone(&self.connection);
+        let current_generation = Arc::clone(&self.next_connection_id);
+        let is_wifi = transport == "wifi";
         let status_snapshot = Arc::clone(&self.status_snapshot);
         let desktop_id_ref = Arc::clone(&self.desktop_device_id);
         let asset_ack_waiters = Arc::clone(&self.asset_ack_waiters);
@@ -1613,11 +1649,11 @@ impl UsbSerialManager {
                 if cancel_reader.load(Ordering::SeqCst) {
                     break;
                 }
-                if serial_body_write_active.load(Ordering::Acquire) {
+                if !is_wifi && serial_body_write_active.load(Ordering::Acquire) {
                     thread::sleep(Duration::from_millis(1));
                     continue;
                 }
-                let line = match read_serial_line_lossy(&mut reader, &mut line_buffer) {
+                let line = match read_serial_line_lossy_with_limit(&mut reader, &mut line_buffer, if is_wifi { 32768 } else { 256 * 1024 }) {
                     Ok(Some(line)) => line,
                     Ok(None) => { read_failure=Some(("read_eof","end_of_stream",None)); break; },
                     Err(e) if matches!(e.kind(),std::io::ErrorKind::TimedOut|std::io::ErrorKind::Interrupted|std::io::ErrorKind::WouldBlock) => {
@@ -1634,6 +1670,7 @@ impl UsbSerialManager {
                     }
                 };
 
+                if cancel_reader.load(Ordering::Acquire) || current_generation.load(Ordering::Acquire) != connection_id { break; }
                 if line.trim().is_empty() {
                     continue;
                 }
@@ -1682,7 +1719,11 @@ impl UsbSerialManager {
                     }
                 }
 
-                on_message(msg.topic, msg.payload);
+                // Pair credentials are only consumed by the private request waiter.
+                if msg.topic != "wifi/pair" && !cancel_reader.load(Ordering::Acquire)
+                    && current_generation.load(Ordering::Acquire) == connection_id {
+                    on_message(msg.topic, msg.payload);
+                }
             }
 
             // Reader thread ended -> mark disconnected
@@ -1710,6 +1751,61 @@ impl UsbSerialManager {
     }
 
     /// Disconnect from USB serial device
+    pub(crate) fn ensure_transport_switch_idle(&self) -> Result<(), String> {
+        let _guard = self.asset_transfer_guard.try_lock().map_err(|_| "资源或固件正在传输，请完成后切换连接")?;
+        if self.appearance_sync_active.load(Ordering::Acquire)
+            || self.media_requests_pending.load(Ordering::Acquire) != 0 {
+            return Err("设备正在传输，请完成后切换连接".into());
+        }
+        let connection = self.connection.try_lock().map_err(|_| "设备正在发送数据，请稍后切换")?;
+        if connection.as_ref().is_some_and(|c| c.connected && c.capture_active.load(Ordering::Acquire)) {
+            return Err("语音正在使用，请结束后切换连接".into());
+        }
+        Ok(())
+    }
+
+    pub(crate) fn connect_wifi<F>(&self, identity: &crate::wifi_transport::WifiIdentity,
+        address: std::net::SocketAddr, takeover: bool, on_message: F) -> Result<(), String>
+    where F: Fn(String, serde_json::Value) + Send + 'static,
+    {
+        self.connect_wifi_inner(identity,address,takeover,false,on_message)
+    }
+
+    pub(crate) fn reconnect_wifi_after_update<F>(&self, identity: &crate::wifi_transport::WifiIdentity,
+        address: std::net::SocketAddr, on_message: F) -> Result<(), String>
+    where F: Fn(String, serde_json::Value) + Send + 'static,
+    {
+        // Only the serialized updater calls this during its own validation phase.
+        let status=self.status();
+        if status.connected && status.board_device_id != identity.board_device_id {
+            return Err("升级恢复目标设备已改变".into());
+        }
+        self.connect_wifi_inner(identity,address,false,true,on_message)
+    }
+
+    fn connect_wifi_inner<F>(&self, identity: &crate::wifi_transport::WifiIdentity,
+        address: std::net::SocketAddr, takeover: bool, recovering_update: bool, on_message: F) -> Result<(), String>
+    where F: Fn(String, serde_json::Value) + Send + 'static,
+    {
+        let _guard = self.connect_guard.lock().map_err(|_| "连接操作繁忙")?;
+        if !recovering_update { self.ensure_transport_switch_idle()?; }
+        let _transfer_guard = if recovering_update { None } else {
+            Some(self.asset_transfer_guard.try_lock().map_err(|_| "设备正在传输，请稍后连接")?)
+        };
+        let desktop = self.desktop_device_id.lock().map_err(|_| "设备身份不可用")?.clone();
+        let mut io = crate::wifi_transport::connect(identity, address, &desktop, takeover)?;
+        let hello = crate::wifi_transport::read_json_line(&mut io.reader, 32768, Instant::now()+Duration::from_secs(5))?;
+        let mut hello: SerialMessage = serde_json::from_value(hello).map_err(|_| "设备握手格式无效")?;
+        validate_hello_message(&mut hello)?;
+        if first_json_string(&hello.payload, &["boardDeviceId"]) != identity.board_device_id
+            || runtime_from_hello_payload(&hello.payload) != "esp-s3" {
+            return Err("无线设备身份与 USB 绑定不一致".into());
+        }
+        let ack=serde_json::json!({"topic":"ack","payload":{"desktopDeviceId":desktop}});
+        io.writer.write_all(format!("{ack}\n").as_bytes()).map_err(|_|"无线握手确认失败")?;
+        self.install_verified_stream(address.to_string(), 0, "wifi", Box::new(io.writer), Box::new(io.reader), hello, io.cancel, on_message)
+    }
+
     pub fn disconnect(&self) {
         if let Ok(_guard) = self.connect_guard.lock() {
             if let Ok(mut conn) = self.connection.lock() {
@@ -1852,10 +1948,10 @@ impl UsbSerialManager {
         // and asset transaction headers can otherwise be truncated before the
         // board parser sees a newline, which presents to the UI as a missing
         // ACK and makes an identical second attempt appear to fix itself.
-        let paced_slice_bytes = write_slice_bytes.filter(|size| *size > 0).or_else(|| {
+        let paced_slice_bytes = if conn.transport == "wifi" { None } else { write_slice_bytes.filter(|size| *size > 0).or_else(|| {
             (conn.baud_rate >= P4_USB_UART_BAUD && conn.runtime.eq_ignore_ascii_case("esp-p4"))
                 .then_some(P4_CH343_SERIAL_WRITE_SLICE_BYTES)
-        });
+        }) };
         let audio_frame = topic.starts_with("audio/") || topic.starts_with("media/") || topic == "ui/conversation";
         if (topic == "audio/conversation" && payload.get("enabled").and_then(serde_json::Value::as_bool) == Some(true))
             || (topic == "audio/control" && payload.get("action").and_then(serde_json::Value::as_str) == Some("start")) {
@@ -1868,7 +1964,7 @@ impl UsbSerialManager {
         let live_frame = audio_frame || topic == "widget/data" || topic == "app/snapshot"
             || (!bulk_frame && conn.capture_active.load(Ordering::Acquire));
         let write_result = {
-            let _pause = (!live_frame).then(|| SerialReaderPause::new(&self.serial_body_write_active));
+            let _pause = (!live_frame && conn.transport != "wifi").then(|| SerialReaderPause::new(&self.serial_body_write_active));
             (|| {
                 if live_frame {
                     let started=Instant::now();
@@ -2014,6 +2110,13 @@ impl UsbSerialManager {
         request_topic: &str,
         response_topic: &str,
     ) -> Result<serde_json::Value, String> {
+        self.maintenance_request(expected_board_device_id, request_topic, response_topic, serde_json::json!({}))
+    }
+
+    pub(crate) fn maintenance_request(
+        &self, expected_board_device_id: &str, request_topic: &str,
+        response_topic: &str, mut payload: serde_json::Value,
+    ) -> Result<serde_json::Value, String> {
         let expected_board_device_id = validate_expected_board_device_id(expected_board_device_id)?;
         let request_id = format!("device-request-{}", uuid::Uuid::new_v4());
         let (sender, receiver) = mpsc::channel();
@@ -2025,10 +2128,11 @@ impl UsbSerialManager {
                 response_topic: response_topic.to_string(),
                 sender,
             });
+        payload["requestId"] = serde_json::json!(request_id);
         if let Err(error) = self.send_to_board(
             expected_board_device_id,
             request_topic,
-            &serde_json::json!({ "requestId": request_id }),
+            &payload,
         ) {
             self.remove_device_response_waiter(&request_id, response_topic);
             return Err(error);
@@ -2704,7 +2808,7 @@ impl UsbSerialManager {
                 port_name: conn.port_name.clone(),
                 baud_rate: conn.baud_rate,
                 board_device_id: conn.board_device_id.clone(),
-                transport: "usb".to_string(),
+                transport: conn.transport.clone(),
                 runtime: conn.runtime.clone(),
                 device_model: conn.device_model.clone(),
                 firmware: conn.firmware.clone(),
@@ -3234,13 +3338,8 @@ impl UsbSerialManager {
                 return Err("Connection lost".to_string());
             }
             let header_write_result = {
-                let _pause = SerialReaderPause::new(&self.serial_body_write_active);
-                write_serial_bytes_paced(
-                    connection.writer.as_mut(),
-                    &line,
-                    P4_CH343_SERIAL_WRITE_SLICE_BYTES,
-                    P4_CH343_SERIAL_WRITE_GAP,
-                )
+                let _pause = (connection.transport != "wifi").then(|| SerialReaderPause::new(&self.serial_body_write_active));
+                write_transport_bytes(connection, &line, false)
             };
             if let Err(error) = header_write_result {
                 connection.connected = false;
@@ -3279,13 +3378,8 @@ impl UsbSerialManager {
             }
             let raw_write_started = Instant::now();
             let raw_write_result = {
-                let _pause = SerialReaderPause::new(&self.serial_body_write_active);
-                write_serial_bytes_paced(
-                    connection.writer.as_mut(),
-                    chunk,
-                    P4_CH343_RAW_WRITE_SLICE_BYTES,
-                    P4_CH343_RAW_WRITE_GAP,
-                )
+                let _pause = (connection.transport != "wifi").then(|| SerialReaderPause::new(&self.serial_body_write_active));
+                write_transport_bytes(connection, chunk, true)
             };
             if let Err(error) = raw_write_result {
                 connection.connected = false;
@@ -3398,12 +3492,7 @@ impl UsbSerialManager {
                 return Err("Connection lost".to_string());
             }
             let padding = vec![0u8; pending_size];
-            if let Err(error) = write_serial_bytes_paced(
-                connection.writer.as_mut(),
-                &padding,
-                P4_CH343_RAW_WRITE_SLICE_BYTES,
-                P4_CH343_RAW_WRITE_GAP,
-            ) {
+            if let Err(error) = write_transport_bytes(connection, &padding, true) {
                 connection.connected = false;
                 cache_usb_status(&self.status_snapshot, Some(connection));
                 return Err(format!("Raw asset paced recovery write failed: {error}"));
@@ -5110,7 +5199,7 @@ fn usb_connection_status(connection: &UsbConnection) -> UsbConnectionStatus {
         port_name: connection.port_name.clone(),
         baud_rate: connection.baud_rate,
         board_device_id: connection.board_device_id.clone(),
-        transport: "usb".to_string(),
+        transport: connection.transport.clone(),
         runtime: connection.runtime.clone(),
         device_model: connection.device_model.clone(),
         firmware: connection.firmware.clone(),
@@ -6801,6 +6890,7 @@ mod tests {
         let active = Arc::new(AtomicBool::new(false));
         let fail_next=Arc::new(AtomicBool::new(false));
         *manager.connection.lock().unwrap() = Some(UsbConnection {
+            transport: "usb".into(),
             connection_id: 1, port_name: "test".into(), baud_rate: P4_USB_UART_BAUD,
             writer: Box::new(CheckedWriter {pause: manager.serial_body_write_active.clone(), expected: expected.clone(), stats: stats.clone(), fail_next: fail_next.clone()}),
             board_device_id: "p4-test".into(), runtime: "esp-p4".into(), device_model: String::new(),
@@ -6856,6 +6946,7 @@ mod tests {
         let manager = UsbSerialManager::new();
         let recorded = Arc::new(Mutex::new(PacedWriterState::default()));
         *manager.connection.lock().unwrap() = Some(UsbConnection {
+            transport: "usb".into(),
             connection_id: 1,
             port_name: "COM21".into(),
             baud_rate: P4_USB_UART_BAUD,
@@ -6905,6 +6996,7 @@ mod tests {
             let manager = UsbSerialManager::new();
             let recorded = Arc::new(Mutex::new(PacedWriterState::default()));
             *manager.connection.lock().unwrap() = Some(UsbConnection {
+            transport: "usb".into(),
                 connection_id: 1,
                 port_name: "test-only".into(),
                 baud_rate: P4_USB_UART_BAUD,
@@ -7017,6 +7109,7 @@ mod tests {
         let manager = UsbSerialManager::new();
         let written = Arc::new(Mutex::new(Vec::new()));
         *manager.connection.lock().unwrap() = Some(UsbConnection {
+            transport: "usb".into(),
             connection_id: 1,
             port_name: "COM15".to_string(),
             baud_rate: P4_USB_UART_BAUD,
@@ -7566,6 +7659,7 @@ mod tests {
         {
             let mut conn = manager.connection.lock().unwrap();
             *conn = Some(UsbConnection {
+            transport: "usb".into(),
                 connection_id: 1,
                 port_name: "COM5".to_string(),
                 baud_rate: P4_USB_UART_BAUD,
@@ -7621,6 +7715,7 @@ mod tests {
         {
             let mut conn = manager.connection.lock().unwrap();
             *conn = Some(UsbConnection {
+            transport: "usb".into(),
                 connection_id: 1,
                 port_name: "COM15".to_string(),
                 baud_rate: P4_USB_UART_BAUD,
@@ -7717,6 +7812,7 @@ mod tests {
         let manager = UsbSerialManager::new();
         let recorded = Arc::new(Mutex::new(PacedWriterState::default()));
         *manager.connection.lock().unwrap() = Some(UsbConnection {
+            transport: "usb".into(),
             connection_id: 1,
             port_name: "COM15".to_string(),
             baud_rate: P4_USB_UART_BAUD,
@@ -7811,6 +7907,7 @@ mod tests {
     #[test]
     fn hello_payload_records_p4_runtime_capabilities() {
         let mut conn = UsbConnection {
+            transport: "usb".into(),
             connection_id: 1,
             port_name: "COM15".to_string(),
             baud_rate: P4_USB_UART_BAUD,
@@ -7864,6 +7961,7 @@ mod tests {
     #[test]
     fn partial_hello_does_not_erase_verified_runtime_metadata() {
         let mut conn = UsbConnection {
+            transport: "usb".into(),
             connection_id: 1,
             port_name: "COM3".to_string(),
             baud_rate: P4_USB_UART_BAUD,
@@ -8720,6 +8818,7 @@ mod tests {
     fn board_targeted_send_rejects_blank_or_changed_identity_under_lock() {
         let manager = UsbSerialManager::new();
         *manager.connection.lock().unwrap() = Some(UsbConnection {
+            transport: "usb".into(),
             connection_id: 1,
             port_name: "COM15".to_string(),
             baud_rate: P4_USB_UART_BAUD,
@@ -8757,6 +8856,7 @@ mod tests {
         let manager = UsbSerialManager::new();
         let recorded = Arc::new(Mutex::new(PacedWriterState::default()));
         *manager.connection.lock().unwrap() = Some(UsbConnection {
+            transport: "usb".into(),
             connection_id: 1,
             port_name: "COM15".to_string(),
             baud_rate: P4_USB_UART_BAUD,
@@ -9086,6 +9186,7 @@ mod tests {
         let manager = UsbSerialManager::new();
         let recorded = Arc::new(Mutex::new(PacedWriterState::default()));
         *manager.connection.lock().unwrap() = Some(UsbConnection {
+            transport: "usb".into(),
             connection_id: 1,
             port_name: "COM15".to_string(),
             baud_rate: P4_USB_UART_BAUD,
@@ -9146,6 +9247,7 @@ mod tests {
         let manager = UsbSerialManager::new();
         let written = Arc::new(Mutex::new(Vec::new()));
         *manager.connection.lock().unwrap() = Some(UsbConnection {
+            transport: "usb".into(),
             connection_id: 2,
             port_name: "COM15".to_string(),
             baud_rate: P4_USB_UART_BAUD,
@@ -9183,6 +9285,7 @@ mod tests {
         let manager = UsbSerialManager::new();
         let written = Arc::new(Mutex::new(Vec::new()));
         *manager.connection.lock().unwrap() = Some(UsbConnection {
+            transport: "usb".into(),
             connection_id: 7,
             port_name: "COM15".to_string(),
             baud_rate: P4_USB_UART_BAUD,
@@ -9258,6 +9361,7 @@ mod tests {
         let manager = UsbSerialManager::new();
         let written = Arc::new(Mutex::new(Vec::new()));
         *manager.connection.lock().unwrap() = Some(UsbConnection {
+            transport: "usb".into(),
             connection_id: 1,
             port_name: "COM15".to_string(),
             baud_rate: P4_USB_UART_BAUD,

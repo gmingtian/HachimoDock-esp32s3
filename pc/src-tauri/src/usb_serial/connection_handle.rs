@@ -30,6 +30,7 @@ const SERIAL_IO_TIMEOUT: Duration = Duration::from_millis(20);
 const SERIAL_IO_TIMEOUT: Duration = Duration::from_millis(100);
 
 pub(super) struct UsbConnection {
+    pub(super) transport: String,
     pub(super) connection_id: u64,
     pub(super) port_name: String,
     pub(super) baud_rate: u32,

@@ -12,7 +12,7 @@ export function permissionText(p={},notice=""){
   if(p.newsGeneration)result.push("使用 Pet Manager 已配置的对话模型及联网检索，可能产生调用费用；仅发送公开主题和新闻摘录，不发送聊天、个人资料或桌面任务。进入设备组件自动整理，PC 预览不自动请求；结果附原文链接与发布时间。");
   if(p.microphone)result.push("仅在按下录制后使用设备麦克风，最多 28 秒；音频发给你配置的云端 ASR，转写须手动确认保存。不会写入桌面 Agent 输入框。");
   if(p.speechProvider&&!p.microphone)result.push(p.autoRead?"在设备进入组件或换条后，自动将当前知识正文分段发送给已配置的语音合成服务并朗读；打开 PC 预览不会播放，不发送其他笔记或聊天内容。":"按下朗读后，将该知识卡片文字发送给你配置的语音合成服务；不发送其他笔记或聊天内容。");
-  if(p.deviceAudio)result.push("通过 USB 使用设备扬声器。退出组件、断线或进入语音后停止，不会自动恢复。");
+  if(p.deviceAudio)result.push("通过当前连接使用设备扬声器。退出组件、断线或进入语音后停止，不会自动恢复。");
   if(p.todos)result.push(p.todoWrites?"读取本机待办；仅在你确认具体事项后标记完成或撤销完成，不新增、不删除事项。":p.microphone?"可在你确认后创建统一待办；删除笔记不删除关联待办。":"可读取本机近期待办，内容可能显示在设备上。");
   if(p.desktopReceipts)result.push("只读取当前设备跟随 Agent 的任务回执；默认隐藏正文。语音补充仍遵守客户端原有权限确认。");
   return result;

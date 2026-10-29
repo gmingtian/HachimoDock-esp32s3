@@ -1,6 +1,6 @@
 [package]
 name = "pet-manager-tauri"
-version = "0.1.167"
+version = "0.1.168"
 description = "pet-manager Tauri client"
 authors = ["pet-manager contributors"]
 license-file = "../../LICENSE"
@@ -55,6 +55,7 @@ cbc = { version = "0.1", features = ["alloc"] }
 rsa = { version = "0.9", features = ["pem"] }
 rand = "0.8"
 ring = "0.17.14"
+rustls = { version = "0.23.39", default-features = false, features = ["std", "ring", "tls12"] }
 zip = "0.6"
 # Used by install_clawpkg_over_ssh to stage widget dirs before scp.
 tempfile = "3.27.0"
@@ -76,3 +77,4 @@ objc2-foundation = { version = "0.3.2", default-features = false, features = ["N
 
 [dev-dependencies]
 tempfile = "3.27.0"
+rcgen = "0.13"

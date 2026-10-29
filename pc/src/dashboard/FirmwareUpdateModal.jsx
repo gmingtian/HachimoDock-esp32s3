@@ -173,7 +173,7 @@ export default function FirmwareUpdateModal({
           {error && <div className="firmware-update-modal__result" data-tone="error">{error}</div>}
           {!pending && !result && !error && (
             <p className="firmware-update-modal__notice">
-              升级写入备用槽，不会覆盖当前可启动版本。传输开始后请保持 USB 连接和设备供电。
+              升级写入备用槽，不会覆盖当前可启动版本。传输开始后请保持当前 USB / Wi-Fi 连接和设备供电。
             </p>
           )}
         </div>

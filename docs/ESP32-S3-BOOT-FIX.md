@@ -65,3 +65,12 @@ The corrected r4 uses 128-byte writes, compatible with both the console default 
 application's requested 4096-byte ring. The regression now simulates the actual
 256-byte limit; the original build fails and corrected r4 passes a 12 KiB frame including partial writes.
 Host tests/build do not establish physical Windows acceptance.
+
+## Release numbering reset
+
+The current distribution is 0.7.103-s3-r1 after withdrawal of earlier r2/r3/r4
+releases. This resets release numbering, not the code or commit history. It
+includes the corrected 128-byte USB write path. Historical r4 references above
+describe the diagnosis, not the current download name. USB connection was
+confirmed by the user; Wi-Fi pairing is still blocked by the desktop transfer
+guard on the user's Windows setup and is not claimed fixed.

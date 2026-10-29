@@ -47,7 +47,7 @@ export default function WifiSettings({ status, boardDeviceId }) {
     <h3 style={{ margin: "0 0 10px" }}>设备连接</h3>
     <p>当前：<strong>{connectionLabel(status)}</strong>　偏好：{rules.preferredTransport === "wifi" ? "Wi-Fi" : "USB"}</p>
     <p style={{ fontSize: 13, opacity: 0.75 }}>记住所选连接，保持当前通道；Wi-Fi 断开后尝试 USB。录音、播放、同步和升级期间请先结束操作再切换。</p>
-    {!rules.supported && status?.connected && <p role="status">当前设备需升级至 S3 r3 或更新固件，才能启用无线连接。</p>}
+    {!rules.supported && status?.connected && <p role="status">当前设备需安装当前配套 S3 固件，才能启用无线连接。</p>}
     <div style={small}>
       <button style={control} disabled={busy || !board} onClick={() => run(() => invoke("device_set_transport_preference", { ...args, transport: "usb" }), "已使用 USB 连接")}>使用 USB</button>
       <button style={control} disabled={busy || !paired} onClick={() => run(() => invoke("device_wifi_connect", { ...args, ip: ip.trim() || null }), "已使用 Wi-Fi 连接")}>使用 Wi-Fi</button>

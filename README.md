@@ -1,7 +1,8 @@
 # HachimoDock-esp32s3
 
-ESP32-S3 r4 boot and USB discovery repair: fixes the r3 component-startup watchdog, libc mutex
-allocation abort, and oversized USB hello loss. [Diagnosis and verified hardware](docs/ESP32-S3-BOOT-FIX.md).
+当前发布从 **r1** 重新编号，包含此前的启动内存、看门狗与 USB 握手修复。
+旧 r2/r3/r4 发布已撤回。Wi-Fi 配网可用，无线绑定的传输繁忙问题仍待解决。
+[修复与验证记录](docs/ESP32-S3-BOOT-FIX.md)。
 
 基于 [YizhengWw/HachimoDock](https://github.com/YizhengWw/HachimoDock) 的 **ESP32-S3 三键硬件适配版**，让现有小智设备显示桌宠动画、Agent 工作状态、中文会话气泡，并运行共享组件。
 
@@ -44,7 +45,7 @@ GPIO0 在上电或复位时须松开。完整接线、分区和构建步骤见 [
 
 ## 下载安装
 
-当前 S3 固件版本为 **`0.7.103-s3-r3`**，配套客户端 **`0.1.168`**；下载 [S3 固件与客户端](https://github.com/gmingtian/HachimoDock-esp32s3/releases)。首次改刷请使用完整 ZIP 内的 `hachimodock-s3-factory.bin`，从 `0x0` 写入；应用镜像不能替代完整出厂镜像。先保存原小智固件用于恢复。
+当前 S3 固件版本为 **`0.7.103-s3-r1`**，配套客户端 **`0.1.168`**；下载 [S3 固件与客户端](https://github.com/gmingtian/HachimoDock-esp32s3/releases)。首次改刷请使用完整 ZIP 内的 `hachimodock-s3-factory.bin`，从 `0x0` 写入；应用镜像不能替代完整出厂镜像。先保存原小智固件用于恢复。
 
 客户端安装、设备连接和服务配置见 [安装与使用](docs/INSTALLATION.md)。平台支持情况、S3 与 P4 的能力差异及已知限制见 [兼容性说明](docs/COMPATIBILITY.md)。
 
@@ -52,7 +53,7 @@ GPIO0 在上电或复位时须松开。完整接线、分区和构建步骤见 [
 
 上图为模拟预览，不能代表实机颜色或帧率。[查看中文菜单预览](docs/images/s3-menu-preview.png)。
 
-### r3：USB 与 Wi-Fi 双通道
+### USB 与 Wi-Fi 双通道
 
 首次通过 USB 配网并绑定此电脑，之后可以在同一可互访局域网内无线使用。
 会话、三键、语音、组件、形象同步、诊断及应用 OTA 共用既有运行时协议，
@@ -60,7 +61,7 @@ GPIO0 在上电或复位时须松开。完整接线、分区和构建步骤见 [
 
 首次默认 USB；记住手动选择，已有连接不被另一通道抢占。
 Wi-Fi 断开后清理当前操作，再尝试同一绑定设备的 USB；失败的传输不会自动重放。
-首次完整刷机与 ROM 恢复仍使用 USB。旧 r2 下载保持独立保留。
+首次完整刷机与 ROM 恢复仍使用 USB。此前旧版下载已撤回，当前以重新编号的 r1 为准。
 配置步骤见 [Wi-Fi 使用说明](docs/WIFI.md)。无线速度、射频、音频及持续运行仍需本板实测。
 
 ## 原项目资料与许可

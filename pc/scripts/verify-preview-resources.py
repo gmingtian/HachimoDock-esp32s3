@@ -18,7 +18,7 @@ import sys
 import tempfile
 
 ROOT = Path(__file__).resolve().parents[2]
-FIRMWARE_SHA = '1556a17b4e26be5bf5e74683f331f717b8cbf766f44de1e1a65aadeecf4dc91d'
+FIRMWARE_SHA = 'e37a62e63b6a5590d400449c2c4514a83676e91987233e6692bd9dea7aa9a320'
 
 
 def sha256(path):
@@ -40,7 +40,7 @@ def validate_firmware(path):
         raise ValueError('S3 firmware app descriptor is missing')
     version = data[48:80].split(b'\0', 1)[0].decode('utf-8')
     project = data[80:112].split(b'\0', 1)[0].decode('utf-8')
-    if project != 'pet_manager_s3_runtime' or version != '0.7.103-s3-r3':
+    if project != 'pet_manager_s3_runtime' or version != '0.7.103-s3-r1':
         raise ValueError(f'S3 firmware identity mismatch: {project} {version}')
     actual = sha256(path)
     if actual != FIRMWARE_SHA:

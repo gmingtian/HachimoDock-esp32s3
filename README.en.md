@@ -7,13 +7,13 @@ An ESP32-S3, three-button adaptation of [YizhengWw/HachimoDock](https://github.c
 [简体中文](README.md) · [S3 downloads](https://github.com/gmingtian/HachimoDock-esp32s3/releases) · [Wiring and firmware](docs/ESP32-S3-Linux.md) · [Linux build](pc/docs/linux-native.md) · [Installation](docs/INSTALLATION.md) · [Upstream feature comparison](docs/FEATURE-COMPARISON.md) · [Compatibility](docs/COMPATIBILITY.md)
 
 
-S3 r3 / desktop 0.1.168 adds paired TLS Wi-Fi alongside USB. Provision and pair
+S3 r1 / desktop 0.1.168 adds paired TLS Wi-Fi alongside USB. Provision and pair
 once over USB, then use the same reachable LAN for session state, keys, audio,
 assets, components, diagnostics and application OTA. The selected transport is
 remembered, live connections are not preempted, and a lost Wi-Fi session can
 fall back to the same board over USB after transaction cleanup. Initial flashing
 and ROM recovery remain USB operations. See [Wi-Fi setup](docs/WIFI.md).
-Hardware radio/latency/stability checks are still pending; r2 downloads remain available.
+Hardware radio/latency/stability checks are still pending; previous releases have been withdrawn.
 
 ## Adaptation scope
 
@@ -23,7 +23,7 @@ Hardware radio/latency/stability checks are still pending; r2 downloads remain a
 - Desktop build support for Linux x86_64, Windows x64 and Apple-silicon macOS; installers are distributed through this fork's Releases.
 - Bounded S3 asset conversion to 240×180 at up to 10fps, chip-specific firmware validation and transactional resource updates.
 
-Current S3 firmware: **0.7.103-s3-r3**. [S3 firmware and desktop clients](https://github.com/gmingtian/HachimoDock-esp32s3/releases) are available. Initial flashing requires the complete factory image at address `0x0`, not the application image. Preserve the old firmware for recovery.
+Current S3 firmware: **0.7.103-s3-r1**. [S3 firmware and desktop clients](https://github.com/gmingtian/HachimoDock-esp32s3/releases) are available. Initial flashing requires the complete factory image at address `0x0`, not the application image. Preserve the old firmware for recovery.
 
 See [Installation](docs/INSTALLATION.md) for setup and [Compatibility](docs/COMPATIBILITY.md) for platform support, hardware status and known limitations. The original license continues to govern the original works; third-party materials retain their respective terms.
 

@@ -69,14 +69,14 @@ class PreviewVerificationTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'S3|chip'):
             verify.validate_firmware(firmware)
 
-    def test_checked_in_firmware_is_real_pinned_s3_r3(self):
+    def test_checked_in_firmware_is_real_pinned_s3_r1(self):
         verify = load('verify-preview-resources')
         firmware = SCRIPTS.parents[1] / 'pc/src-tauri/firmware/esp32-s3/firmware.bin'
         result = verify.validate_firmware(firmware)
         self.assertEqual(result['chipId'], 9)
         self.assertEqual(result['projectName'], 'pet_manager_s3_runtime')
-        self.assertEqual(result['version'], '0.7.103-s3-r3')
-        self.assertEqual(result['sha256'], '1556a17b4e26be5bf5e74683f331f717b8cbf766f44de1e1a65aadeecf4dc91d')
+        self.assertEqual(result['version'], '0.7.103-s3-r1')
+        self.assertEqual(result['sha256'], 'e37a62e63b6a5590d400449c2c4514a83676e91987233e6692bd9dea7aa9a320')
 
     def test_corrupt_s3_helper_source_is_rejected(self):
         verify = load('verify-preview-resources')

@@ -25,7 +25,7 @@ fn require_usb(manager:&UsbSerialManager,board:&str)->Result<(),String> {
         return Err("请先通过 USB 连接目标 ESP32-S3".into());
     }
     if status.capabilities.pointer("/transport/wifi").and_then(Value::as_bool)!=Some(true) {
-        return Err("当前固件未启用 Wi-Fi，请先升级 S3 r3 或更新版本".into());
+        return Err("当前固件未启用 Wi-Fi，请先安装当前配套 S3 固件".into());
     }
     manager.ensure_transport_switch_idle()
 }

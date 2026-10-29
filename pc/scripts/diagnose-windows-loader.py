@@ -23,8 +23,23 @@ def main():
     path = candidates[0]
     print('Native loader diagnostics:', path, flush=True)
     image = pefile.PE(str(path))
+    manifests = []
+    for entry in getattr(getattr(image, 'DIRECTORY_ENTRY_RESOURCE', None), 'entries', []):
+        if entry.id == 24:
+            for resource in entry.directory.entries:
+                for language in resource.directory.entries:
+                    data = language.data.struct
+                    manifests.append(image.get_data(data.OffsetToData, data.Size).decode('utf-8', errors='replace'))
+    print('Test manifest selects Common Controls v6:', any('Microsoft.Windows.Common-Controls' in m and '6.0.0.0' in m for m in manifests), flush=True)
     for descriptor in getattr(image, 'DIRECTORY_ENTRY_IMPORT', []):
         name = descriptor.dll.decode('ascii')
+        if name.lower() == 'comctl32.dll':
+            import os
+            legacy = pefile.PE(str(Path(os.environ['SystemRoot']) / 'System32/comctl32.dll'))
+            exports = {symbol.name for symbol in legacy.DIRECTORY_ENTRY_EXPORT.symbols}
+            missing = [imp.name.decode('ascii') for imp in descriptor.imports if imp.name and imp.name not in exports]
+            print('Imports absent from default Common Controls:', missing, flush=True)
+            legacy.close()
         try:
             module = ctypes.WinDLL(name, use_last_error=True)
         except OSError as error:

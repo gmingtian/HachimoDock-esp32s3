@@ -1,21 +1,22 @@
-name: S3 home clients
+name: Desktop clients
 on:
   workflow_dispatch:
   push:
-    branches: [codex/esp32-s3-linux]
+    branches: [main]
     paths:
-      - .github/workflows/home-clients.yml
+      - .github/workflows/desktop-clients.yml
       - pc/**
       - firmware/tools/prepare_s3_assets.py
-      - docs/HOME-TESTING.md
+      - docs/INSTALLATION.md
+      - docs/COMPATIBILITY.md
 permissions:
   contents: read
 concurrency:
-  group: home-clients-${{ github.ref }}
+  group: desktop-clients-${{ github.ref }}
   cancel-in-progress: true
 jobs:
   native:
-    name: ${{ matrix.target }} native preview
+    name: ${{ matrix.target }} desktop client
     runs-on: ${{ matrix.os }}
     timeout-minutes: 90
     strategy:
@@ -125,12 +126,12 @@ jobs:
         working-directory: pc
         run: npx tauri build --target aarch64-apple-darwin --bundles app --ci
       - name: Package and verify installed contents
-        run: python pc/scripts/package-home-preview.py --target ${{ matrix.target }} --output-dir artifacts/home-preview
+        run: python pc/scripts/package-desktop-client.py --target ${{ matrix.target }} --output-dir artifacts/desktop-clients
       - name: Upload verified preview downloads
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: HachimoDock-S3-${{ matrix.target }}-preview
-          path: artifacts/home-preview/*
+          name: HachimoDock-esp32-s3-${{ matrix.target }}
+          path: artifacts/desktop-clients/*
           if-no-files-found: error
           retention-days: 14
       - name: Save native Cargo cache for fixes

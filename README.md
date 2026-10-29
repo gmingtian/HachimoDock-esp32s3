@@ -4,15 +4,15 @@
 
 > **来源与署名**：原项目 HachimoDock 由 **Yizheng Wang（[@YizhengWw](https://github.com/YizhengWw)）** 创作。本仓库由 [gmingtian](https://github.com/gmingtian) 维护 S3、三键和 Linux 适配，属于修改版本，并非原作者官方发布或背书。原项目的版权、[许可证](LICENSE)和[第三方声明](THIRD_PARTY_NOTICES.md)均予保留；使用及再分发须遵守原许可，项目内修改不改变原作品的权属。
 
-[下载 S3 固件与客户端](https://github.com/gmingtian/HachimoDock-esp32-s3/releases) · [接线与刷机](docs/ESP32-S3-Linux.md) · [Linux 构建](pc/docs/linux-native.md) · [Windows / Mac 验收指南](docs/HOME-TESTING.md) · [English](README.en.md)
+[下载 S3 固件与客户端](https://github.com/gmingtian/HachimoDock-esp32-s3/releases) · [接线与刷机](docs/ESP32-S3-Linux.md) · [Linux 构建](pc/docs/linux-native.md) · [安装使用](docs/INSTALLATION.md) · [兼容性](docs/COMPATIBILITY.md) · [English](README.en.md)
 
-## 当前仓库做了什么
+## 功能特性
 
 - **沿用现有硬件与 IO**：ESP32-S3 N16R8（16MiB Flash / 8MiB PSRAM）、1.54 寸 240×240 ST7789、I2S 麦克风、MAX98357A 喇叭，以及 GPIO39 / 38 / 0 三个按键；替换原小智功能，无需增加摇杆或触摸屏。
 - **适配小屏显示**：保留宠物与多会话气泡，系统菜单、按键提示和会话操作采用原生中文布局；长正文分页，更多会话可切换。
 - **适配三键操作**：上一项 / 下一项 / 确认，加长按返回、组件菜单与按住录音；组件附加动作通过菜单和软件光标操作。
 - **保留共享能力**：默认形象、29 个内置组件、Agent 状态同步、素材同步与语音路径。内置组件包括贪吃蛇、像素方块、飞鸟、番茄钟等；服务功能需要自行配置凭据。
-- **增加 Linux 客户端支持**：保留原 Windows / macOS 构建；S3 配套 Windows x64 和 Apple 芯片 macOS 客户端正在原生构建验证，下载以本仓库 Releases 实际附件为准。
+- **跨平台客户端**：支持 Linux x86_64、Windows x64 和 Apple 芯片 macOS 构建；安装包通过本仓库 Releases 分发。
 - **约束资源与升级**：S3 素材转为 240×180、最高 10fps，保留资源容量校验、事务更新和固件芯片识别；这是一组素材上限，并非实测帧率。
 
 ## 硬件接线
@@ -26,11 +26,11 @@
 
 GPIO0 在上电或复位时须松开。完整接线、分区和构建步骤见 [S3 适配说明](docs/ESP32-S3-Linux.md)。
 
-## 下载与当前边界
+## 下载安装
 
-当前 S3 固件版本为 **`0.7.103-s3-r2`**；已有 [S3 固件与 Linux 预览下载](https://github.com/gmingtian/HachimoDock-esp32-s3/releases/tag/s3-v0.7.103-r2-preview)。首次改刷请使用完整 ZIP 内的 `hachimodock-s3-factory.bin`，从 `0x0` 写入；应用镜像不能替代完整出厂镜像。先保存原小智固件用于恢复。
+当前 S3 固件版本为 **`0.7.103-s3-r2`**；下载 [S3 固件与客户端](https://github.com/gmingtian/HachimoDock-esp32-s3/releases)。首次改刷请使用完整 ZIP 内的 `hachimodock-s3-factory.bin`，从 `0x0` 写入；应用镜像不能替代完整出厂镜像。先保存原小智固件用于恢复。
 
-**尚未完成本板实机验收**。语音暂用半双工；Linux 暂不支持向其他应用的输入框自动填字或发送。原 P4 的高速 USB、触摸与摇杆体验不能等同于 S3 的串口和三键操作。软件测试、构建和启动检查不能替代屏幕、音频、按键及长期稳定性实测。
+客户端安装、设备连接和服务配置见 [安装与使用](docs/INSTALLATION.md)。平台支持情况、S3 与 P4 的能力差异及已知限制见 [兼容性说明](docs/COMPATIBILITY.md)。
 
 ![S3 中文会话界面模拟预览](docs/images/s3-session-preview.png)
 

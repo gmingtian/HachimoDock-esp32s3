@@ -4,19 +4,19 @@ An ESP32-S3, three-button adaptation of [YizhengWw/HachimoDock](https://github.c
 
 **Attribution:** The original HachimoDock project is created by **Yizheng Wang ([@YizhengWw](https://github.com/YizhengWw))**. This modified repository is maintained by [gmingtian](https://github.com/gmingtian) for ESP32-S3 and Linux compatibility. It is not an official upstream release or endorsement. Original copyrights, the [project license](LICENSE) and [third-party notices](THIRD_PARTY_NOTICES.md) are retained.
 
-[简体中文](README.md) · [S3 downloads](https://github.com/gmingtian/HachimoDock-esp32-s3/releases) · [Wiring and firmware](docs/ESP32-S3-Linux.md) · [Linux build](pc/docs/linux-native.md) · [Windows / Mac testing](docs/HOME-TESTING.md)
+[简体中文](README.md) · [S3 downloads](https://github.com/gmingtian/HachimoDock-esp32-s3/releases) · [Wiring and firmware](docs/ESP32-S3-Linux.md) · [Linux build](pc/docs/linux-native.md) · [Installation](docs/INSTALLATION.md) · [Compatibility](docs/COMPATIBILITY.md)
 
 ## Adaptation scope
 
 - ESP32-S3 N16R8: 16MiB Flash, 8MiB PSRAM, 240×240 SPI display and buttons on GPIO39 / 38 / 0.
 - Chinese native menus and session bubbles, paginated text, three-button navigation and software pointer actions.
 - Shared pet animations, Agent session synchronization, 29 factory components and configurable speech paths.
-- Native Linux client support; Windows x64 and Apple-silicon macOS S3 previews are undergoing native build verification. Only assets actually attached to this fork's Releases are available downloads.
+- Desktop build support for Linux x86_64, Windows x64 and Apple-silicon macOS; installers are distributed through this fork's Releases.
 - Bounded S3 asset conversion to 240×180 at up to 10fps, chip-specific firmware validation and transactional resource updates.
 
-Current S3 firmware: **0.7.103-s3-r2**. [S3 firmware and Linux preview](https://github.com/gmingtian/HachimoDock-esp32-s3/releases/tag/s3-v0.7.103-r2-preview) are available. Initial flashing requires the complete factory image at address `0x0`, not the application image. Preserve the old firmware for recovery.
+Current S3 firmware: **0.7.103-s3-r2**. [S3 firmware and desktop clients](https://github.com/gmingtian/HachimoDock-esp32-s3/releases) are available. Initial flashing requires the complete factory image at address `0x0`, not the application image. Preserve the old firmware for recovery.
 
-**Physical board acceptance is still pending.** S3 uses half-duplex speech. Linux cannot automatically fill or send another desktop application's input field. P4 high-speed USB, touch, joystick and full-duplex claims do not apply to this S3 target. The original license continues to govern the original works; third-party materials retain their respective terms.
+See [Installation](docs/INSTALLATION.md) for setup and [Compatibility](docs/COMPATIBILITY.md) for platform support, hardware status and known limitations. The original license continues to govern the original works; third-party materials retain their respective terms.
 
 ## Original project reference
 

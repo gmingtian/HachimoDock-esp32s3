@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Package native S3 home previews and verify the actual installed payload."""
+"""Package native ESP32-S3 desktop clients and verify installed resources."""
 import argparse
 import hashlib
 import json
@@ -50,7 +50,7 @@ def smoke(binary, log):
 def windows(output):
     bundle=ROOT/'pc/src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis'
     installer=unique(bundle.glob('*.exe'),'Windows NSIS installer')
-    dest=output/'HachimoDock_S3_Windows-x64-preview.exe'
+    dest=output/'HachimoDock-esp32-s3_Windows-x64.exe'
     shutil.copy2(installer,dest)
     sevenzip=shutil.which('7z') or str(Path(os.environ.get('ProgramFiles','C:/Program Files'))/'7-Zip/7z.exe')
     with tempfile.TemporaryDirectory(prefix='hachimo-install-') as temp:
@@ -76,13 +76,14 @@ def macos(output):
     info=plistlib.loads((app/'Contents/Info.plist').read_bytes())
     binary=app/'Contents/MacOS'/info['CFBundleExecutable']
     smoke(binary,output/'macOS-startup.log')
-    dest=output/'HachimoDock_S3_macOS-arm64-preview.dmg'
+    dest=output/'HachimoDock-esp32-s3_macOS-arm64.dmg'
     with tempfile.TemporaryDirectory(prefix='hachimo-dmg-stage-') as temp, tempfile.TemporaryDirectory(prefix='hachimo-dmg-mount-') as mount:
         temp=Path(temp);mount=Path(mount)
         run(['/usr/bin/ditto',app,temp/app.name])
         (temp/'Applications').symlink_to('/Applications',target_is_directory=True)
-        shutil.copy2(ROOT/'docs/HOME-TESTING.md',temp/'使用说明.md')
-        run(['/usr/bin/hdiutil','create','-volname','HachimoDock S3 Preview','-srcfolder',temp,'-ov','-format','UDZO',dest])
+        shutil.copy2(ROOT/'docs/INSTALLATION.md',temp/'安装使用说明.md')
+        shutil.copy2(ROOT/'docs/COMPATIBILITY.md',temp/'兼容性说明.md')
+        run(['/usr/bin/hdiutil','create','-volname','HachimoDock ESP32-S3','-srcfolder',temp,'-ov','-format','UDZO',dest])
         attached=False
         try:
             run(['/usr/bin/hdiutil','attach','-readonly','-nobrowse','-noautoopen','-mountpoint',mount,dest])
@@ -103,11 +104,12 @@ def main():
         parser.error('Package verification must run on its native target OS')
     output=args.output_dir.resolve();output.mkdir(parents=True,exist_ok=True)
     artifact=windows(output) if args.target=='windows' else macos(output)
-    shutil.copy2(ROOT/'docs/HOME-TESTING.md',output/'回家测试说明.md')
+    shutil.copy2(ROOT/'docs/INSTALLATION.md',output/'安装使用说明.md')
+    shutil.copy2(ROOT/'docs/COMPATIBILITY.md',output/'兼容性说明.md')
     for name in ('LICENSE','THIRD_PARTY_NOTICES.md'):
         shutil.copy2(ROOT/name,output/name)
     identity={'sourceCommit':subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip(),
-              'target':args.target,'preview':True,'signing':'unsigned' if args.target=='windows' else 'ad-hoc-not-notarized',
+              'target':args.target,'releaseChannel':'prerelease','signing':'unsigned' if args.target=='windows' else 'ad-hoc-not-notarized',
               'firmware':'0.7.103-s3-r2','nativeStartupSeconds':10,'physicalBoardTested':False,
               'artifact':artifact.name,'bytes':artifact.stat().st_size,
               'sha256':hashlib.sha256(artifact.read_bytes()).hexdigest()}

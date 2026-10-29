@@ -22,7 +22,11 @@
       "generated-runtime/ffmpeg.README": "tools/ffmpeg.README",
       "generated-runtime/ffmpeg.SOURCE.txt": "tools/ffmpeg.SOURCE.txt",
       "generated-runtime/ffmpeg-8.1.2.tar.xz": "tools/source/ffmpeg-8.1.2.tar.xz",
-      "generated-runtime/zlib.LICENSE": "tools/zlib.LICENSE"
+      "generated-runtime/zlib.LICENSE": "tools/zlib.LICENSE",
+      "firmware/esp32-s3/firmware.bin": "firmware/esp32-s3/firmware.bin",
+      "generated-runtime/s3": "tools/s3-runtime",
+      "../../LICENSE": "LICENSE",
+      "generated-runtime/node.LICENSE": "licenses/Node-LICENSE.txt"
     }
   }
 }

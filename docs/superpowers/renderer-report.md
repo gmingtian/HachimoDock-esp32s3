@@ -53,7 +53,7 @@ Test-first literal fixtures failed before the new scaler/SPS/converter existed a
 ASAN_OPTIONS=detect_leaks=0 \
   S3_TEST_FFMPEG=/tmp/hachimo-python-tools/imageio_ffmpeg/binaries/ffmpeg-linux-x86_64-v7.0.2 \
   PYTHONPATH=/tmp/hachimo-python-tools \
-  /home/gaomt/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 \
+  python3 \
   -m pytest -q firmware/tests/s3_renderer_test.py \
   firmware/tests/p4_h264_replay_test.py firmware/tests/p4_media_renderer_test.py \
   firmware/tests/p4_todo_renderer_test.py firmware/tests/p4_alpha_panel_test.py \

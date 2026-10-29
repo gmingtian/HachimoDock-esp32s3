@@ -5482,6 +5482,64 @@ pub fn prepared_p4_requires_system_cues(appearance_dir: &Path) -> Result<bool, S
 
 const S3_READY_DIR: &str = "s3-ready";
 
+pub(crate) fn resolve_s3_converter(
+    resource_dir: &Path,
+    development_source: Option<&Path>,
+    platform: &str,
+) -> Result<PathBuf, String> {
+    let name = if platform == "windows" { "prepare-s3-assets.exe" } else { "prepare-s3-assets" };
+    let executable = resource_dir.join("tools/s3-runtime").join(name);
+    if executable.is_file() {
+        return Ok(executable);
+    }
+    // Linux intentionally retains the host Python3 + libx264 development path.
+    // Native preview packages must be self-contained even if a script is present.
+    if platform == "linux" {
+        let script = resource_dir.join("tools/prepare_s3_assets.py");
+        if script.is_file() {
+            return Ok(script);
+        }
+        if let Some(source) = development_source.filter(|source| source.is_file()) {
+            return Ok(source.to_path_buf());
+        }
+    }
+    Err(format!("S3 standalone asset converter is missing: {}", executable.display()))
+}
+
+fn s3_converter_command(converter: &Path, platform: &str) -> Result<std::process::Command, String> {
+    if !converter.is_file() {
+        return Err(format!("S3 asset converter is missing: {}", converter.display()));
+    }
+    if converter.extension().is_some_and(|extension| extension == "py") {
+        if platform != "linux" {
+            return Err("S3 conversion requires the bundled standalone converter on Windows/macOS".into());
+        }
+        let mut command = crate::command_for_host("python3");
+        command.arg(converter);
+        Ok(command)
+    } else {
+        Ok(crate::command_for_host(converter))
+    }
+}
+
+fn s3_ffmpeg_path(
+    converter: &Path,
+    platform: &str,
+    system_ffmpeg: impl FnOnce() -> Result<String, String>,
+) -> Result<PathBuf, String> {
+    let name = if platform == "windows" { "s3-ffmpeg.exe" } else { "s3-ffmpeg" };
+    let helper = converter.with_file_name(name);
+    if helper.is_file() {
+        return Ok(helper);
+    }
+    if platform == "linux" && converter.extension().is_some_and(|extension| extension == "py") {
+        return system_ffmpeg().map(PathBuf::from).map_err(|error| {
+            format!("S3 conversion requires a system FFmpeg with libx264: {error}")
+        });
+    }
+    Err(format!("S3 conversion requires the separate bundled FFmpeg with libx264: {} is missing", helper.display()))
+}
+
 fn load_s3_appearance_pack(appearance_dir: &Path) -> Result<(Vec<AppearanceAssetEntry>, PreparedP4Appearance), String> {
     let root = appearance_dir.join(S3_READY_DIR);
     let manifest: serde_json::Value = serde_json::from_slice(&std::fs::read(root.join("p4/manifest.json")).map_err(|e| e.to_string())?).map_err(|e| e.to_string())?;
@@ -5492,12 +5550,21 @@ fn load_s3_appearance_pack(appearance_dir: &Path) -> Result<(Vec<AppearanceAsset
 pub fn prepare_s3_appearance(appearance_dir: &Path, app_data_dir: &Path, converter: &Path) -> Result<PreparedP4Appearance, String> {
     let _guard = p4_ready_prepare_lock().lock().map_err(|e| e.to_string())?;
     let stage = tempfile::Builder::new().prefix(".s3-").tempdir_in(appearance_dir).map_err(|e| e.to_string())?;
-    let ffmpeg = crate::codex_import::resolve_ffmpeg()?;
-    let result = crate::command_for_host("python3")
-        .arg(converter).arg("--source").arg(appearance_dir)
+    let platform = std::env::consts::OS;
+    let mut command = s3_converter_command(converter, platform)?;
+    let ffmpeg = s3_ffmpeg_path(converter, platform, crate::codex_import::resolve_ffmpeg)?;
+    let result = command
+        .arg("--source").arg(appearance_dir)
         .arg("--app-data-dir").arg(app_data_dir)
         .arg("--output").arg(stage.path())
-        .arg("--ffmpeg").arg(ffmpeg).output().map_err(|e| format!("S3 conversion requires Python3: {e}"))?;
+        .arg("--ffmpeg").arg(ffmpeg).output().map_err(|e| {
+            let runtime = if converter.extension().is_some_and(|extension| extension == "py") {
+                "Python3 S3 asset converter"
+            } else {
+                "bundled standalone S3 asset converter"
+            };
+            format!("Unable to launch {runtime} {}: {e}", converter.display())
+        })?;
     if !result.status.success() { return Err(format!("S3 asset conversion failed: {}", String::from_utf8_lossy(&result.stderr))); }
     let (_, summary) = load_p4_pack_from_profile_root(stage.path())?;
     let final_root = appearance_dir.join(S3_READY_DIR);
@@ -7307,6 +7374,82 @@ mod tests {
             assert_eq!(serial_probe_attempt_timeout(0, baud, Duration::from_secs(12)), Duration::from_secs(12));
         }
         assert_eq!(serial_probe_attempt_timeout(0, DEFAULT_USB_SERIAL_BAUD, short), short);
+    }
+
+    #[test]
+    fn s3_converter_prefers_native_resource_without_python() {
+        let tmp = tempfile::tempdir().unwrap();
+        std::fs::create_dir_all(tmp.path().join("tools/s3-runtime")).unwrap();
+        for (platform, name) in [("windows", "prepare-s3-assets.exe"), ("macos", "prepare-s3-assets"), ("linux", "prepare-s3-assets")] {
+            let executable = tmp.path().join("tools/s3-runtime").join(name);
+            std::fs::write(&executable, b"native converter").unwrap();
+            let script = tmp.path().join("tools/prepare_s3_assets.py");
+            std::fs::write(&script, b"script").unwrap();
+            let converter = resolve_s3_converter(tmp.path(), Some(&script), platform).unwrap();
+            assert_eq!(converter, executable);
+            let command = s3_converter_command(&converter, platform).unwrap();
+            assert_eq!(command.get_program(), executable.as_os_str());
+            assert_eq!(command.get_args().count(), 0);
+            std::fs::remove_file(executable).unwrap();
+        }
+    }
+
+    #[test]
+    fn s3_converter_python_fallback_is_linux_only_and_preserves_spaced_paths() {
+        let tmp = tempfile::tempdir().unwrap();
+        let script = tmp.path().join("source with spaces/prepare_s3_assets.py");
+        std::fs::create_dir(script.parent().unwrap()).unwrap();
+        std::fs::write(&script, b"script").unwrap();
+        assert_eq!(resolve_s3_converter(tmp.path(), Some(&script), "linux").unwrap(), script);
+        let command = s3_converter_command(&script, "linux").unwrap();
+        assert_eq!(command.get_program(), "python3");
+        assert_eq!(command.get_args().collect::<Vec<_>>(), vec![script.as_os_str()]);
+        for platform in ["windows", "macos"] {
+            assert!(resolve_s3_converter(tmp.path(), Some(&script), platform).unwrap_err().contains("prepare-s3-assets"));
+            assert!(s3_converter_command(&script, platform).unwrap_err().contains("standalone"));
+        }
+        std::fs::create_dir(tmp.path().join("tools")).unwrap();
+        let packaged = tmp.path().join("tools/prepare_s3_assets.py");
+        std::fs::write(&packaged, b"packaged script").unwrap();
+        assert_eq!(resolve_s3_converter(tmp.path(), Some(&script), "linux").unwrap(), packaged);
+        std::fs::remove_file(&packaged).unwrap();
+        assert!(resolve_s3_converter(tmp.path(), None, "linux").is_err());
+        std::fs::remove_file(&script).unwrap();
+        assert!(s3_converter_command(&script, "linux").unwrap_err().contains("missing"));
+    }
+
+    #[test]
+    fn s3_native_converter_requires_its_separate_ffmpeg_helper() {
+        let tmp = tempfile::tempdir().unwrap();
+        for (platform, converter_name, helper_name, main_name) in [
+            ("windows", "prepare-s3-assets.exe", "s3-ffmpeg.exe", "ffmpeg.exe"),
+            ("macos", "prepare-s3-assets", "s3-ffmpeg", "ffmpeg"),
+        ] {
+            let converter = tmp.path().join(converter_name);
+            std::fs::write(&converter, b"converter").unwrap();
+            std::fs::write(tmp.path().join(main_name), b"LGPL media runtime").unwrap();
+            let error = s3_ffmpeg_path(&converter, platform, || panic!("native S3 must not use the main media runtime")).unwrap_err();
+            assert!(error.contains(helper_name));
+            assert!(error.contains("libx264"));
+            let helper = tmp.path().join(helper_name);
+            std::fs::write(&helper, b"separate helper").unwrap();
+            assert_eq!(s3_ffmpeg_path(&converter, platform, || panic!("bundled helper must win")).unwrap(), helper);
+            std::fs::remove_file(helper).unwrap();
+        }
+    }
+
+    #[test]
+    fn s3_linux_script_uses_system_x264_only_when_helper_is_absent() {
+        let tmp = tempfile::tempdir().unwrap();
+        let script = tmp.path().join("prepare_s3_assets.py");
+        std::fs::write(&script, b"script").unwrap();
+        assert_eq!(s3_ffmpeg_path(&script, "linux", || Ok("/usr/bin/ffmpeg".into())).unwrap(), PathBuf::from("/usr/bin/ffmpeg"));
+        let error = s3_ffmpeg_path(&script, "linux", || Err("system encoder unavailable".into())).unwrap_err();
+        assert!(error.contains("libx264"));
+        assert!(error.contains("system encoder unavailable"));
+        let helper = tmp.path().join("s3-ffmpeg");
+        std::fs::write(&helper, b"helper").unwrap();
+        assert_eq!(s3_ffmpeg_path(&script, "linux", || panic!("adjacent helper must win")).unwrap(), helper);
     }
 
     #[test]

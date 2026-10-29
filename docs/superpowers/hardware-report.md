@@ -71,7 +71,7 @@ Focused checks (2026-10-29):
 
 ```sh
 PYTHONPATH=/tmp/hachimo-python-tools \
-  /home/gaomt/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 \
+  python3 \
   -m pytest -q firmware/tests/s3_hardware_test.py \
   firmware/tests/s3_action_list_test.py firmware/tests/s3_virtual_pointer_test.py \
   firmware/tests/p4_input_logic_test.py

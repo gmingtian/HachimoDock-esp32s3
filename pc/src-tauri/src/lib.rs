@@ -6878,14 +6878,12 @@ fn prepare_connected_appearance(app: &tauri::AppHandle, dir: &Path, data: &Path)
 }
 
 fn s3_converter_path(app: &tauri::AppHandle) -> Result<PathBuf, String> {
-    let resource = app.path().resource_dir().map_err(|e| e.to_string())?.join("tools/prepare_s3_assets.py");
-    if resource.is_file() { return Ok(resource); }
+    let resource_dir = app.path().resource_dir().map_err(|e| e.to_string())?;
     #[cfg(debug_assertions)]
-    {
-        let source = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../firmware/tools/prepare_s3_assets.py");
-        if source.is_file() { return Ok(source); }
-    }
-    Err("S3 asset converter is missing from desktop resources".into())
+    let source = Some(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../firmware/tools/prepare_s3_assets.py"));
+    #[cfg(not(debug_assertions))]
+    let source: Option<PathBuf> = None;
+    usb_serial::resolve_s3_converter(&resource_dir, source.as_deref(), std::env::consts::OS)
 }
 
 fn prepare_p4_appearance_by_id(

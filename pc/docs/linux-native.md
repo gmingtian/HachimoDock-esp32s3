@@ -27,7 +27,7 @@ npm run build:linux
 ./dist-linux/launch.sh
 ```
 
-`build:linux` uses Tauri, then stages the ELF under `dist-linux/usr/bin/pet-manager-tauri` and its complete configured resources under `dist-linux/usr/lib/pet-manager-tauri`. The directory can be moved as a unit. It requires the host GTK/WebKitGTK, ALSA, udev and OpenSSL runtime libraries, plus FFmpeg and Python3; this is not a self-contained AppImage. No persistent service or device flashing is installed by these commands. `CARGO_TARGET_DIR` and `PET_MANAGER_LINUX_BINARY` are supported by `npm run stage:linux` for an existing native build.
+`build:linux` uses Tauri, then stages the ELF under `dist-linux/usr/bin/pet-manager-tauri` and its complete configured resources under `dist-linux/usr/lib/HachimiDock`. The resource directory follows Tauri's configured `productName`, which overrides the Cargo package name. The directory can be moved as a unit. It requires the host GTK/WebKitGTK, ALSA, udev and OpenSSL runtime libraries, plus FFmpeg and Python3; this is not a self-contained AppImage. No persistent service or device flashing is installed by these commands. `CARGO_TARGET_DIR` and `PET_MANAGER_LINUX_BINARY` are supported by `npm run stage:linux` for an existing native build.
 
 The preparation step copies a native Node executable into application resources and installs the bridge's locked production dependencies. `PET_MANAGER_NODE_BIN` can override the Node executable. Serial access needs the normal permissions on `/dev/ttyACM*` or `/dev/ttyUSB*`; use your distribution's serial-device group if access is denied. No automatic system group/udev changes are made.
 

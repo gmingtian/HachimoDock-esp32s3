@@ -1,12 +1,14 @@
 /** Stage an unpackaged native ELF with every resource Tauri resolves at runtime. */
 import {chmodSync,copyFileSync,cpSync,existsSync,mkdirSync,readFileSync,writeFileSync} from 'node:fs';
-import {dirname,join,resolve,isAbsolute} from 'node:path';
+import {basename,dirname,join,resolve,isAbsolute} from 'node:path';
 import {fileURLToPath} from 'node:url';
 
-export function stageLinuxNative({tauriRoot,resources,outputRoot,binaryPath}) {
+export function stageLinuxNative({tauriRoot,resources,outputRoot,binaryPath,packageName='pet-manager-tauri'}) {
  const prefix=readFileSync(binaryPath).subarray(0,4);
  if(!prefix.equals(Buffer.from([127,69,76,70]))) throw new Error('Native Linux ELF executable is required');
- const libraryRoot=join(outputRoot,'usr/lib/pet-manager-tauri');
+ // Tauri resolves ../lib/<PackageInfo.name>; productName overrides Cargo's name.
+ if(!packageName||basename(packageName)!==packageName||packageName.includes('\\')||packageName==='.'||packageName==='..')throw new Error('Invalid Tauri package name');
+ const libraryRoot=join(outputRoot,'usr/lib',packageName);
  const binaryRoot=join(outputRoot,'usr/bin');
  for(const [source,destination] of Object.entries(resources)){
   const from=resolve(tauriRoot,source);
@@ -33,6 +35,6 @@ if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)){
  const resources={...config.bundle.resources,...linux.bundle.resources};
  const targetRoot=process.env.CARGO_TARGET_DIR?resolve(process.env.CARGO_TARGET_DIR):join(tauriRoot,'target');
  const binaryPath=process.env.PET_MANAGER_LINUX_BINARY||join(targetRoot,'release/pet-manager-tauri');
- const output=stageLinuxNative({tauriRoot,resources,binaryPath,outputRoot:join(pcRoot,'dist-linux')});
+ const output=stageLinuxNative({tauriRoot,resources,binaryPath,packageName:config.productName,outputRoot:join(pcRoot,'dist-linux')});
  console.log(`Native Linux app staged: ${output}/launch.sh (requires system WebKitGTK, GTK3, ALSA, OpenSSL, FFmpeg and Python3)`);
 }

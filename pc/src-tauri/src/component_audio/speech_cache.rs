@@ -91,6 +91,7 @@ pub(super) fn prepare(id:&str,board:&str,cfg:crate::doubao_tts::DoubaoTtsConfig,
         assert_eq!(std::env::var("PET_NEWS_CACHE_TEST").as_deref(),Ok("1"));
         let settings=PathBuf::from(std::env::var("P4_SERVICE_CONFIG").unwrap());
         crate::voice_chat_settings::configure_storage_dir(settings.clone()).unwrap();
+        #[cfg(any(target_os = "macos", target_os = "linux"))]
         crate::volcengine_asr::configure_storage_dir(settings.clone()).unwrap();
         crate::llm_network::configure_storage_dir(settings.clone()).unwrap();
         let output=PathBuf::from(std::env::var("PET_NEWS_CACHE_DIR").unwrap());

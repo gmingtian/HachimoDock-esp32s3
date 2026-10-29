@@ -9912,6 +9912,7 @@ mod tests {
         let package=PathBuf::from(std::env::var("PET_KNOWLEDGE_PACKAGE").unwrap());
         let entry=crate::component_library::inspect(&package).unwrap();assert!(entry.valid);assert_eq!(entry.id,"hachimi-learn");
         let config=PathBuf::from(std::env::var("P4_SERVICE_CONFIG").unwrap());
+        #[cfg(any(target_os = "macos", target_os = "linux"))]
         crate::volcengine_asr::configure_storage_dir(config.clone()).unwrap();
         crate::voice_chat_settings::configure_storage_dir(config).unwrap();
         let volume=(crate::voice_chat_settings::realtime_volume().unwrap().clamp(0.0,0.35)*100.0)as u32;

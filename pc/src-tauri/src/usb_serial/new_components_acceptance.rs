@@ -9,6 +9,7 @@ fn p4_news_reading_audio_hardware(){
     let output=PathBuf::from(std::env::var("P4_NEW_REPORT_DIR").unwrap());
     let config=PathBuf::from(std::env::var("P4_SERVICE_CONFIG").unwrap());
     crate::voice_chat_settings::configure_storage_dir(config.clone()).unwrap();
+    #[cfg(any(target_os = "macos", target_os = "linux"))]
     crate::volcengine_asr::configure_storage_dir(config.clone()).unwrap(); // settings only, no capture
     crate::llm_network::configure_storage_dir(config.clone()).unwrap();
     let d:Value=serde_json::from_slice(&std::fs::read(package.join("pc/application.json")).unwrap()).unwrap();
@@ -410,6 +411,7 @@ fn p4_book_narration_hardware() {
     let entry=crate::component_library::inspect(&package).unwrap();assert!(entry.valid);assert_eq!(entry.id,"book-pocket");
     let config=PathBuf::from(std::env::var("P4_SERVICE_CONFIG").unwrap());
     crate::voice_chat_settings::configure_storage_dir(config.clone()).unwrap();
+    #[cfg(any(target_os = "macos", target_os = "linux"))]
     crate::volcengine_asr::configure_storage_dir(config.clone()).unwrap(); // config only; no ASR opened
     let volume=(crate::voice_chat_settings::realtime_volume().unwrap().clamp(0.0,0.35)*100.0)as u32;
     assert!(volume>0,"global volume muted; do not override it for this test");

@@ -1,5 +1,13 @@
 # ESP-P4 USB Protocol
 
+## ESP32-S3 r4 boot and USB recovery
+
+S3 `0.7.103-s3-r4` preserves the r3 wire contract, partition layout and three-key
+hardware mapping. JSON trees use PSRAM from app entry; component catalog reads
+cooperate with the idle task. Serial/JTAG transmission splits long JSON lines
+into bounded writes under the existing frame mutex. Framing/newlines and raw
+block semantics do not change. See [boot repair](../docs/ESP32-S3-BOOT-FIX.md).
+
 ## ESP32-S3 r3 transport extension
 
 S3 firmware `0.7.103-s3-r3` adds `pet-wifi-tls-v1` at TCP48973 alongside existing

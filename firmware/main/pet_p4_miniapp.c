@@ -2627,6 +2627,9 @@ bool pet_p4_miniapp_sync_stats(const pet_p4_stats_model_t *stats) {
 }
 
 static bool read_file(const char *path, char *buffer, size_t capacity) {
+  /* A populated SPIFFS catalog performs many synchronous name lookups.
+   * Block for one tick between files so IDLE0 can service the watchdog. */
+  vTaskDelay(1);
   FILE *file = fopen(path, "rb");
   size_t len;
   if (!file) return false;
@@ -2648,6 +2651,7 @@ static bool read_binary_file(
   size_t length;
   bool overflow;
   if (!path || !buffer || capacity == 0 || !out_length) return false;
+  vTaskDelay(1);
   file = fopen(path, "rb");
   if (!file) return false;
   length = fread(buffer, 1, capacity, file);

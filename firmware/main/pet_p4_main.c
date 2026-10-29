@@ -49,6 +49,7 @@
 #include "pet_p4_usb_native.h"
 #include "pet_p4_view.h"
 #if CONFIG_IDF_TARGET_ESP32S3
+#include "pet_s3_json_memory.h"
 #include "pet_s3_wifi.h"
 #include "pet_s3_transport.h"
 static uintptr_t g_s3_owner, g_s3_uart_token, g_s3_usb_token;
@@ -176,7 +177,11 @@ static bool rx_tasks_healthy(void) {
 static void usb_queue_all(const char *data, size_t len) {
   size_t written = 0;
   while (written < len) {
-    int n = usb_serial_jtag_write_bytes(data + written, len - written, pdMS_TO_TICKS(20));
+    /* The driver enqueues each call atomically into its 4 KiB ring. A
+     * capabilities hello exceeds that size and would otherwise vanish. */
+    size_t chunk = len - written;
+    if (chunk > 512) chunk = 512;
+    int n = usb_serial_jtag_write_bytes(data + written, chunk, pdMS_TO_TICKS(20));
     if (n <= 0) break;
     written += (size_t) n;
   }
@@ -693,6 +698,9 @@ static void uart_rx_task(void *arg) {
 }
 
 void app_main(void) {
+#if CONFIG_IDF_TARGET_ESP32S3
+  pet_s3_json_memory_init();
+#endif
   unsigned long long last_logged_update = 0;
   unsigned long long last_hello_ms = 0;
   unsigned long long last_render_ms = 0;
@@ -756,10 +764,14 @@ void app_main(void) {
       NULL
     ) == pdPASS ? ESP_OK : ESP_ERR_NO_MEM
   );
+  ESP_LOGI(TAG, "Restoring component catalog");
   esp_err_t miniapp_err = pet_p4_miniapp_init();
   if (miniapp_err != ESP_OK && miniapp_err != ESP_ERR_INVALID_STATE) {
     ESP_LOGW(TAG, "mini-app init failed: %s", esp_err_to_name(miniapp_err));
   }
+  ESP_LOGI(TAG, "Synchronizing built-ins; internal free=%u largest=%u",
+    (unsigned)heap_caps_get_free_size(MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT),
+    (unsigned)heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT));
   esp_err_t builtin_sync_err = pet_p4_miniapp_sync_builtins();
   if (builtin_sync_err != ESP_OK) {
     ESP_LOGW(TAG, "built-in component sync failed: %s", esp_err_to_name(builtin_sync_err));

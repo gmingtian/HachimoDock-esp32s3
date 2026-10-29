@@ -25,8 +25,8 @@ def package(factory, app, output, upgrade_output=None):
         raise ValueError('Unexpected application project')
     version = application[48:80].split(b'\0', 1)[0].decode('ascii')
     text = f'''HachimoDock-esp32s3\n固件版本：{version}\n\n适用硬件\nESP32-S3 N16R8（16MiB Flash / 8MiB PSRAM）、240×240 ST7789、\n原 I2S 麦克风、MAX98357A 与 GPIO39 / 38 / 0 三按键。\n\n首次刷机\n1. 保存原小智完整固件，用于恢复。\n2. 将 hachimodock-s3-factory.bin 从地址 0x0 写入，Flash 容量选择 16MB。\n   完整刷机会替换原固件、资源和配置。上电或复位时松开 GPIO0。\n3. 安装对应系统的电脑客户端，使用支持数据传输的 USB 线连接设备。\n4. 在客户端配置 Agent、语音和其他所需服务。\n\n三键操作\nGPIO39：短按上一项，长按返回。\nGPIO38：短按下一项，长按组件菜单。\nGPIO0：短按确认，按住录音、松开结束。\n\n应用升级\n应用分区固件在下载页面单独提供，交由客户端的 S3 固件升级入口使用；\n不能将应用分区镜像从 0x0 写入。客户端内也包含配套 S3 应用固件。\n\n下载、接线和兼容性\nhttps://github.com/gmingtian/HachimoDock-esp32s3/releases\nhttps://github.com/gmingtian/HachimoDock-esp32s3/blob/main/docs/INSTALLATION.md\nhttps://github.com/gmingtian/HachimoDock-esp32s3/blob/main/docs/COMPATIBILITY.md\n\nSHA256SUMS 用于核对文件摘要；许可证与原作者声明保存在 licenses 目录。\n原项目：YizhengWw/HachimoDock，原作者 Yizheng Wang。\n'''
-    if version.endswith('-r3'):
-        text += "\nWi-Fi（r3）\n先通过 USB 连接客户端 0.1.168 或更新版本，在设备连接中配置 2.4GHz Wi-Fi，\n然后绑定此电脑，选择使用 Wi-Fi。两端需处于可互访局域网。\n设备记住显式选择；已有连接不被抢占，无线断线清理后尝试同板 USB。\n配网与清除操作使用 USB；首次完整刷机和 ROM 恢复仍使用 USB。\nS3 预置 25 个三键兼容组件，游戏保留贪吃蛇、双键接球和像素飞鸟。\nhttps://github.com/gmingtian/HachimoDock-esp32s3/blob/main/docs/WIFI.md\n"
+    if version.endswith(('-r3', '-r4')):
+        text += "\nWi-Fi（r3 / r4）\n先通过 USB 连接客户端 0.1.168 或更新版本，在设备连接中配置 2.4GHz Wi-Fi，\n然后绑定此电脑，选择使用 Wi-Fi。两端需处于可互访局域网。\n设备记住显式选择；已有连接不被抢占，无线断线清理后尝试同板 USB。\n配网与清除操作使用 USB；首次完整刷机和 ROM 恢复仍使用 USB。\nS3 预置 25 个三键兼容组件，游戏保留贪吃蛇、双键接球和像素飞鸟。\nhttps://github.com/gmingtian/HachimoDock-esp32s3/blob/main/docs/WIFI.md\n"
     files = {'hachimodock-s3-factory.bin': full,
              '使用说明.txt': text.encode('utf-8-sig'),
              'licenses/LICENSE': (ROOT / 'LICENSE').read_bytes(),

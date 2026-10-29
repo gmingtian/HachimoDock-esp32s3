@@ -1,5 +1,8 @@
 # HachimoDock-esp32s3
 
+ESP32-S3 r4 boot repair: fixes the r3 component-startup watchdog, libc mutex
+allocation abort, and oversized USB hello loss. [Diagnosis and verified hardware](docs/ESP32-S3-BOOT-FIX.md).
+
 基于 [YizhengWw/HachimoDock](https://github.com/YizhengWw/HachimoDock) 的 **ESP32-S3 三键硬件适配版**，让现有小智设备显示桌宠动画、Agent 工作状态、中文会话气泡，并运行共享组件。
 
 > **来源与署名**：原项目 HachimoDock 由 **Yizheng Wang（[@YizhengWw](https://github.com/YizhengWw)）** 创作。本仓库由 [gmingtian](https://github.com/gmingtian) 维护 S3、三键和 Linux 适配，属于修改版本，并非原作者官方发布或背书。原项目的版权、[许可证](LICENSE)和[第三方声明](THIRD_PARTY_NOTICES.md)均予保留；使用及再分发须遵守原许可，项目内修改不改变原作品的权属。

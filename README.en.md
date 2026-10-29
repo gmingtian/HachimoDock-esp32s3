@@ -15,6 +15,19 @@ fall back to the same board over USB after transaction cleanup. Initial flashing
 and ROM recovery remain USB operations. See [Wi-Fi setup](docs/WIFI.md).
 Hardware radio/latency/stability checks are still pending; previous releases have been withdrawn.
 
+## Device photos
+
+<table>
+  <tr>
+    <td align="center"><img src="docs/images/s3-device-photo.jpg" width="480" alt="ESP32-S3 device with display and speaker, showing the idle terrier" /></td>
+    <td align="center"><img src="docs/images/s3-session-photo.jpg" width="360" alt="Physical 240×240 display showing a completed task and Chinese conversation bubble" /></td>
+  </tr>
+  <tr>
+    <td align="center">ESP32-S3 device, display and speaker</td>
+    <td align="center">Completed task and Chinese conversation bubble</td>
+  </tr>
+</table>
+
 ## Adaptation scope
 
 - ESP32-S3 N16R8: 16MiB Flash, 8MiB PSRAM, 240×240 SPI display and buttons on GPIO39 / 38 / 0.

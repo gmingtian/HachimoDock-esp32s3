@@ -49,9 +49,20 @@ GPIO0 在上电或复位时须松开。完整接线、分区和构建步骤见 [
 
 客户端安装、设备连接和服务配置见 [安装与使用](docs/INSTALLATION.md)。平台支持情况、S3 与 P4 的能力差异及已知限制见 [兼容性说明](docs/COMPATIBILITY.md)。
 
-![S3 中文会话界面模拟预览](docs/images/s3-session-preview.png)
+## 实机照片
 
-上图为模拟预览，不能代表实机颜色或帧率。[查看中文菜单预览](docs/images/s3-menu-preview.png)。
+<table>
+  <tr>
+    <td align="center"><img src="docs/images/s3-device-photo.jpg" width="480" alt="ESP32-S3 桌宠设备全景，屏幕显示休息中的西高地形象" /></td>
+    <td align="center"><img src="docs/images/s3-session-photo.jpg" width="360" alt="240×240 实机屏幕显示已完成状态及中文会话气泡" /></td>
+  </tr>
+  <tr>
+    <td align="center">设备全景：ESP32-S3、屏幕与扬声器</td>
+    <td align="center">任务完成状态与中文会话气泡</td>
+  </tr>
+</table>
+
+[中文会话界面模拟预览](docs/images/s3-session-preview.png) · [中文菜单模拟预览](docs/images/s3-menu-preview.png)
 
 ### USB 与 Wi-Fi 双通道
 

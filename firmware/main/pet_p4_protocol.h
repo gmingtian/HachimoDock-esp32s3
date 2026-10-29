@@ -190,3 +190,5 @@ bool pet_p4_handle_line(
 #ifdef __cplusplus
 }
 #endif
+
+void pet_p4_protocol_disconnect(pet_p4_runtime_state_t *state);

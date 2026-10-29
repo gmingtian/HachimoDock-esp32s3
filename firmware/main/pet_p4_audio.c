@@ -60,6 +60,12 @@ static QueueHandle_t g_playback_queue;
 static SemaphoreHandle_t g_stream_lock;
 static pet_p4_send_line_fn g_send_line;
 static void *g_send_ctx;
+#if CONFIG_IDF_TARGET_ESP32S3
+/* Capture task snapshots its origin for the whole session. Late PCM/end frames
+ * retain the old generation even if a replacement client installs a new sink. */
+static pet_p4_send_line_fn g_capture_requested_send, g_capture_session_send;
+static void *g_capture_requested_ctx, *g_capture_session_ctx;
+#endif
 static portMUX_TYPE g_send_lock = portMUX_INITIALIZER_UNLOCKED;
 
 void pet_p4_audio_set_transport(pet_p4_send_line_fn send_line, void *ctx) {
@@ -212,6 +218,9 @@ static void send_topic(const char *topic, cJSON *payload) {
   portENTER_CRITICAL(&g_send_lock);
   pet_p4_send_line_fn send_line = g_send_line;
   void *ctx = g_send_ctx;
+#if CONFIG_IDF_TARGET_ESP32S3
+  if(xTaskGetCurrentTaskHandle()==g_audio_task){send_line=g_capture_session_send;ctx=g_capture_session_ctx;}
+#endif
   portEXIT_CRITICAL(&g_send_lock);
   if (line && send_line) send_line(line, ctx);
   cJSON_free(line);
@@ -704,6 +713,11 @@ static void audio_task(void *arg) {
     const char *reason = "released";
     snprintf(session_id, sizeof(session_id), "p4-audio-%llu-%u",
              (unsigned long long) started_ms, (unsigned int) session_sequence);
+#if CONFIG_IDF_TARGET_ESP32S3
+    portENTER_CRITICAL(&g_send_lock);
+    g_capture_session_send=g_capture_requested_send;g_capture_session_ctx=g_capture_requested_ctx;
+    portEXIT_CRITICAL(&g_send_lock);
+#endif
     atomic_store_explicit(&g_capture_active, true, memory_order_release);
     atomic_store(&g_capture_tx_last_us, 0);
     atomic_store(&g_capture_tx_max_us, 0);
@@ -999,6 +1013,11 @@ esp_err_t pet_p4_audio_capture_start_owned(bool session_queue_empty,const char *
   );
   portENTER_CRITICAL(&g_conversation_lock);snprintf(g_capture_owner,sizeof(g_capture_owner),"%s",owner);portEXIT_CRITICAL(&g_conversation_lock);
   if(g_stream_lock)xSemaphoreGiveRecursive(g_stream_lock);
+#if CONFIG_IDF_TARGET_ESP32S3
+  portENTER_CRITICAL(&g_send_lock);
+  g_capture_requested_send=g_send_line;g_capture_requested_ctx=g_send_ctx;
+  portEXIT_CRITICAL(&g_send_lock);
+#endif
   xTaskNotifyGive(g_audio_task);
   return ESP_OK;
 }

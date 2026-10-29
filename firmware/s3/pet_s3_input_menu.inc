@@ -1,4 +1,9 @@
 #include "pet_s3_menu.h"
+#include "pet_s3_wifi.h"
+#include "pet_p4_ota.h"
+static bool g_s3_network_menu;
+static unsigned g_s3_network_confirm;
+static char g_s3_network_notice[64];
 #include "pet_p4_touch_core.h"
 
 static bool g_s3_menu_visible, g_s3_pointer_visible, g_s3_pointer_down;
@@ -11,7 +16,7 @@ static const char *const g_s3_menu_commands[]={
   "关闭菜单","组件中心","返回桌宠","语音聊天","释放蓄力",
   "开关光标","切换横纵方向","光标按下或松开","光标点击",
   "切换步长4/16","向左划动","向右划动","向上划动","向下划动",
-  "确认操作","取消操作"
+  "确认操作","取消操作","Wi-Fi 设置"
 };
 #define PET_S3_MENU_COMMANDS (sizeof(g_s3_menu_commands)/sizeof(g_s3_menu_commands[0]))
 static void pet_s3_pointer_emit(pet_p4_pointer_kind_t kind,uint64_t now_ms) {
@@ -38,6 +43,7 @@ static void pet_s3_pointer_tap(uint64_t now_ms) {
   g_s3_pointer_down=false;
 }
 static unsigned pet_s3_menu_count(void) {
+  if(g_s3_network_menu)return g_s3_network_confirm?2:5;
   return (unsigned)PET_S3_MENU_COMMANDS+(unsigned)pet_p4_miniapp_action_count();
 }
 /* Labels are presentation text; execution still uses the original action ID.
@@ -64,6 +70,12 @@ bool pet_s3_menu_snapshot(pet_s3_menu_view_t *out) {
   *out=(pet_s3_menu_view_t){.visible=g_s3_menu_visible,.selected=g_s3_menu_selected,
     .count=pet_s3_menu_count(),.pointer_visible=g_s3_pointer_visible,
     .pointer_down=g_s3_pointer_down,.pointer_x=g_s3_pointer_x,.pointer_y=g_s3_pointer_y};
+  if(g_s3_network_menu){
+    snprintf(out->title,sizeof(out->title),"%s",g_s3_network_confirm==3?"确认清除配网？":g_s3_network_confirm==2?"确认撤销所有绑定？":"Wi-Fi 设置");
+    if(g_s3_network_confirm){snprintf(out->rows[0],64,"取消");snprintf(out->rows[1],64,"确认");}
+    else {pet_s3_wifi_menu_status(out->rows[0],64);snprintf(out->rows[1],64,"开关 Wi-Fi");snprintf(out->rows[2],64,"撤销所有无线绑定");snprintf(out->rows[3],64,"清除配网和绑定");snprintf(out->rows[4],64,"%s",g_s3_network_notice[0]?g_s3_network_notice:"返回");}
+    return out->visible;
+  }
   snprintf(out->title,sizeof(out->title),"操作菜单：%s光标",g_s3_pointer_vertical?"纵向":"横向");
   out->first=g_s3_menu_selected/PET_S3_MENU_VISIBLE_ROWS*PET_S3_MENU_VISIBLE_ROWS;
   for(unsigned row=0;row<PET_S3_MENU_VISIBLE_ROWS;row++) {
@@ -93,6 +105,21 @@ static void pet_s3_menu_execute(pet_p4_runtime_state_t *state,pet_p4_send_line_f
     const pet_p4_input_event_t *event) {
   unsigned selected=g_s3_menu_selected;
   uint64_t now_ms=event->ts_ms;
+  if(g_s3_network_menu){
+    if(g_s3_network_confirm){
+      if(selected==1){
+        bool busy=state->asset_transfer_active||pet_p4_ota_active()||pet_p4_miniapp_transfer_active()||pet_p4_audio_active()||pet_p4_audio_playback_active()||pet_p4_audio_conversation_active()||pet_p4_audio_music_active();
+        if(busy)snprintf(g_s3_network_notice,sizeof(g_s3_network_notice),"请先停止录音或传输");
+        else {bool ok=pet_s3_wifi_menu_action(g_s3_network_confirm);snprintf(g_s3_network_notice,sizeof(g_s3_network_notice),"%s",ok?"":"保存失败，请重试");}
+      }
+      g_s3_network_confirm=0;g_s3_menu_selected=0;
+    }else if(selected==1){
+      bool busy=state->asset_transfer_active||pet_p4_ota_active()||pet_p4_miniapp_transfer_active()||pet_p4_audio_active()||pet_p4_audio_playback_active()||pet_p4_audio_conversation_active()||pet_p4_audio_music_active();
+      if(!busy){bool ok=pet_s3_wifi_menu_action(1);snprintf(g_s3_network_notice,sizeof(g_s3_network_notice),"%s",ok?"":"保存失败，请重试");}else snprintf(g_s3_network_notice,sizeof(g_s3_network_notice),"请先停止录音或传输");
+    }else if(selected==2||selected==3){g_s3_network_confirm=selected;g_s3_menu_selected=0;}
+    else if(selected==4){g_s3_network_menu=false;g_s3_menu_selected=0;}
+    return;
+  }
   g_s3_menu_visible=false;
   if(selected>=PET_S3_MENU_COMMANDS) {
     char action[PET_P4_MINIAPP_ACTION_MAX]={0};
@@ -139,6 +166,7 @@ static void pet_s3_menu_execute(pet_p4_runtime_state_t *state,pet_p4_send_line_f
       pet_s3_pointer_emit(PET_P4_POINTER_UP,now_ms);g_s3_pointer_down=false;break;
     case 14:handled=pet_p4_miniapp_dispatch_action("input.confirm",now_ms);break;
     case 15:handled=pet_p4_miniapp_dispatch_action("input.cancel",now_ms);break;
+    case 16:g_s3_network_menu=true;g_s3_network_confirm=0;g_s3_menu_selected=0;g_s3_menu_visible=true;break;
     default:handled=false;break;
   }
   pet_s3_send_local(state,send_line,ctx,event,action,"",handled);
@@ -160,7 +188,7 @@ static void pet_s3_process_key(pet_p4_runtime_state_t *state,pet_p4_send_line_fn
     return;
   }
   if(action==PET_S3_ACTION_BACK) {
-    if(g_s3_menu_visible){g_s3_menu_visible=false;return;}
+    if(g_s3_menu_visible){g_s3_menu_visible=false;g_s3_network_menu=false;g_s3_network_confirm=0;return;}
     pet_s3_pointer_cancel(event->ts_ms);g_s3_pointer_visible=false;
     if(pet_p4_conversation_active(state)) {
       pet_s3_send_local(state,send_line,ctx,event,"realtime_chat","",false);return;
@@ -173,7 +201,7 @@ static void pet_s3_process_key(pet_p4_runtime_state_t *state,pet_p4_send_line_fn
   }
   if(action==PET_S3_ACTION_MENU) {
     if(app) {
-      g_s3_menu_visible=!g_s3_menu_visible;g_s3_menu_selected=0;
+      g_s3_menu_visible=!g_s3_menu_visible;g_s3_menu_selected=0;g_s3_network_menu=false;g_s3_network_confirm=0;
       g_s3_menu_context=pet_p4_miniapp_input_context();
     } else {
       pet_p4_miniapp_catalog_focus_active();

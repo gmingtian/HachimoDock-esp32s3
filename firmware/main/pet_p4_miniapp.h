@@ -153,3 +153,6 @@ bool pet_p4_miniapp_remove_preserving_save(const char *widget_id, char *error, s
 #ifdef __cplusplus
 }
 #endif
+
+bool pet_p4_miniapp_transfer_active(void);
+void pet_p4_miniapp_transfer_abort(void);

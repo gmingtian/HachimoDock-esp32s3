@@ -5572,3 +5572,8 @@ static bool remove_component(const char *widget_id, char *error, size_t error_si
   );
   return true;
 }
+
+bool pet_p4_miniapp_transfer_active(void) {return g_staging.active;}
+void pet_p4_miniapp_transfer_abort(void) {
+  memset(&g_staging,0,sizeof(g_staging));g_image_used=0;g_image_next=0;g_image_id[0]=0;
+}

@@ -48,6 +48,12 @@
 #include "pet_p4_conversation.h"
 #include "pet_p4_usb_native.h"
 #include "pet_p4_view.h"
+#if CONFIG_IDF_TARGET_ESP32S3
+#include "pet_s3_wifi.h"
+#include "pet_s3_transport.h"
+static uintptr_t g_s3_owner, g_s3_uart_token, g_s3_usb_token;
+static bool s3_enqueue_bytes(uintptr_t,const uint8_t *,size_t);
+#endif
 
 static const char *TAG = "pet-p4";
 
@@ -103,6 +109,10 @@ typedef struct {
   char *line;
   pet_p4_send_line_fn send_line;
   void *reply_ctx;
+#if CONFIG_IDF_TARGET_ESP32S3
+  size_t bytes;
+  bool raw_input;
+#endif
 } pet_p4_protocol_request_t;
 
 static const pet_p4_transport_route_t g_uart_route = PET_P4_TRANSPORT_UART;
@@ -222,11 +232,30 @@ static int transport_log_vprintf(const char *format, va_list args) {
 }
 
 static void transport_send_line_impl(const char *line, void *ctx, bool drain) {
+#if CONFIG_IDF_TARGET_ESP32S3
+  uintptr_t token=ctx?(uintptr_t)ctx:__atomic_load_n(&g_s3_owner,__ATOMIC_ACQUIRE);
+  if(!line)return;
+  if(!token){
+    if(strncmp(line,"{\"topic\":\"device/hello\"",23)&&strncmp(line,"{\"topic\":\"hello\"",16))return;
+    transport_send_line_impl(line,(void*)__atomic_load_n(&g_s3_uart_token,__ATOMIC_ACQUIRE),drain);
+    transport_send_line_impl(line,(void*)__atomic_load_n(&g_s3_usb_token,__ATOMIC_ACQUIRE),drain);return;
+  }
+  unsigned route=token&3;
+  if(route==3){(void)pet_s3_wifi_send(token,line);return;}
+  if(token!=__atomic_load_n(route==1?&g_s3_uart_token:&g_s3_usb_token,__ATOMIC_ACQUIRE))return;
+#else
   pet_p4_transport_route_t route = ctx
     ? *((const pet_p4_transport_route_t *) ctx)
     : PET_P4_TRANSPORT_BROADCAST;
+#endif
   if (!line) return;
   if (g_transport_mutex) xSemaphoreTake(g_transport_mutex, portMAX_DELAY);
+#if CONFIG_IDF_TARGET_ESP32S3
+  if(token!=__atomic_load_n(route==1?&g_s3_uart_token:&g_s3_usb_token,__ATOMIC_ACQUIRE)){
+    if(g_transport_mutex)xSemaphoreGive(g_transport_mutex);
+    return;
+  }
+#endif
   if (route == PET_P4_TRANSPORT_BROADCAST || route == PET_P4_TRANSPORT_UART) {
     if (drain) {
       uart_write_all(line, strlen(line));
@@ -292,6 +321,10 @@ static void send_screenshot_chunk(
     id,
     index
   );
+#if CONFIG_IDF_TARGET_ESP32S3
+  size_t size=strlen(header)+b64_len+4;char *line=malloc(size);
+  if(line){snprintf(line,size,"%s%s\"}}",header,b64);transport_send_line(line,reply_ctx);free(line);}
+#else
   pet_p4_transport_route_t route = reply_ctx
     ? *((const pet_p4_transport_route_t *) reply_ctx)
     : PET_P4_TRANSPORT_BROADCAST;
@@ -308,6 +341,7 @@ static void send_screenshot_chunk(
     usb_write_all("\"}}\n", 4);
   }
   if (g_transport_mutex) xSemaphoreGive(g_transport_mutex);
+#endif
 }
 
 static bool maybe_handle_debug_line(const char *line, void *reply_ctx) {
@@ -438,11 +472,34 @@ static bool enqueue_protocol_line(
   return false;
 }
 
+#if CONFIG_IDF_TARGET_ESP32S3
+static void s3_invalidate_route(uintptr_t token) {
+  /* Finish an already-writing USB frame before changing its generation. */
+  xSemaphoreTake(g_transport_mutex,portMAX_DELAY);
+  __atomic_store_n(&g_s3_owner,0,__ATOMIC_RELEASE);
+  unsigned route=token&3;
+  if(route!=3)__atomic_store_n(route==1?&g_s3_uart_token:&g_s3_usb_token,pet_s3_connection_token(route),__ATOMIC_RELEASE);
+  xSemaphoreGive(g_transport_mutex);
+}
+#include "../s3/pet_s3_protocol.inc"
+#endif
+
 static void protocol_worker_task(void *arg) {
   (void) arg;
   pet_p4_protocol_request_t request;
   while (true) {
+#if CONFIG_IDF_TARGET_ESP32S3
+    bool got=xQueueReceive(g_protocol_queue,&request,pdMS_TO_TICKS(100))==pdTRUE;
+    xSemaphoreTake(g_state_mutex,portMAX_DELAY);
+    s3_expire_owner();
+    if(got&&request.raw_input)s3_process_bytes(&request);
+    xSemaphoreGive(g_state_mutex);
+    if(!got)continue;
+    if(request.raw_input){free(request.line);continue;}
+#endif
+#if !CONFIG_IDF_TARGET_ESP32S3
     if (xQueueReceive(g_protocol_queue, &request, portMAX_DELAY) != pdTRUE) continue;
+#endif
     bool handled_debug = request.send_line == transport_send_line
       && maybe_handle_debug_line(request.line, request.reply_ctx);
     if (!handled_debug) {
@@ -454,6 +511,7 @@ static void protocol_worker_task(void *arg) {
   }
 }
 
+#if !CONFIG_IDF_TARGET_ESP32S3
 static bool consume_byte(
   char ch,
   char *line_buffer,
@@ -483,6 +541,8 @@ static bool consume_byte(
   return false;
 }
 
+#endif
+
 static void mark_usb_protocol_seen(void) {
   portENTER_CRITICAL(&g_rx_health_mutex);
   g_usb_protocol_seen = true;
@@ -506,6 +566,15 @@ static void consume_transport_bytes(
   bool *raw_mode,
   void *reply_ctx
 ) {
+#if CONFIG_IDF_TARGET_ESP32S3
+  (void)line_buffer;(void)line_used;(void)line_capacity;(void)raw_mode;
+  unsigned route=*((const pet_p4_transport_route_t*)reply_ctx);
+  uintptr_t token=__atomic_load_n(route==1?&g_s3_uart_token:&g_s3_usb_token,__ATOMIC_ACQUIRE);
+  if(!s3_enqueue_bytes(token,data,len)) {
+    /* A dropped chunk invalidates framing; queue a mandatory close marker. */
+    while(!s3_enqueue_bytes(token,NULL,0))vTaskDelay(pdMS_TO_TICKS(10));
+  }
+#else
   size_t offset = 0;
   while (offset < len) {
     if (!*raw_mode && pet_p4_raw_asset_chunk_active()) *raw_mode = true;
@@ -531,6 +600,7 @@ static void consume_transport_bytes(
     }
     offset += 1;
   }
+#endif
 }
 
 static esp_err_t init_storage(void) {
@@ -697,6 +767,11 @@ void app_main(void) {
   // Parse the large appearance manifest before any USB/UART receive task can
   // concurrently parse command JSON during boot.
   pet_p4_load_asset_manifest(&g_state);
+#if CONFIG_IDF_TARGET_ESP32S3
+  g_s3_uart_token=pet_s3_connection_token(1);g_s3_usb_token=pet_s3_connection_token(2);
+  esp_err_t wifi_err=pet_s3_wifi_init(board_device_id,s3_enqueue_bytes);
+  if(wifi_err!=ESP_OK)ESP_LOGW(TAG,"Wi-Fi initialization failed: %s",esp_err_to_name(wifi_err));
+#endif
   ESP_ERROR_CHECK(init_usb());
   ESP_ERROR_CHECK(init_uart());
   xSemaphoreTake(g_transport_mutex, portMAX_DELAY);

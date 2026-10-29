@@ -4,12 +4,17 @@
 # [Sync] If this file changes, update `firmware/.folder.md` and `protocol.md`.
 
 set(PET_HARDWARE_REQUIRES esp_driver_spi esp_driver_i2s esp_driver_i2c)
+if(IDF_TARGET STREQUAL "esp32s3")
+  list(APPEND PET_HARDWARE_REQUIRES esp_wifi esp_netif esp_event esp-tls lwip)
+  set(PET_S3_SRCS "../s3/pet_s3_wifi.c" "../s3/pet_s3_transport.c")
+endif()
 if(NOT IDF_TARGET STREQUAL "esp32s3")
   list(APPEND PET_HARDWARE_REQUIRES esp_driver_jpeg esp_driver_ppa usb tinyusb)
 endif()
 
 idf_component_register(
   SRCS
+    ${PET_S3_SRCS}
     "pet_p4_main.c"
     "pet_p4_lcd.c"
     "pet_p4_assets.c"
@@ -46,7 +51,7 @@ idf_component_register(
     "pet_p4_renderer.c"
     "pet_p4_view.c"
   INCLUDE_DIRS
-    "."
+    "." "../s3"
   REQUIRES
     esp_adc
     esp_timer
@@ -139,4 +144,8 @@ target_include_directories(${tusb_lib} PUBLIC "${CMAKE_CURRENT_LIST_DIR}")
 cmake_policy(SET CMP0079 NEW)
 target_link_libraries(${tusb_lib} PRIVATE ${COMPONENT_LIB})
 
+endif()
+
+if(IDF_TARGET STREQUAL "esp32s3")
+  set_source_files_properties(${PET_S3_SRCS} PROPERTIES COMPILE_OPTIONS "-Wno-misleading-indentation")
 endif()

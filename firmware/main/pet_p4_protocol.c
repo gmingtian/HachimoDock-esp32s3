@@ -28,7 +28,7 @@
 #include "cJSON.h"
 #include "mbedtls/base64.h"
 #include "pet_target.h"
-#if !CONFIG_IDF_TARGET_ESP32S3
+#if PET_TARGET_NATIVE_USB
 #include "bsp/display.h"
 #endif
 #include "esp_app_desc.h"
@@ -575,6 +575,11 @@ static void abort_serial_asset_transfer(pet_p4_runtime_state_t *state) {
   reset_asset_transfer_slot();
   g_asset_transfer_last_activity_ms = 0;
   if (state) state->asset_transfer_active = false;
+}
+
+void pet_p4_protocol_disconnect(pet_p4_runtime_state_t *state) {
+  abort_serial_asset_transfer(state);
+  if(state){pet_p4_conversation_clear(state);state->desktop_device_id[0]=0;state->host_last_seen_ms=0;state->session_voice_active=false;}
 }
 
 void pet_p4_asset_transfer_process(
@@ -1781,7 +1786,11 @@ void pet_p4_send_hello(const pet_p4_runtime_state_t *state, pet_p4_send_line_fn 
   cJSON_AddItemToObject(payload, "hardware", hardware);
 
   cJSON_AddNumberToObject(capabilities, "version", 1);
+#if CONFIG_IDF_TARGET_ESP32S3
+  cJSON_AddBoolToObject(capabilities, "usbOnly", false);
+#else
   cJSON_AddBoolToObject(capabilities, "usbOnly", true);
+#endif
   cJSON_AddBoolToObject(capabilities, "nativeUsb", PET_TARGET_NATIVE_USB);
   cJSON_AddBoolToObject(capabilities, "bulk", PET_TARGET_NATIVE_USB);
   cJSON_AddNumberToObject(capabilities, "maxAppearanceSlots", 2);
@@ -1923,7 +1932,15 @@ void pet_p4_send_hello(const pet_p4_runtime_state_t *state, pet_p4_send_line_fn 
   cJSON_AddItemToArray(asset_formats, cJSON_CreateString("p4-pcm-wav-v1"));
   cJSON_AddItemToObject(capabilities, "assetFormats", asset_formats);
 
+#if CONFIG_IDF_TARGET_ESP32S3
+  cJSON_AddBoolToObject(transport, "usbOnly", false);
+#else
   cJSON_AddBoolToObject(transport, "usbOnly", true);
+#endif
+#if CONFIG_IDF_TARGET_ESP32S3
+  cJSON_AddBoolToObject(transport,"wifi",true);
+  cJSON_AddStringToObject(transport,"wifiProtocol","pet-wifi-tls-v1");
+#endif
   cJSON_AddBoolToObject(transport, "usbUart", true);
   cJSON_AddNumberToObject(transport, "usbUartBaud", PET_P4_UART_BAUD);
   cJSON_AddBoolToObject(transport, "rawAssetChunks", true);

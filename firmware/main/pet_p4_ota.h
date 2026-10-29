@@ -33,3 +33,5 @@ bool pet_p4_ota_transfer_active(void);
 #ifdef __cplusplus
 }
 #endif
+
+void pet_p4_ota_disconnect(void);

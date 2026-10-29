@@ -834,3 +834,10 @@ bool pet_p4_ota_transfer_active(void) {
   xSemaphoreGive(g_ota_mutex);
   return active;
 }
+
+void pet_p4_ota_disconnect(void) {
+  if(!g_ota_mutex)return;
+  xSemaphoreTake(g_ota_mutex,portMAX_DELAY);
+  clear_transfer(true);
+  xSemaphoreGive(g_ota_mutex);
+}

@@ -60,6 +60,8 @@ arch=$(uname -m)
 suffix=''
 ff_platform=()
 x264_platform=()
+# Bash 3.2 treats an empty array as unset under nounset: expand optional arrays
+# with ${array[@]+"${array[@]}"} below, preserving zero arguments and word boundaries.
 link_flags=''
 case "$platform" in
     MINGW64_NT-*|MINGW64*)
@@ -123,7 +125,7 @@ run() {
     run ./configure --prefix="$work/prefix" --enable-static --disable-cli \
         --disable-opencl --disable-lavf --disable-swscale --disable-ffms \
         --bit-depth=8 --chroma-format=420 --enable-pic \
-        "${x264_platform[@]}" "${x264_asm[@]}"
+        ${x264_platform[@]+"${x264_platform[@]}"} ${x264_asm[@]+"${x264_asm[@]}"}
     run make -j"$jobs"
     run make install-lib-static
 )
@@ -136,7 +138,7 @@ run() {
         --disable-hwaccels --disable-encoders --enable-encoder=libx264,pcm_s16le,rawvideo \
         --disable-muxers --enable-muxer=h264,wav,mp4,rawvideo,null \
         --pkg-config-flags=--static --extra-ldflags="$link_flags" \
-        "${ff_platform[@]}" "${ff_asm[@]}"
+        ${ff_platform[@]+"${ff_platform[@]}"} ${ff_asm[@]+"${ff_asm[@]}"}
     run make -j"$jobs" ffmpeg
 )
 cp "$work/ffmpeg/ffmpeg$suffix" "$output/s3-ffmpeg$suffix"

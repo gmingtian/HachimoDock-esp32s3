@@ -6,7 +6,7 @@
 
 Windows 使用 Windows-x64-preview.exe；安装程序会准备 WebView2，首次安装可能需要联网。当前包未做商业代码签名。
 
-Apple 芯片 Mac 使用 macOS-arm64-preview.dmg，将 HachimiDock 拖到 Applications。此预览包为本地 ad-hoc 签名、未做 Apple 公证。如系统阻止打开，先核对下载包 SHA-256，再按系统“隐私与安全性”中的针对该应用的“仍要打开”流程操作；不要关闭系统整体安全保护。Agent 输入框控制需要按客户端提示授予“辅助功能”等权限；麦克风使用需按系统提示授权。
+macOS 12 或更高版本的 Apple 芯片 Mac 使用 macOS-arm64-preview.dmg，将 HachimiDock 拖到 Applications。此预览包为本地 ad-hoc 签名、未做 Apple 公证。如系统阻止打开，先核对下载包 SHA-256，再按系统“隐私与安全性”中的针对该应用的“仍要打开”流程操作；不要关闭系统整体安全保护。Agent 输入框控制需要按客户端提示授予“辅助功能”等权限；麦克风使用需按系统提示授权。
 
 两个包均包含 Node、媒体运行工具、独立 S3 素材转换器及对应源代码/许可证；家里不需要 Rust、Node 或 Python 开发环境。API 凭据、Agent 连接和本机授权需要分别配置，不会从开发电脑同步。自定义形象过大时会明确拒绝，不会自动删除动作。
 

@@ -46,6 +46,17 @@ jobs:
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: '3.12'
+      - name: Restore native Cargo build cache
+        id: cargo-cache
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            pc/src-tauri/target
+          key: s3-home-${{ runner.os }}-${{ matrix.target }}-${{ hashFiles('pc/src-tauri/Cargo.lock') }}-${{ github.sha }}
+          restore-keys: |
+            s3-home-${{ runner.os }}-${{ matrix.target }}-${{ hashFiles('pc/src-tauri/Cargo.lock') }}-
       - name: Install native build dependencies
         run: |
           rustup toolchain install 1.95.0 --profile minimal
@@ -118,3 +129,12 @@ jobs:
           path: artifacts/home-preview/*
           if-no-files-found: error
           retention-days: 14
+      - name: Save native Cargo cache for fixes
+        if: always() && steps.cargo-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            pc/src-tauri/target
+          key: ${{ steps.cargo-cache.outputs.cache-primary-key }}

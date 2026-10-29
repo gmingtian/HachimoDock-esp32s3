@@ -2,7 +2,9 @@
   "$schema": "https://schema.tauri.app/config/2",
   "bundle": {
     "macOS": {
-      "signingIdentity": "-"
+      "signingIdentity": "-",
+      "infoPlist": "Info.plist",
+      "minimumSystemVersion": "12.0"
     },
     "resources": {
       "generated-runtime/node": "bridge/runtime/node",

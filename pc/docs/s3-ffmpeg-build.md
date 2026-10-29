@@ -13,6 +13,9 @@ make diffutils curl tar xz coreutils bash
 On **native macOS Apple silicon**, install Xcode command line tools and
 `pkg-config` (GNU make and nasm may also be installed by CI; arm64 assembly uses
 clang). The release recipe refuses Intel/Rosetta macOS and non-MINGW64 Windows.
+The script supports macOS's system Bash 3.2; optional platform/assembly argument
+arrays expand safely under `set -u` even when empty. Local Linux shell checks do
+not establish native Bash 3.2 or Apple toolchain acceptance; run native CI too.
 
 From the repository root:
 

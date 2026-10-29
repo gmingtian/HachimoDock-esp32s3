@@ -1,10 +1,10 @@
-# HachimoDock-esp32-s3
+# HachimoDock-esp32s3
 
 基于 [YizhengWw/HachimoDock](https://github.com/YizhengWw/HachimoDock) 的 **ESP32-S3 三键硬件适配版**，让现有小智设备显示桌宠动画、Agent 工作状态、中文会话气泡，并运行共享组件。
 
 > **来源与署名**：原项目 HachimoDock 由 **Yizheng Wang（[@YizhengWw](https://github.com/YizhengWw)）** 创作。本仓库由 [gmingtian](https://github.com/gmingtian) 维护 S3、三键和 Linux 适配，属于修改版本，并非原作者官方发布或背书。原项目的版权、[许可证](LICENSE)和[第三方声明](THIRD_PARTY_NOTICES.md)均予保留；使用及再分发须遵守原许可，项目内修改不改变原作品的权属。
 
-[下载 S3 固件与客户端](https://github.com/gmingtian/HachimoDock-esp32-s3/releases) · [接线与刷机](docs/ESP32-S3-Linux.md) · [Linux 构建](pc/docs/linux-native.md) · [安装使用](docs/INSTALLATION.md) · [原版功能对比](docs/FEATURE-COMPARISON.md) · [兼容性](docs/COMPATIBILITY.md) · [English](README.en.md)
+[下载 S3 固件与客户端](https://github.com/gmingtian/HachimoDock-esp32s3/releases) · [接线与刷机](docs/ESP32-S3-Linux.md) · [Linux 构建](pc/docs/linux-native.md) · [安装使用](docs/INSTALLATION.md) · [原版功能对比](docs/FEATURE-COMPARISON.md) · [兼容性](docs/COMPATIBILITY.md) · [English](README.en.md)
 
 ## 功能特性
 
@@ -41,7 +41,7 @@ GPIO0 在上电或复位时须松开。完整接线、分区和构建步骤见 [
 
 ## 下载安装
 
-当前 S3 固件版本为 **`0.7.103-s3-r3`**，配套客户端 **`0.1.168`**；下载 [S3 固件与客户端](https://github.com/gmingtian/HachimoDock-esp32-s3/releases)。首次改刷请使用完整 ZIP 内的 `hachimodock-s3-factory.bin`，从 `0x0` 写入；应用镜像不能替代完整出厂镜像。先保存原小智固件用于恢复。
+当前 S3 固件版本为 **`0.7.103-s3-r3`**，配套客户端 **`0.1.168`**；下载 [S3 固件与客户端](https://github.com/gmingtian/HachimoDock-esp32s3/releases)。首次改刷请使用完整 ZIP 内的 `hachimodock-s3-factory.bin`，从 `0x0` 写入；应用镜像不能替代完整出厂镜像。先保存原小智固件用于恢复。
 
 客户端安装、设备连接和服务配置见 [安装与使用](docs/INSTALLATION.md)。平台支持情况、S3 与 P4 的能力差异及已知限制见 [兼容性说明](docs/COMPATIBILITY.md)。
 

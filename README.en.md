@@ -1,10 +1,10 @@
-# HachimoDock-esp32-s3
+# HachimoDock-esp32s3
 
 An ESP32-S3, three-button adaptation of [YizhengWw/HachimoDock](https://github.com/YizhengWw/HachimoDock), retaining the existing N16R8 board, 240×240 ST7789 display, I2S microphone, MAX98357A speaker and GPIO wiring.
 
 **Attribution:** The original HachimoDock project is created by **Yizheng Wang ([@YizhengWw](https://github.com/YizhengWw))**. This modified repository is maintained by [gmingtian](https://github.com/gmingtian) for ESP32-S3 and Linux compatibility. It is not an official upstream release or endorsement. Original copyrights, the [project license](LICENSE) and [third-party notices](THIRD_PARTY_NOTICES.md) are retained.
 
-[简体中文](README.md) · [S3 downloads](https://github.com/gmingtian/HachimoDock-esp32-s3/releases) · [Wiring and firmware](docs/ESP32-S3-Linux.md) · [Linux build](pc/docs/linux-native.md) · [Installation](docs/INSTALLATION.md) · [Upstream feature comparison](docs/FEATURE-COMPARISON.md) · [Compatibility](docs/COMPATIBILITY.md)
+[简体中文](README.md) · [S3 downloads](https://github.com/gmingtian/HachimoDock-esp32s3/releases) · [Wiring and firmware](docs/ESP32-S3-Linux.md) · [Linux build](pc/docs/linux-native.md) · [Installation](docs/INSTALLATION.md) · [Upstream feature comparison](docs/FEATURE-COMPARISON.md) · [Compatibility](docs/COMPATIBILITY.md)
 
 
 S3 r3 / desktop 0.1.168 adds paired TLS Wi-Fi alongside USB. Provision and pair
@@ -23,7 +23,7 @@ Hardware radio/latency/stability checks are still pending; r2 downloads remain a
 - Desktop build support for Linux x86_64, Windows x64 and Apple-silicon macOS; installers are distributed through this fork's Releases.
 - Bounded S3 asset conversion to 240×180 at up to 10fps, chip-specific firmware validation and transactional resource updates.
 
-Current S3 firmware: **0.7.103-s3-r3**. [S3 firmware and desktop clients](https://github.com/gmingtian/HachimoDock-esp32-s3/releases) are available. Initial flashing requires the complete factory image at address `0x0`, not the application image. Preserve the old firmware for recovery.
+Current S3 firmware: **0.7.103-s3-r3**. [S3 firmware and desktop clients](https://github.com/gmingtian/HachimoDock-esp32s3/releases) are available. Initial flashing requires the complete factory image at address `0x0`, not the application image. Preserve the old firmware for recovery.
 
 See [Installation](docs/INSTALLATION.md) for setup and [Compatibility](docs/COMPATIBILITY.md) for platform support, hardware status and known limitations. The original license continues to govern the original works; third-party materials retain their respective terms.
 

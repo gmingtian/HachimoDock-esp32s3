@@ -2,7 +2,7 @@
 
 ## 硬件
 
-本适配面向 ESP32-S3 N16R8（16MiB Flash / 8MiB PSRAM）、1.54 寸 240×240 ST7789、I2S 麦克风、MAX98357A 与 GPIO39 / 38 / 0 三按键。保留原接线，替换原小智运行功能。详细 IO 见 [硬件文档](https://github.com/gmingtian/HachimoDock-esp32-s3/blob/main/docs/ESP32-S3-Linux.md)。
+本适配面向 ESP32-S3 N16R8（16MiB Flash / 8MiB PSRAM）、1.54 寸 240×240 ST7789、I2S 麦克风、MAX98357A 与 GPIO39 / 38 / 0 三按键。保留原接线，替换原小智运行功能。详细 IO 见 [硬件文档](https://github.com/gmingtian/HachimoDock-esp32s3/blob/main/docs/ESP32-S3-Linux.md)。
 
 | 功能 | ESP32-S3 适配情况 |
 |---|---|

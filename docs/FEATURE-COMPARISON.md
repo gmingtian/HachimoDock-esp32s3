@@ -51,7 +51,7 @@ USB 数值是总线等级，10fps 是素材上限，均不等于实测传输速�
 | Agent 输入框定位、自动填字 / 发送 | Windows / macOS 依赖各 Agent 集成和系统权限 | Windows / macOS 保留原实现；Linux 暂不支持 |
 | 语音、模型与形象生成凭据 | 用户自行配置 | 同样需要用户自行配置，不在下载包中内置 |
 
-安装包是否已发布，以 [Releases 附件](https://github.com/gmingtian/HachimoDock-esp32-s3/releases) 为准。系统要求、签名状态及安装步骤见 [安装与使用](INSTALLATION.md)。
+安装包是否已发布，以 [Releases 附件](https://github.com/gmingtian/HachimoDock-esp32s3/releases) 为准。系统要求、签名状态及安装步骤见 [安装与使用](INSTALLATION.md)。
 
 ## 使用上的主要差异
 

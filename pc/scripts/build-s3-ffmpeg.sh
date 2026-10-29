@@ -29,21 +29,54 @@ sha256() {
     fi
 }
 fetch_source() {
-    local name=$1 expected=$2 url=$3 archive
+    local name=$1 expected=$2 archive url downloaded=0 download_target='' transfer_status
+    shift 2
+    source_origin='checksum-verified local archive'
     archive="$cache/$name"
     if [[ ! -f "$archive" ]]; then
         if [[ ${S3_FFMPEG_OFFLINE:-0} == 1 ]]; then
             echo "Offline source archive missing: $archive" >&2
             exit 1
         fi
-        archive="$output/source/$name"
-        curl --fail --location --retry 3 --connect-timeout 30 --max-time 600 \
-            --proto '=https' --proto-redir '=https' --output "$archive.part" "$url"
-        mv "$archive.part" "$archive"
+        download_target="$output/source/$name"
+        archive="$download_target.part"
+        for url in "$@"; do
+            rm -f "$archive"
+            if curl --silent --show-error --fail --location --retry 1 \
+                --connect-timeout 15 --max-time 120 --proto '=https' \
+                --proto-redir '=https' --output "$archive" "$url"; then
+                source_origin="$url"
+                downloaded=1
+                break
+            else
+                transfer_status=$?
+                case "$transfer_status" in
+                    # Remote/connection/TLS/HTTP transfer failures may try the
+                    # next pinned-byte mirror; local write/configuration errors may not.
+                    5|6|7|16|18|22|28|35|47|51|52|55|56|60|92|95|96) ;;
+                    *)
+                        rm -f "$archive"
+                        echo "Source transfer failed locally (curl $transfer_status): $name" >&2
+                        exit "$transfer_status"
+                        ;;
+                esac
+            fi
+            echo "Source transfer failed: $url" >&2
+        done
+        if [[ "$downloaded" != 1 ]]; then
+            rm -f "$archive"
+            echo "Source download failed: $name" >&2
+            exit 1
+        fi
     fi
     if [[ $(sha256 "$archive") != "$expected" ]]; then
         echo "Source checksum mismatch: $archive (expected $expected)" >&2
+        if [[ -n "$download_target" ]]; then rm -f "$archive"; fi
         exit 1
+    fi
+    if [[ -n "$download_target" ]]; then
+        mv "$archive" "$download_target"
+        archive="$download_target"
     fi
     if [[ $(cd "$(dirname "$archive")" && pwd)/$(basename "$archive") != "$output/source/$name" ]]; then
         cp "$archive" "$output/source/$name"
@@ -52,8 +85,12 @@ fetch_source() {
 
 ffmpeg_archive=ffmpeg-$FFMPEG_VERSION.tar.xz
 x264_archive=x264-$X264_COMMIT.tar.gz
-fetch_source "$ffmpeg_archive" "$FFMPEG_SHA256" "https://ffmpeg.org/releases/$ffmpeg_archive"
+fetch_source "$ffmpeg_archive" "$FFMPEG_SHA256" \
+    'https://github.com/YizhengWw/HachimoDock/releases/download/v0.1.167/FFmpeg-8.1.2-source.tar.xz' \
+    "https://ffmpeg.org/releases/$ffmpeg_archive"
+ffmpeg_origin="$source_origin"
 fetch_source "$x264_archive" "$X264_SHA256" "https://codeload.github.com/mirror/x264/tar.gz/$X264_COMMIT"
+x264_origin="$source_origin"
 
 platform=$(uname -s)
 arch=$(uname -m)
@@ -139,7 +176,7 @@ run() {
         --disable-muxers --enable-muxer=h264,wav,mp4,rawvideo,null \
         --pkg-config-flags=--static --extra-ldflags="$link_flags" \
         ${ff_platform[@]+"${ff_platform[@]}"} ${ff_asm[@]+"${ff_asm[@]}"}
-    run make -j"$jobs" ffmpeg
+    run make -j"$jobs" "ffmpeg$suffix"
 )
 cp "$work/ffmpeg/ffmpeg$suffix" "$output/s3-ffmpeg$suffix"
 chmod +x "$output/s3-ffmpeg$suffix"
@@ -157,8 +194,10 @@ cp "$work/x264/AUTHORS" "$output/source/x264-AUTHORS.txt"
 cat > "$output/BUILD-SOURCES.txt" <<EOF
 FFmpeg $FFMPEG_VERSION, unmodified: https://ffmpeg.org/releases/$ffmpeg_archive
 SHA256 $FFMPEG_SHA256  source/$ffmpeg_archive
+Retrieved from: $ffmpeg_origin
 x264 $X264_COMMIT, unmodified: https://codeload.github.com/mirror/x264/tar.gz/$X264_COMMIT
 SHA256 $X264_SHA256  source/$x264_archive
+Retrieved from: $x264_origin
 EOF
 cat > "$output/BUILD-README.txt" <<'EOF'
 This independent s3-ffmpeg executable combines FFmpeg and static x264 under

@@ -39,6 +39,12 @@ The build pins FFmpeg **8.1.2** to SHA256
 x264 commit **baee400fa9ced6f5481a728138fed6e867b0ff7f** to archive SHA256
 `436a2be54d8bc0cb05dd33ecbbcb7df9c3b57362714fcdaa3a5991189a33319b`.
 Every downloaded or cached archive is verified before extraction or configure.
+FFmpeg downloads prefer the byte-identical `v0.1.167` source asset in the upstream
+GitHub release, with `ffmpeg.org` as a fallback after a transfer failure. Both
+locations must match the same pinned digest; a checksum mismatch stops the build
+without trying another URL. Each transfer uses a 15-second connection timeout,
+120-second total timeout and one retry. `BUILD-SOURCES.txt` retains the
+authoritative source URL and records the actual retrieval URL or verified cache.
 
 The output directory contains `s3-ffmpeg[.exe]`, complete unmodified corresponding
 source archives and the build script in `source/`, upstream `LICENSE*` files,

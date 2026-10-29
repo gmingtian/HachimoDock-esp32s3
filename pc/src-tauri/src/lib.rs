@@ -6622,7 +6622,6 @@ async fn run_usb_firmware_update(
     let reconnect_manager = manager.clone();
     let reconnect_app = app_handle.clone();
     let reconnect_board_device_id = expected_board_device_id.clone();
-    let update_transport = connection_policy::update_reconnect_transport(&manager.status().transport);
     tauri::async_runtime::spawn_blocking(move || {
         manager.update_firmware(
             &firmware_path,
@@ -6643,8 +6642,8 @@ async fn run_usb_firmware_update(
                     }),
                 );
             },
-            || {
-                if update_transport == "wifi" {
+            |actual_update_transport| {
+                if connection_policy::update_reconnect_transport(actual_update_transport) == "wifi" {
                     wifi_commands::reconnect_after_update(&reconnect_app,&reconnect_manager,&reconnect_board_device_id)
                 } else {
                     reconnect_usb_serial_to_expected_board(&reconnect_app,&reconnect_manager,&reconnect_board_device_id)

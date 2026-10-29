@@ -2318,7 +2318,7 @@ impl UsbSerialManager {
     ) -> Result<FirmwareUpdateResult, String>
     where
         F: Fn(u64, u64, &str),
-        R: FnMut() -> Result<(), String>,
+        R: FnMut(&str) -> Result<(), String>,
     {
         let expected_board_device_id =
             validate_expected_board_device_id(expected_board_device_id)?.to_string();
@@ -2731,6 +2731,7 @@ impl UsbSerialManager {
             &original_version,
             &original_partition,
             baseline_boot_count,
+            &status.transport,
             &mut reconnect,
             &on_progress,
             total_bytes,
@@ -2832,13 +2833,14 @@ impl UsbSerialManager {
         original_version: &str,
         original_partition: &str,
         baseline_boot_count: u64,
+        update_transport: &str,
         reconnect: &mut R,
         on_progress: &F,
         total_bytes: u64,
     ) -> Result<VerifiedFirmware, String>
     where
         F: Fn(u64, u64, &str),
-        R: FnMut() -> Result<(), String>,
+        R: FnMut(&str) -> Result<(), String>,
     {
         thread::sleep(Duration::from_secs(1));
         let started = Instant::now();
@@ -2865,7 +2867,7 @@ impl UsbSerialManager {
                 || status.board_device_id != expected_board_device_id
             {
                 force_reconnect = false;
-                if let Err(error) = reconnect() {
+                if let Err(error) = reconnect(update_transport) {
                     transfer_log::record(
                         "firmware",
                         "validation_reconnect_failed",
@@ -7017,7 +7019,7 @@ mod tests {
             let image = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("firmware/esp32-p4").join(name);
             let result = manager.update_firmware(&image, "p4-test",
                 |_,_,_| panic!("incompatible firmware must not start transfer"),
-                || panic!("incompatible firmware must not reconnect"));
+                |_| panic!("incompatible firmware must not reconnect"));
             assert!(result.unwrap_err().contains("芯片版本不匹配"));
             assert!(recorded.lock().unwrap().writes.is_empty());
         }
@@ -10350,7 +10352,7 @@ mod tests {
                         eprintln!("[p4-firmware-hil] stage={stage} bytes={sent}/{total}");
                     }
                 },
-                move || {
+                move |_| {
                     reconnect_manager.disconnect();
                     let deadline = Instant::now() + Duration::from_secs(20);
                     loop {

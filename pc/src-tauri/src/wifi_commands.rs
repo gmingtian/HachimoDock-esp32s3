@@ -74,9 +74,6 @@ pub(crate) fn reconnect_after_update(app:&tauri::AppHandle,manager:&UsbSerialMan
     manager.reconnect_wifi_after_update(&device.identity,address,move|topic,payload|crate::handle_incoming_usb_message(&emitter,topic,payload))
 }
 
-pub(crate) fn prefers_wifi(app:&tauri::AppHandle,board:&str)->bool {
-    settings(app).is_ok_and(|s|s.preferred_transport=="wifi"&&s.selected_board_device_id==board)
-}
 pub(crate) fn preferred_board(app:&tauri::AppHandle)->Option<String> {
     settings(app).ok().map(|s|s.selected_board_device_id).filter(|s|!s.is_empty())
 }

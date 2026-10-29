@@ -1414,7 +1414,7 @@ mod tests {
                         println!("OTA {stage}: {done}/{total}");
                     }
                 },
-                || {
+                |_| {
                     usb.disconnect();
                     std::thread::sleep(Duration::from_secs(1));
                     usb.connect(&port, |topic, payload| {

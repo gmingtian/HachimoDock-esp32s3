@@ -1,5 +1,28 @@
 # ESP-P4 USB Protocol
 
+## ESP32-S3 r3 transport extension
+
+S3 firmware `0.7.103-s3-r3` adds `pet-wifi-tls-v1` at TCP48973 alongside existing
+USB JSONL/raw blocks. `capabilities.transport.wifi=true`, `wifiProtocol` and
+`usbOnly=false` apply only to S3; P4 remains unchanged. Initial USB maintenance
+configures the network and returns the per-board public certificate and random
+pairing token. TLS authentication precedes hello and any event subscription.
+All commands share the existing serialized protocol worker and transaction rules.
+See [S3 Wi-Fi protocol](s3/README-wifi.md) and [installation](../docs/WIFI.md).
+
+One immutable connection generation owns runtime input/output. A non-owner USB
+probe cannot consume another connection's binary block or poison later USB
+fallback. Busy state includes accepted/pending microphone capture, buffering
+voice playback, active conversation/music, widget/assets and OTA. Releasing or
+losing a connection aborts uncommitted work before admitting a new owner. Firmware
+OTA validation reconnect uses the transport captured under the updater lock.
+
+The reviewed S3 component policy in `s3/component-policy.json` excludes
+`block-combo`, `fresh-fruit-slice`, `cloud-hop` and `bloomfrog_companion` from
+factory/bootstrap, runtime visibility and new installation. Existing package
+files and saves are preserved. S3 defaults contain25 components; P4 retains29.
+
+
 0.7.103-p4：内置清单、启动器图片及完整出厂资源统一为 29 项。末尾追加 `decision-capsule`、`answer-book`、`hope-train`；通用 `widgetLocalTools=p4-local-tools-v1` 契约保持不变。OTA 仍保留轻量资源引导与现有用户存档，完整出厂镜像才携带全部图片。
 
 0.7.100-p4：新增 `widgetMediaQueueMax=128` 与 `widgetMediaLifecycle=p4-media-lifecycle-v1`。媒体队列超过 20 项时，key 至多 80 UTF-8 字节、标题至多 90 字节；上限 128，刷新按 key 保留选中项，不修改音频会话。`media/event` 新增 `operation=visibility`，包含 `source/boot/epoch/visible`；进入或离开递增 epoch，可见时每 2 秒发送心跳。宿主只有资源包声明自动播放、当前可见且新的进入事件时才准备播放，停止/离开取消未开始的播放；目录刷新不重新触发播放。能力与配置为通用媒体机制，不绑定特定组件 ID。

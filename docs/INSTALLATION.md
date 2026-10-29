@@ -48,3 +48,9 @@ Windows / macOS 包含 Node、媒体运行工具、S3 素材转换器以及对�
 固件 ZIP 根目录只包含 `hachimodock-s3-factory.bin`、`使用说明.txt`、`SHA256SUMS` 和 `licenses/`，日志、测试记录和开发元数据保留在源码与构建记录中。
 
 接线、分区与固件构建见 [ESP32-S3 适配说明](https://github.com/gmingtian/HachimoDock-esp32-s3/blob/main/docs/ESP32-S3-Linux.md)。平台差异与硬件状态见 [兼容性说明](https://github.com/gmingtian/HachimoDock-esp32-s3/blob/main/docs/COMPATIBILITY.md)。
+
+## Wi-Fi（S3 r3）
+
+客户端 0.1.168 在设备页面提供“设备连接”：先通过 USB 配置 2.4GHz 网络并
+绑定此电脑，再选择“使用 Wi-Fi”。无线可使用现有 S3 运行时功能；首次刷机和
+ROM 恢复继续使用 USB。详细配网、优先级和恢复步骤见 [Wi-Fi 使用说明](WIFI.md)。

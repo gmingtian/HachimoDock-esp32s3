@@ -27,7 +27,12 @@
     "prepare:p4-assets": "node scripts/prepare-p4-ready-assets.mjs",
     "pack-builtins": "node scripts/pack-builtin-clawpkgs.cjs",
     "test": "npm run check:provenance && node scripts/run-node-tests.mjs src",
-    "test:bridge": "node scripts/run-node-tests.mjs src-tauri/bridge/test src-tauri/bridge/packages/agent-session-bus/test"
+    "test:bridge": "node scripts/run-node-tests.mjs src-tauri/bridge/test src-tauri/bridge/packages/agent-session-bus/test",
+    "prepare:linux": "npm run check:public-build-env && node scripts/prepare-linux-desktop.mjs",
+    "dev:linux": "npm run prepare:linux && tauri dev --features devtools --config src-tauri/tauri.linux.conf.json",
+    "build:linux": "npm run prepare:linux && tauri build --no-bundle --config src-tauri/tauri.linux.conf.json --ci && node scripts/stage-linux-native.mjs",
+    "prepare:s3-assets": "python3 ../firmware/tools/prepare_s3_assets.py",
+    "stage:linux": "node scripts/stage-linux-native.mjs"
   },
   "dependencies": {
     "@tauri-apps/api": "2.11.1",

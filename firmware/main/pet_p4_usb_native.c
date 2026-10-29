@@ -1,3 +1,16 @@
+#include "sdkconfig.h"
+#if CONFIG_IDF_TARGET_ESP32S3
+#include "pet_p4_usb_native.h"
+/* OTG and USB Serial/JTAG share the internal PHY. Leave it with Serial/JTAG;
+ * never claim vendor bulk support or take over the user's serial connector. */
+esp_err_t pet_p4_native_usb_init(pet_p4_runtime_state_t *state,SemaphoreHandle_t state_mutex,
+    pet_p4_native_protocol_enqueue_fn enqueue_protocol,void *enqueue_ctx) {
+  (void)state;(void)state_mutex;(void)enqueue_protocol;(void)enqueue_ctx;
+  return ESP_ERR_NOT_SUPPORTED;
+}
+void pet_p4_native_usb_send_json_line(const char *line,void *ctx) { (void)line;(void)ctx; }
+void pet_p4_native_usb_process(unsigned long long now_ms) { (void)now_ms; }
+#else
 /*
  * [Input] TinyUSB vendor frames for JSON control and raw asset payloads.
  * [Output] framed native-USB responses, callback-safe queued protocol work,
@@ -714,3 +727,5 @@ void tud_suspend_cb(bool remote_wakeup_en) {
 
 void tud_resume_cb(void) {
 }
+
+#endif

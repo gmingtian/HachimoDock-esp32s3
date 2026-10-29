@@ -1,3 +1,5 @@
+#include "sdkconfig.h"
+#if !CONFIG_IDF_TARGET_ESP32S3
 #include <stdint.h>
 #include <string.h>
 
@@ -137,3 +139,5 @@ uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid) {
   desc_str[0] = (uint16_t) ((TUSB_DESC_STRING << 8) | (2 * chr_count + 2));
   return desc_str;
 }
+
+#endif

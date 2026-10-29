@@ -48,14 +48,14 @@ test("Menu does not expose unsupported P4 WiFi configuration", () => {
   assert.doesNotMatch(source, /通过 USB 配 WiFi/);
 });
 
-test("Menu exposes P4 firmware update only when its callback is provided", () => {
+test("Menu exposes supported device firmware update only when its callback is provided", () => {
   assert.match(source, /\bonUpdateFirmware\b/);
   assert.match(source, /onUpdateFirmware\s*&&/);
-  assert.match(source, /升级 ESP32-P4 固件/);
+  assert.match(source, /升级设备固件/);
 });
 
-test("Menu exposes P4 diagnostics only when its callback is provided", () => {
+test("Menu exposes supported device diagnostics only when its callback is provided", () => {
   assert.match(source, /\bonDiagnostics\b/);
   assert.match(source, /onDiagnostics\s*&&/);
-  assert.match(source, /ESP32-P4 设备诊断/);
+  assert.match(source, /设备诊断/);
 });

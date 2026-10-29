@@ -21,9 +21,21 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "soc/soc_caps.h"
+#if CONFIG_IDF_TARGET_ESP32S3
+#include "../s3/pet_s3_render.h"
+#include "../s3/pet_s3_menu.h"
+#define BSP_LCD_H_RES PET_S3_PANEL_WIDTH
+#define BSP_LCD_V_RES PET_S3_PANEL_HEIGHT
+#else
 #include "bsp/display.h"
+#endif
+#if SOC_JPEG_DECODE_SUPPORTED
 #include "driver/jpeg_decode.h"
+#endif
+#if SOC_PPA_SUPPORTED
 #include "driver/ppa.h"
+#endif
 #include "esp_check.h"
 #include "esp_h264_dec.h"
 #include "esp_h264_dec_sw.h"
@@ -62,7 +74,11 @@ pet_p4_render_metrics_t pet_p4_renderer_metrics(void) {
 }
 #define PET_P4_ASSET_HEIGHT 480
 #define PET_P4_MAX_MJPEG_FRAMES PET_P4_ASSET_CATALOG_MAX_FRAMES
+#if CONFIG_IDF_TARGET_ESP32S3
+#define PET_P4_MAX_JPEG_BYTES (128 * 1024)
+#else
 #define PET_P4_MAX_JPEG_BYTES (512 * 1024)
+#endif
 #define PET_P4_TJPGD_WORK_BUFFER_BYTES 4096
 #define PET_P4_HARDWARE_JPEG_TIMEOUT_MS 40
 #define PET_P4_ASSET_DECODE_BACKOFF_MS 500ULL
@@ -71,8 +87,13 @@ pet_p4_render_metrics_t pet_p4_renderer_metrics(void) {
 #define PET_P4_RENDER_PERF_WINDOW 100U
 #define PET_P4_RENDER_PERF_GAP_RESET_US 2000000LL
 #define PET_P4_PPA_BUFFER_ALIGNMENT 64U
+#if CONFIG_IDF_TARGET_ESP32S3
+#define PET_P4_ASSET_CACHE_SLOTS 1U
+#define PET_P4_ASSET_CACHE_MAX_FILE_BYTES PET_S3_ASSET_MAX_STREAM_BYTES
+#else
 #define PET_P4_ASSET_CACHE_SLOTS 2U
 #define PET_P4_ASSET_CACHE_MAX_FILE_BYTES (2U * 1024U * 1024U)
+#endif
 #define PET_P4_H264_MAX_DECODE_FRAMES_PER_RENDER 1U
 #define PET_P4_H264_PRIMARY_TASK_PRIORITY 16U
 #define PET_P4_H264_PACK_TASK_STACK_BYTES 3072U
@@ -113,8 +134,15 @@ static unsigned int g_native_framebuffer_index;
 static uint8_t *g_jpeg_input;
 static uint16_t *g_jpeg_output;
 static uint8_t *g_tjpgd_workbuf;
+#if SOC_JPEG_DECODE_SUPPORTED
 static jpeg_decoder_handle_t g_jpeg_decoder;
+#else
+/* A null hardware handle keeps fallback diagnostics shared. */
+static void *const g_jpeg_decoder;
+#endif
+#if SOC_PPA_SUPPORTED
 static ppa_client_handle_t g_ppa_srm_client;
+#endif
 static size_t g_jpeg_input_capacity;
 static size_t g_jpeg_output_capacity;
 static bool g_jpeg_input_dma_compatible;
@@ -463,6 +491,7 @@ static bool decode_jpeg_frame_hardware(
   int *out_stride,
   esp_err_t *out_error
 ) {
+#if SOC_JPEG_DECODE_SUPPORTED
   jpeg_decode_picture_info_t picture_info = {0};
   jpeg_decode_cfg_t decode_cfg = {
     .output_format = JPEG_DECODE_OUT_FORMAT_RGB565,
@@ -523,6 +552,12 @@ static bool decode_jpeg_frame_hardware(
   if (out_stride) *out_stride = (int) decoded_stride;
   if (out_error) *out_error = ESP_OK;
   return true;
+
+#else
+  (void)input; (void)input_size; (void)out_width; (void)out_height; (void)out_stride;
+  if (out_error) *out_error = ESP_ERR_NOT_SUPPORTED;
+  return false;
+#endif
 }
 
 typedef struct {
@@ -1512,6 +1547,7 @@ static bool asset_fit_layout(
 }
 
 static bool scale_asset_frame_ppa(int src_w, int src_h, int src_stride) {
+#if SOC_PPA_SUPPORTED
   int dst_x;
   int dst_y;
   int dst_w;
@@ -1573,6 +1609,11 @@ static bool scale_asset_frame_ppa(int src_w, int src_h, int src_stride) {
     g_logged_ppa_scale_fallback = true;
   }
   return false;
+
+#else
+  (void)src_w; (void)src_h; (void)src_stride;
+  return false;
+#endif
 }
 
 static void scale_asset_frame_cpu(int src_w, int src_h, int src_stride) {
@@ -1637,11 +1678,19 @@ void pet_p4_renderer_reset_playback(void) {
 
 static bool h264_stream_has_single_slice_access_units(
   const uint8_t *stream,
-  size_t stream_size
+  size_t stream_size,
+  int width,
+  int height
 ) {
+#if !CONFIG_IDF_TARGET_ESP32S3
+  (void)width; (void)height;
+#endif
   size_t cursor = 0;
   unsigned int access_units = 0;
   unsigned int slices_in_access_unit = 0;
+#if CONFIG_IDF_TARGET_ESP32S3
+  bool have_sps = false;
+#endif
   if (!stream || stream_size < 5) return false;
   while (cursor + 3 < stream_size) {
     size_t prefix_size = 0;
@@ -1660,6 +1709,16 @@ static bool h264_stream_has_single_slice_access_units(
     size_t payload_start = cursor + prefix_size;
     if (payload_start >= stream_size) break;
     uint8_t nal_type = stream[payload_start] & 0x1fU;
+#if CONFIG_IDF_TARGET_ESP32S3
+    if (nal_type == 7U) {
+      size_t end = payload_start + 1;
+      while (end + 3 < stream_size && !(stream[end] == 0 && stream[end+1] == 0
+        && (stream[end+2] == 1 || (stream[end+2] == 0 && stream[end+3] == 1)))) end++;
+      if (end + 3 >= stream_size) end = stream_size;
+      if (!pet_s3_h264_sps_matches(stream + payload_start, end - payload_start, width, height)) return false;
+      have_sps = true;
+    }
+#endif
     if (nal_type == 9U) {
       if (access_units > 0 && slices_in_access_unit != 1U) return false;
       access_units += 1U;
@@ -1671,6 +1730,9 @@ static bool h264_stream_has_single_slice_access_units(
     }
     cursor = payload_start + 1U;
   }
+#if CONFIG_IDF_TARGET_ESP32S3
+  if (!have_sps) return false;
+#endif
   return access_units > 0 && slices_in_access_unit == 1U;
 }
 
@@ -1954,6 +2016,7 @@ static bool scale_h264_frame_ppa(
   int src_h,
   int storage_h
 ) {
+#if SOC_PPA_SUPPORTED
   int dst_x;
   int dst_y;
   int dst_w;
@@ -2024,12 +2087,23 @@ static bool scale_h264_frame_ppa(
     g_logged_h264_ppa_fallback = true;
   }
   return false;
+
+#else
+  (void)packed_yuv420; (void)src_w; (void)src_h; (void)storage_h;
+  return false;
+#endif
 }
 
 static bool h264_frame_supports_ppa_yuv420(int width, int storage_h) {
+#if SOC_PPA_SUPPORTED
   return width > 0 && storage_h > 0
     && (width % 16) == 0
     && (storage_h % 16) == 0;
+
+#else
+  (void)width; (void)storage_h;
+  return false;
+#endif
 }
 
 static uint8_t clamp_u8(int value) {
@@ -2091,7 +2165,7 @@ static bool render_h264_asset_frame(
   }
   if (strcmp(g_h264_validated_fs_path, fs_path) != 0) {
     g_h264_single_slice_valid =
-      h264_stream_has_single_slice_access_units(stream->bytes, stream->size);
+      h264_stream_has_single_slice_access_units(stream->bytes, stream->size, asset->width, asset->height);
     snprintf(g_h264_validated_fs_path, sizeof(g_h264_validated_fs_path), "%s", fs_path);
     if (!g_h264_single_slice_valid) {
       ESP_LOGW(
@@ -2674,6 +2748,11 @@ static void render_component_center_page(void) {
   const size_t start = selected / per_page * per_page;
   const size_t pages = (count + per_page - 1) / per_page;
 
+#if CONFIG_IDF_TARGET_ESP32S3
+  /* Native navigation is drawn after presentation; no P4 artwork cache needed. */
+  fill_rect(0,0,PET_P4_UI_WIDTH,PET_P4_UI_HEIGHT,background);
+  return;
+#endif
   center_art_prepare();
   if(center_background)memcpy(g_framebuffer,center_background,640*480*2);
   else fill_rect(0, 0, PET_P4_UI_WIDTH, PET_P4_UI_HEIGHT, background);
@@ -4193,8 +4272,11 @@ static void app_text_bounds(const char *s,int *top,int *bottom){
     int i;const pet_surface_font_t *f=app_font_glyph(cp,&i);
     if(f){t=f->metrics[i][1];b=f->metrics[i][2];if(t==b)continue;}
     else {if(pet_app_symbol_advance(cp))pet_app_symbol_bounds(cp,&t,&b);
-      else if(!glyph_visual_bounds(cp,utf8_peek(s),1,&t,&b))continue;t*=2;b=(b+1)*2;}
-    if(!found||t<*top)*top=t;if(!found||b>*bottom)*bottom=b;found=true;
+      else if(!glyph_visual_bounds(cp,utf8_peek(s),1,&t,&b))continue;
+      t*=2;b=(b+1)*2;}
+    if(!found||t<*top)*top=t;
+    if(!found||b>*bottom)*bottom=b;
+    found=true;
   }
   if(!found){*top=0;*bottom=32;}
 }
@@ -4432,7 +4514,8 @@ static bool render_package_app(unsigned long long now_ms,const pet_p4_miniapp_vi
       while(text&&*text&&y+32*n->scale<=n->y+n->h){
         bool last=y+64*n->scale>n->y+n->h;
         const char *next=draw_text_line(text,n->x,y,n->w,n->color,n->scale,last);
-        if(last||!next||next==text)break;text=next;y+=32*n->scale;
+        if(last||!next||next==text)break;
+        text=next;y+=32*n->scale;
       }
     }else if(n->type==2){int value=app->progress_percent;if(value<0)value=0;if(value>100)value=100;fill_rect(n->x,n->y,n->w*value/100,n->h,n->color);}
   }
@@ -4761,7 +4844,9 @@ static void render_fruit_page(void) {
   }
   if(s->feedback_ms) {
     int x=(int)s->feedback_x,y=(int)s->feedback_y-40-(650-s->feedback_ms)/22;
-    if(x<80)x=80;if(x>560)x=560;if(y<135)y=135;
+    if(x<80)x=80;
+    if(x>560)x=560;
+    if(y<135)y=135;
     snprintf(text,sizeof(text),s->feedback_kind==3?"-%u":s->feedback_kind==2?"金果 +%u":"+%u",s->feedback_points);
     draw_text_center(text,x,y,160,s->feedback_kind==3?coral:gold,2);
   }
@@ -5000,7 +5085,12 @@ static void draw_boot_diagnostic(unsigned long long now_ms) {
   fill_rect(PET_P4_UI_WIDTH - marker_w - 16, PET_P4_UI_HEIGHT - marker_h - 16, marker_w, marker_h, orange);
 }
 
+#if CONFIG_IDF_TARGET_ESP32S3
+#include "../s3/pet_s3_renderer_ui.inc"
+#endif
+
 static esp_err_t rotate_landscape_to_panel(void) {
+#if !CONFIG_IDF_TARGET_ESP32S3
   if (!g_framebuffer || !g_native_framebuffer) return ESP_ERR_INVALID_STATE;
   /* Every producer and the ST7701S panel use the same RGB565 element order. */
   if (g_ppa_srm_client
@@ -5056,10 +5146,17 @@ static esp_err_t rotate_landscape_to_panel(void) {
     }
   }
   return ESP_OK;
+
+#else
+  return pet_s3_scale_rgb565(g_framebuffer, PET_P4_UI_WIDTH, PET_P4_UI_HEIGHT,
+    PET_P4_UI_WIDTH, g_native_framebuffer, BSP_LCD_H_RES, BSP_LCD_V_RES)
+      ? ESP_OK : ESP_ERR_INVALID_STATE;
+#endif
 }
 
 esp_err_t pet_p4_renderer_init(void) {
   if (!g_framebuffer) {
+    #if SOC_PPA_SUPPORTED
     g_framebuffer = (uint16_t *) heap_caps_aligned_calloc(
       PET_P4_PPA_BUFFER_ALIGNMENT,
       PET_P4_UI_WIDTH * PET_P4_UI_HEIGHT,
@@ -5067,6 +5164,7 @@ esp_err_t pet_p4_renderer_init(void) {
       MALLOC_CAP_SPIRAM | MALLOC_CAP_DMA
     );
     g_framebuffer_ppa_compatible = g_framebuffer != NULL;
+    #endif
     if (!g_framebuffer) {
       g_framebuffer = (uint16_t *) heap_caps_malloc(
         PET_P4_UI_WIDTH * PET_P4_UI_HEIGHT * sizeof(uint16_t),
@@ -5078,12 +5176,14 @@ esp_err_t pet_p4_renderer_init(void) {
   if (!g_native_framebuffers[0]) {
     g_native_framebuffer_ppa_compatible = true;
     for (unsigned int index = 0; index < PET_P4_NATIVE_OUTPUT_BUFFER_COUNT; index += 1) {
+      #if SOC_PPA_SUPPORTED
       g_native_framebuffers[index] = (uint16_t *) heap_caps_aligned_calloc(
         PET_P4_PPA_BUFFER_ALIGNMENT,
         BSP_LCD_H_RES * BSP_LCD_V_RES,
         sizeof(uint16_t),
         MALLOC_CAP_SPIRAM | MALLOC_CAP_DMA
       );
+      #endif
       if (!g_native_framebuffers[index]) {
         g_native_framebuffer_ppa_compatible = false;
         g_native_framebuffers[index] = (uint16_t *) heap_caps_malloc(
@@ -5101,6 +5201,7 @@ esp_err_t pet_p4_renderer_init(void) {
     g_native_framebuffer = g_native_framebuffers[0];
   }
   if (!g_jpeg_input) {
+    #if SOC_JPEG_DECODE_SUPPORTED
     jpeg_decode_memory_alloc_cfg_t input_mem_cfg = {
       .buffer_direction = JPEG_DEC_ALLOC_INPUT_BUFFER,
     };
@@ -5110,6 +5211,7 @@ esp_err_t pet_p4_renderer_init(void) {
       &g_jpeg_input_capacity
     );
     g_jpeg_input_dma_compatible = g_jpeg_input != NULL;
+    #endif
     if (!g_jpeg_input) {
       g_jpeg_input = (uint8_t *) heap_caps_malloc(PET_P4_MAX_JPEG_BYTES, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
       if (!g_jpeg_input) g_jpeg_input = (uint8_t *) heap_caps_malloc(PET_P4_MAX_JPEG_BYTES, MALLOC_CAP_8BIT);
@@ -5118,6 +5220,7 @@ esp_err_t pet_p4_renderer_init(void) {
   }
   if (!g_jpeg_output) {
     size_t requested_output_capacity = PET_P4_ASSET_WIDTH * PET_P4_ASSET_HEIGHT * sizeof(uint16_t);
+    #if SOC_JPEG_DECODE_SUPPORTED
     jpeg_decode_memory_alloc_cfg_t output_mem_cfg = {
       .buffer_direction = JPEG_DEC_ALLOC_OUTPUT_BUFFER,
     };
@@ -5127,6 +5230,7 @@ esp_err_t pet_p4_renderer_init(void) {
       &g_jpeg_output_capacity
     );
     g_jpeg_output_dma_compatible = g_jpeg_output != NULL;
+    #endif
     if (!g_jpeg_output) {
       g_jpeg_output_capacity = requested_output_capacity;
       g_jpeg_output = (uint16_t *) heap_caps_malloc(g_jpeg_output_capacity, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
@@ -5137,6 +5241,7 @@ esp_err_t pet_p4_renderer_init(void) {
     g_tjpgd_workbuf = (uint8_t *) heap_caps_malloc(PET_P4_TJPGD_WORK_BUFFER_BYTES, MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
     if (!g_tjpgd_workbuf) g_tjpgd_workbuf = (uint8_t *) heap_caps_malloc(PET_P4_TJPGD_WORK_BUFFER_BYTES, MALLOC_CAP_8BIT);
   }
+  #if SOC_PPA_SUPPORTED
   if (!g_h264_pack_task_init_attempted) {
     g_h264_pack_task_init_attempted = true;
     g_h264_pack_done = xSemaphoreCreateBinary();
@@ -5158,10 +5263,12 @@ esp_err_t pet_p4_renderer_init(void) {
       ESP_LOGW(TAG, "P4 H264 parallel pack task unavailable; using one core");
     }
   }
+  #endif
   if (!g_framebuffer || !g_native_framebuffers[0] || !g_native_framebuffers[1]
       || !g_jpeg_input || !g_jpeg_output || !g_tjpgd_workbuf) {
     return ESP_ERR_NO_MEM;
   }
+  #if SOC_PPA_SUPPORTED
   if (!g_ppa_init_attempted) {
     g_ppa_init_attempted = true;
     if (g_native_framebuffer_ppa_compatible) {
@@ -5183,6 +5290,8 @@ esp_err_t pet_p4_renderer_init(void) {
       ESP_LOGW(TAG, "P4 PPA output buffer unavailable; using CPU rotation");
     }
   }
+  #endif
+  #if SOC_JPEG_DECODE_SUPPORTED
   if (!g_jpeg_decoder_init_attempted) {
     g_jpeg_decoder_init_attempted = true;
     if (g_jpeg_input_dma_compatible && g_jpeg_output_dma_compatible) {
@@ -5203,6 +5312,7 @@ esp_err_t pet_p4_renderer_init(void) {
       ESP_LOGW(TAG, "P4 JPEG DMA buffers unavailable; using TJPGD fallback");
     }
   }
+  #endif
   return ESP_OK;
 }
 
@@ -5229,6 +5339,11 @@ esp_err_t pet_p4_renderer_render(
     g_framebuffer_initialized = true;
   }
   const char *page = view && view->page ? view->page : "main";
+#if CONFIG_IDF_TARGET_ESP32S3
+  const bool native_home=strcmp(page,"main")==0;
+#else
+  const bool native_home=false;
+#endif
   if(strcmp(page,"components"))center_art_release();
   if(strcmp(page,"app"))instrument_release();
   bool realtime_mode = view && view->realtime_conversation;
@@ -5260,9 +5375,9 @@ esp_err_t pet_p4_renderer_render(
         g_logged_missing_asset = true;
       }
     }
-    if (view && view->show_voice_overlay) draw_standalone_voice_overlay();
-    else if (!show_session_queue) draw_bubble(view, now_ms);
-    if (!realtime) draw_session_queue(state, now_ms);
+    if (!native_home && view && view->show_voice_overlay) draw_standalone_voice_overlay();
+    else if (!native_home && !show_session_queue) draw_bubble(view, now_ms);
+    if (!native_home && !realtime) draw_session_queue(state, now_ms);
     else g_session_overlay_cache_valid = false;
   }
   const bool media_page = strcmp(page, "app") == 0 && pet_p4_miniapp_media_active();
@@ -5271,15 +5386,19 @@ esp_err_t pet_p4_renderer_render(
   const bool dedicated_page = media_page || instrument_page || (strcmp(page,"app")==0 && pet_p4_miniapp_slicing_active()) || strcmp(page, "components") == 0
     || strcmp(page, "touch_test") == 0;
   if (!dedicated_page) draw_touch_feedback(state, now_ms);
-  if (strcmp(page, "main") == 0) draw_page_indicator(page);
+  if (!native_home && strcmp(page, "main") == 0) draw_page_indicator(page);
   // Native media owns its status and error UI. Generic Agent/connection banners
   // must not cover playback status or break the immersive lyrics-only page.
-  if (!dedicated_page) draw_connection_banner(state, now_ms);
+  if (!native_home && !dedicated_page) draw_connection_banner(state, now_ms);
   snprintf(g_last_render_page, sizeof(g_last_render_page), "%s", page);
-  if (!dedicated_page) draw_boot_diagnostic(now_ms);
+  if (!native_home && !dedicated_page) draw_boot_diagnostic(now_ms);
   int64_t rotate_started_us = esp_timer_get_time();
   uint32_t overlay_us = elapsed_us_clamped(overlay_started_us, rotate_started_us);
-  ESP_RETURN_ON_ERROR(rotate_landscape_to_panel(), TAG, "rotate logical framebuffer");
+  if(!native_home)ESP_RETURN_ON_ERROR(rotate_landscape_to_panel(), TAG, "rotate logical framebuffer");
+#if CONFIG_IDF_TARGET_ESP32S3
+  if(native_home)s3_native_home(state,view,now_ms);
+  s3_native_navigation(page);
+#endif
   int64_t lcd_started_us = esp_timer_get_time();
   uint32_t rotate_us = elapsed_us_clamped(rotate_started_us, lcd_started_us);
   bool unchanged = pet_p4_frame_unchanged(g_native_framebuffer, previous_native,

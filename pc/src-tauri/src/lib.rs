@@ -3462,7 +3462,7 @@ async fn dispatch_remote_cli_binding(
             .map_err(|error| format!("USB 下发渠道切换失败: {error}"))?;
 
         let mut sessions_reset = false;
-        if usb_status.runtime.eq_ignore_ascii_case("esp-p4") {
+        if matches!(usb_status.runtime.as_str(), "esp-p4" | "esp-s3") {
             let mut session_binding = p4_session_binding()
                 .lock()
                 .map_err(|error| error.to_string())?;
@@ -3764,7 +3764,7 @@ fn audio_bridge_signal_blocking(
     }
     let usb_status = usb_manager.status();
     let p4_usb_connected =
-        usb_status.connected && usb_status.runtime.eq_ignore_ascii_case("esp-p4");
+        usb_status.connected && matches!(usb_status.runtime.as_str(), "esp-p4" | "esp-s3");
 
     // Build the JSON object consumed by the USB-connected board runtime.
     let mut obj = serde_json::Map::new();
@@ -4248,7 +4248,7 @@ async fn button_config_signal(
         return Err("按钮配置为空,无法下发".to_string());
     }
     let voice_button = normalize_voice_button(voiceButton)?;
-    let command_topic = if usb_status.runtime.eq_ignore_ascii_case("esp-p4") {
+    let command_topic = if matches!(usb_status.runtime.as_str(), "esp-p4" | "esp-s3") {
         "input/config"
     } else {
         "control/command"
@@ -6329,10 +6329,7 @@ async fn import_codex_pet(
         .map_err(|e| format!("无法解析 AppLocalData 目录: {}", e))?;
     tauri::async_runtime::spawn_blocking(move || {
         let imported = codex_import::import_codex_pet(&pet_id, &app_local_data_dir)?;
-        usb_serial::prepare_p4_appearance(
-            Path::new(&imported.appearance_dir),
-            &app_local_data_dir,
-        )?;
+        prepare_connected_appearance(&app_handle, Path::new(&imported.appearance_dir), &app_local_data_dir)?;
         Ok(imported)
     })
     .await
@@ -6582,7 +6579,9 @@ fn usb_get_bundled_firmware_info(
     usb_manager: tauri::State<'_, usb_serial::UsbSerialManager>,
 ) -> Result<usb_serial::FirmwareImageInfo, String> {
     let status = usb_manager.status();
-    let target = if status.connected && status.runtime.eq_ignore_ascii_case("esp-p4")
+    let target = if status.connected && status.runtime.eq_ignore_ascii_case("esp-s3") {
+        usb_serial::P4ChipTarget::S3
+    } else if status.connected && status.runtime.eq_ignore_ascii_case("esp-p4")
         && status.capabilities.pointer("/firmwareUpdate/chipRevision").is_some() {
         usb_serial::chip_target_from_device(&status.capabilities, None)?
     } else {
@@ -6684,8 +6683,8 @@ async fn usb_update_bundled_firmware(
     if !status.connected || status.board_device_id != expected_board_device_id {
         return Err("connected USB board changed before bundled firmware update".to_string());
     }
-    if !status.runtime.eq_ignore_ascii_case("esp-p4") {
-        return Err("bundled firmware update is only supported by ESP32-P4".to_string());
+    if !matches!(status.runtime.as_str(), "esp-p4" | "esp-s3") {
+        return Err("bundled firmware update is only supported by ESP32-P4 / ESP32-S3".to_string());
     }
     if compare_firmware_versions(&status.firmware, &firmware_info.version)? != VersionOrdering::Less
     {
@@ -6721,7 +6720,7 @@ enum UsbAppearanceSyncRuntime {
 }
 
 fn usb_status_supports_p4_assets(status: &usb_serial::UsbConnectionStatus) -> bool {
-    status.runtime.eq_ignore_ascii_case("esp-p4")
+    matches!(status.runtime.as_str(), "esp-p4" | "esp-s3")
         || status
             .capabilities
             .get("assetFormats")
@@ -6869,6 +6868,26 @@ fn ensure_builtin_terrier_source(
     Ok(appearance_dir)
 }
 
+fn prepare_connected_appearance(app: &tauri::AppHandle, dir: &Path, data: &Path) -> Result<usb_serial::PreparedP4Appearance, String> {
+    let status = app.state::<usb_serial::UsbSerialManager>().status();
+    if status.connected && status.runtime == "esp-s3" {
+        usb_serial::prepare_s3_appearance(dir, data, &s3_converter_path(app)?)
+    } else {
+        usb_serial::prepare_p4_appearance(dir, data)
+    }
+}
+
+fn s3_converter_path(app: &tauri::AppHandle) -> Result<PathBuf, String> {
+    let resource = app.path().resource_dir().map_err(|e| e.to_string())?.join("tools/prepare_s3_assets.py");
+    if resource.is_file() { return Ok(resource); }
+    #[cfg(debug_assertions)]
+    {
+        let source = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../firmware/tools/prepare_s3_assets.py");
+        if source.is_file() { return Ok(source); }
+    }
+    Err("S3 asset converter is missing from desktop resources".into())
+}
+
 fn prepare_p4_appearance_by_id(
     app_handle: &tauri::AppHandle,
     appearance_id: &str,
@@ -6891,7 +6910,7 @@ fn prepare_p4_appearance_by_id(
             .join(appearance_id);
         dir
     };
-    usb_serial::prepare_p4_appearance(&appearance_dir, &app_local_data_dir)
+    prepare_connected_appearance(app_handle, &appearance_dir, &app_local_data_dir)
 }
 
 #[tauri::command]
@@ -7016,6 +7035,9 @@ async fn usb_sync_appearance(
             .join("builtin-terrier");
         let has_overrides = builtin_terrier_has_audio_overrides(&local_dir)?;
         match sync_runtime {
+            UsbAppearanceSyncRuntime::EspP4 if status.runtime == "esp-s3" => {
+                ensure_builtin_terrier_source(&app_local_data_dir, &clips_dir, true)?
+            }
             UsbAppearanceSyncRuntime::EspP4
                 if has_overrides && usb_serial::inspect_prepared_p4_appearance(&local_dir).is_ok() =>
             {
@@ -7044,8 +7066,11 @@ async fn usb_sync_appearance(
         && (!serial_connected || status.capabilities["appearance"]["builtinProtected"] == true);
     match sync_runtime {
         UsbAppearanceSyncRuntime::EspP4 => {
-            if !use_device_builtin { usb_serial::inspect_prepared_p4_appearance(&appearance_dir)?; }
-            if !use_device_builtin && usb_serial::prepared_p4_requires_system_cues(&appearance_dir)?
+            if status.runtime == "esp-s3" {
+                let converter = s3_converter_path(&app_handle)?;
+                usb_serial::prepare_s3_appearance(&appearance_dir, &app_local_data_dir, &converter)?;
+            } else if !use_device_builtin { usb_serial::inspect_prepared_p4_appearance(&appearance_dir)?; }
+            if status.runtime != "esp-s3" && !use_device_builtin && usb_serial::prepared_p4_requires_system_cues(&appearance_dir)?
                 && serial_connected
                 && status.capabilities["appearance"]["systemCues"] != true {
                 return Err("此形象使用公共提示音，请先升级设备固件至 0.7.63 或更新版本。".into());
@@ -10174,7 +10199,7 @@ pub fn run() {
                 "[usb-transfer-log] persistent diagnostics={}",
                 usb_transfer_log.display()
             );
-            #[cfg(target_os = "macos")]
+            #[cfg(any(target_os = "macos", target_os = "linux"))]
             volcengine_asr::configure_storage_dir(app.path().app_data_dir()?)
                 .map_err(std::io::Error::other)?;
             voice_chat_settings::configure_storage_dir(app.path().app_data_dir()?)
@@ -11801,11 +11826,13 @@ fn wait_for_process_exit(pid: u32, attempts: usize, sleep_ms: u64) -> bool {
 
 #[cfg(unix)]
 fn terminate_process_soft(pid: u32) {
+    if pid == 0 || pid > i32::MAX as u32 { return; }
     let _ = command_for_host("kill").arg(pid.to_string()).status();
 }
 
 #[cfg(unix)]
 fn terminate_process_force(pid: u32) {
+    if pid == 0 || pid > i32::MAX as u32 { return; }
     let _ = command_for_host("kill")
         .arg("-9")
         .arg(pid.to_string())
@@ -11832,6 +11859,7 @@ fn process_exists(pid: u32) -> bool {
 
 #[cfg(unix)]
 fn process_exists_platform(pid: u32) -> bool {
+    if pid == 0 || pid > i32::MAX as u32 { return false; }
     command_for_host("kill")
         .arg("-0")
         .arg(pid.to_string())
@@ -13881,6 +13909,8 @@ mod tests {
     fn stale_managed_pid_files_are_discarded_before_runtime_reuse() {
         let tmp = tempfile::tempdir().unwrap();
         let pid_path = tmp.path().join("managed.pid");
+        #[cfg(unix)]
+        assert!(!process_exists(0), "PID zero denotes a process group, not one managed process");
         std::fs::write(&pid_path, u32::MAX.to_string()).unwrap();
 
         assert_eq!(read_live_managed_pid(&pid_path), None);

@@ -138,6 +138,7 @@ typedef struct {
 typedef struct {
   char event[48];
   char action[PET_P4_MINIAPP_ACTION_MAX];
+  char label[64];
 } miniapp_button_t;
 
 typedef struct {
@@ -451,10 +452,10 @@ static void format_compact_u64(char *out, size_t out_size, uint64_t value, bool 
   for (size_t i = 0; i < sizeof(scales) / sizeof(scales[0]); i += 1) {
     if (value >= scales[i].divisor) {
       uint64_t whole = value / scales[i].divisor;
-      uint64_t tenth = (value % scales[i].divisor) * 10ULL / scales[i].divisor;
+      unsigned tenth = (unsigned)((value % scales[i].divisor) * 10ULL / scales[i].divisor) % 10U;
       if (tenth == 0) snprintf(out, out_size, "%llu%c", (unsigned long long) whole, scales[i].suffix);
-      else snprintf(out, out_size, "%llu.%llu%c", (unsigned long long) whole,
-                    (unsigned long long) tenth, scales[i].suffix);
+      else snprintf(out, out_size, "%llu.%u%c", (unsigned long long) whole,
+                    (unsigned) tenth, scales[i].suffix);
       return;
     }
   }
@@ -1067,6 +1068,7 @@ static bool parse_buttons(
     button = &runtime->buttons[runtime->button_count++];
     copy_utf8(button->event, sizeof(button->event), event);
     copy_utf8(button->action, sizeof(button->action), action);
+    copy_utf8(button->label, sizeof(button->label), json_string(item,"label"));
   }
   cJSON_Delete(root);
   return true;
@@ -1196,7 +1198,8 @@ static const char *const keys[]={"engine","repeat","press","swipe","confirm","dr
       const char *bounds=json_string(e,"bounds");
       if(!strcmp(json_string(e,"id"),id)&&(!bounds[0]||!strcmp(bounds,"clamp")))found=true;
     }
-    if(!found)return false;copy_utf8(r->drag_entity,16,id);
+    if(!found)return false;
+    copy_utf8(r->drag_entity,16,id);
   }
   const cJSON *cooldown=cJSON_GetObjectItemCaseSensitive(p,"cooldown");
   if(cooldown){
@@ -1492,12 +1495,15 @@ static bool parse_save(miniapp_runtime_t *r,const cJSON *save){
   const cJSON *page=cJSON_GetObjectItemCaseSensitive(save,"page");if(page&&!cJSON_IsBool(page))return false;r->save_page=cJSON_IsTrue(page);if(r->save_page&&!r->page_count)return false;
   r->save_version=v->valueint;
   cJSON_ArrayForEach(item,vars){
-    if(!cJSON_IsString(item))return false;int i=find_var(r,item->valuestring);
-    if(i<0||r->vars[i].type!=MINIAPP_VAR_INT||(r->save_vars&(1u<<i)))return false;r->save_vars|=1u<<i;
+    if(!cJSON_IsString(item))return false;
+    int i=find_var(r,item->valuestring);
+    if(i<0||r->vars[i].type!=MINIAPP_VAR_INT||(r->save_vars&(1u<<i)))return false;
+    r->save_vars|=1u<<i;
   }
   for(int i=0;i<r->state_count;i++){
     const cJSON *s=cJSON_GetObjectItemCaseSensitive(states,r->states[i]);
-    if(!cJSON_IsString(s))return false;r->save_states[i]=find_name(r->states,r->state_count,s->valuestring);
+    if(!cJSON_IsString(s))return false;
+    r->save_states[i]=find_name(r->states,r->state_count,s->valuestring);
     if(r->save_states[i]<0)return false;
   }
   return true;
@@ -1835,7 +1841,8 @@ static bool apply_effects(miniapp_runtime_t *runtime, const miniapp_effect_t *ef
       int32_t next = effect->op == MINIAPP_EFFECT_INC
         ? clamp_i64((long long) var->int_value + effect->int_value) : effect->int_value;
       if(effect->source_var>=0)next=original[effect->source_var];
-      if(next<var->int_min)next=var->int_min;if(next>var->int_max)next=var->int_max;
+      if(next<var->int_min)next=var->int_min;
+      if(next>var->int_max)next=var->int_max;
       if (next != var->int_value) {
         var->int_value = next;
         changed = true;
@@ -1951,7 +1958,9 @@ bool pet_p4_miniapp_dispatch_action(const char *action, uint64_t now_ms) {
     portEXIT_CRITICAL(&g_runtime_lock);return ok;
   }
   if(g_runtime.active&&g_runtime.slicing) {
+#if !CONFIG_IDF_TARGET_ESP32S3
     if(!pet_p4_touch_ready()){portEXIT_CRITICAL(&g_runtime_lock);return false;}
+#endif
     if(!strcmp(action,"slice.restart")) {pet_fruit_start_or_resume(&g_runtime.fruit,now_ms,(uint32_t)now_ms);handled=true;}
     else if(!strcmp(action,"slice.pause")) {pet_fruit_pause(&g_runtime.fruit,now_ms);handled=true;}
     portEXIT_CRITICAL(&g_runtime_lock);
@@ -2029,6 +2038,52 @@ static bool button_matches_event(const char *binding, const char *event_name) {
   if (strcmp(binding, event_name) == 0) return true;
   return strcmp(binding, "knob.rotate_cw / knob.rotate_ccw") == 0
     && (strcmp(event_name, "knob.rotate_cw") == 0 || strcmp(event_name, "knob.rotate_ccw") == 0);
+}
+
+/* Called with the runtime lock held. Transitions are the declared action
+ * vocabulary, including actions that have no physical button binding. */
+static size_t miniapp_action_index(size_t wanted,char *out,size_t size) {
+  size_t count=0;
+  if(!g_runtime.active)return 0;
+  for(size_t i=0;i<g_runtime.transition_count;i++) {
+    const char *action=g_runtime.transitions[i].action;
+    if(!action[0])continue;
+    bool duplicate=false;
+    for(size_t j=0;j<i;j++)if(!strcmp(action,g_runtime.transitions[j].action)){duplicate=true;break;}
+    if(duplicate)continue;
+    if(count==wanted&&out&&size)copy_utf8(out,size,action);
+    count++;
+  }
+  return count;
+}
+size_t pet_p4_miniapp_action_count(void) {
+  portENTER_CRITICAL(&g_runtime_lock);
+  size_t count=miniapp_action_index((size_t)-1,NULL,0);
+  portEXIT_CRITICAL(&g_runtime_lock);
+  return count;
+}
+bool pet_p4_miniapp_action_get(size_t index,char *action,size_t size) {
+  if(!action||!size)return false;
+  action[0]=0;
+  portENTER_CRITICAL(&g_runtime_lock);
+  miniapp_action_index(index,action,size);
+  portEXIT_CRITICAL(&g_runtime_lock);
+  return action[0]!=0;
+}
+
+bool pet_p4_miniapp_action_label(size_t index,char *label,size_t size) {
+  if(!label||!size)return false;
+  label[0]=0;
+  char action[PET_P4_MINIAPP_ACTION_MAX]={0};
+  portENTER_CRITICAL(&g_runtime_lock);
+  miniapp_action_index(index,action,sizeof(action));
+  for(unsigned i=0;action[0]&&i<g_runtime.button_count;i++) {
+    if(!strcmp(action,g_runtime.buttons[i].action)&&g_runtime.buttons[i].label[0]) {
+      copy_utf8(label,size,g_runtime.buttons[i].label);break;
+    }
+  }
+  portEXIT_CRITICAL(&g_runtime_lock);
+  return label[0]!=0;
 }
 
 bool pet_p4_miniapp_has_input(const char *event_name) {
@@ -2539,9 +2594,9 @@ bool pet_p4_miniapp_sync_stats(const pet_p4_stats_model_t *stats) {
                      stats->valid & PET_P4_STATS_HAS_CACHED_TOKENS);
   snprintf(cache_label, sizeof(cache_label), "缓存 %s", cache);
   if (stats->valid & PET_P4_STATS_HAS_CACHED_TOKENS) {
-    snprintf(breakdown, sizeof(breakdown), "IN %s  OUT %s  CACHE %s", input, output, cache);
+    snprintf(breakdown, sizeof(breakdown), "IN %.14s  OUT %.14s  CACHE %.14s", input, output, cache);
   } else {
-    snprintf(breakdown, sizeof(breakdown), "IN %s  OUT %s", input, output);
+    snprintf(breakdown, sizeof(breakdown), "IN %.14s  OUT %.14s", input, output);
   }
   if (strcmp(stats->source, "codex") == 0) {
     agent_label = "ChatGPT (Codex)";
@@ -3009,9 +3064,9 @@ static bool persist_catalog_snapshot(
     char buttons_checksum[9];
     char sprites_checksum[9];
     if (!item) goto done;
-    snprintf(widget_checksum, sizeof(widget_checksum), "%08x", catalog[i].widget_checksum);
-    snprintf(buttons_checksum, sizeof(buttons_checksum), "%08x", catalog[i].buttons_checksum);
-    snprintf(sprites_checksum, sizeof(sprites_checksum), "%08x", catalog[i].sprites_checksum);
+    snprintf(widget_checksum, sizeof(widget_checksum), "%08x", (unsigned)catalog[i].widget_checksum);
+    snprintf(buttons_checksum, sizeof(buttons_checksum), "%08x", (unsigned)catalog[i].buttons_checksum);
+    snprintf(sprites_checksum, sizeof(sprites_checksum), "%08x", (unsigned)catalog[i].sprites_checksum);
     cJSON_AddStringToObject(item, "widgetId", catalog[i].widget_id);
     cJSON_AddStringToObject(item, "title", catalog[i].title);
     cJSON_AddNumberToObject(item, "slot", catalog[i].slot);
@@ -4815,7 +4870,13 @@ static bool component_install_touch_allowed(bool requires_touch) {
   /* Firmware-owned preinstallation runs before LCD/I2C touch initialization.
    * It stores a verified package, not a claim that touch hardware is ready.
    * External PC installs and live slice input must still require ready touch. */
+#if CONFIG_IDF_TARGET_ESP32S3
+  /* Three-key software pointer supports the same bounded component input API. */
+  (void)requires_touch;
+  return true;
+#else
   return !requires_touch || g_builtin_sync_in_progress || pet_p4_touch_ready();
+#endif
 }
 
 static bool resource_repair_package_matches(const miniapp_catalog_item_t *item,

@@ -21,6 +21,9 @@ import Button from "../shell/Button";
 import { buildUsageHelp, friendlyControlLabel } from "../lib/usage-help.js";
 
 const CONTROL_GROUP_META = {
+  s3_sw1: { label: "上一个", detail: "GPIO39 · 长按返回" },
+  s3_sw2: { label: "下一个", detail: "GPIO38 · 长按组件菜单" },
+  s3_sw3: { label: "确认", detail: "GPIO0 · 按住语音" },
   p4_sw1: { label: "SW1", detail: "左侧按键" },
   p4_sw2: { label: "SW2", detail: "中间按键" },
   p4_sw3: { label: "SW3", detail: "右侧按键" },
@@ -151,7 +154,7 @@ export default function BoardButtonPanel({
   const [hoveredButtonId, setHoveredButton] = useState("");
   const triggerId = selectedTrigger?.id || DEFAULT_VOICE_CONFIG.trigger;
   const controlRows = buttonControlRowsForRuntime(runtime);
-  const isP4Runtime = String(runtime || "").toLowerCase() === "esp-p4";
+  const isP4Runtime = ["esp-p4", "esp-s3"].includes(String(runtime || "").toLowerCase());
   const controlGroups = groupControlRows(controlRows, isP4Runtime);
   const help = buildUsageHelp(controlRows, buttonActions, voiceConfig?.enabled, voiceConfigDirty);
 
@@ -232,7 +235,7 @@ export default function BoardButtonPanel({
       )}
 
       <div className="usage-help">
-        <p>为按键和摇杆选择功能，修改后点击「同步到设备」生效。同一个按键可以分别设置短按和长按。</p>
+        <p>为设备控件选择功能，修改后点击「同步到设备」生效。同一个按键可以分别设置短按和长按。</p>
         <details open>
           <summary>常用操作 · 按当前配置显示{voiceConfigDirty ? "（待同步）" : ""}</summary>
           <dl className="usage-help__operations">

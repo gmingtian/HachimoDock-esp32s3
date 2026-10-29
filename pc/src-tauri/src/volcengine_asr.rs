@@ -9,16 +9,16 @@ use futures_util::{SinkExt, StreamExt};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::env;
-#[cfg(target_os = "macos")]
+#[cfg(any(target_os = "macos", target_os = "linux"))]
 use std::fs;
 use std::io::{Read, Write};
-#[cfg(target_os = "macos")]
+#[cfg(any(target_os = "macos", target_os = "linux"))]
 use std::os::unix::fs::PermissionsExt;
-#[cfg(target_os = "macos")]
+#[cfg(any(target_os = "macos", target_os = "linux"))]
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
-#[cfg(target_os = "macos")]
+#[cfg(any(target_os = "macos", target_os = "linux"))]
 use std::sync::OnceLock;
 use std::time::{Duration, Instant};
 use tokio::sync::mpsc;
@@ -35,9 +35,9 @@ pub const DEFAULT_RESOURCE_ID: &str = "volc.seedasr.sauc.duration";
 const KEYRING_SERVICE: &str = "claw-pet-manager";
 #[cfg(windows)]
 const KEYRING_USER: &str = "volcengine-device-asr";
-#[cfg(target_os = "macos")]
+#[cfg(any(target_os = "macos", target_os = "linux"))]
 const MACOS_CONFIG_FILE_NAME: &str = "volcengine-device-asr.json";
-#[cfg(target_os = "macos")]
+#[cfg(any(target_os = "macos", target_os = "linux"))]
 static MACOS_CONFIG_DIR: OnceLock<PathBuf> = OnceLock::new();
 const CONNECT_TIMEOUT: Duration = Duration::from_secs(8);
 const FINAL_TIMEOUT: Duration = Duration::from_secs(8);
@@ -425,12 +425,12 @@ fn load_runtime_config() -> Result<RuntimeAsrConfig, String> {
     Err("未配置火山引擎语音识别 API Key".to_string())
 }
 
-#[cfg(target_os = "macos")]
+#[cfg(any(target_os = "macos", target_os = "linux"))]
 pub fn configure_storage_dir(path: PathBuf) -> Result<(), String> {
     match MACOS_CONFIG_DIR.set(path.clone()) {
         Ok(()) => Ok(()),
         Err(_) if MACOS_CONFIG_DIR.get() == Some(&path) => Ok(()),
-        Err(_) => Err("macOS ASR 本地配置目录已初始化为其他路径".to_string()),
+        Err(_) => Err("ASR 应用私有配置目录已初始化为其他路径".to_string()),
     }
 }
 
@@ -451,12 +451,12 @@ fn read_stored_config() -> Result<Option<StoredAsrConfig>, String> {
     }
 }
 
-#[cfg(target_os = "macos")]
+#[cfg(any(target_os = "macos", target_os = "linux"))]
 fn read_stored_config() -> Result<Option<StoredAsrConfig>, String> {
     read_macos_config_file(&macos_config_path()?)
 }
 
-#[cfg(not(any(windows, target_os = "macos")))]
+#[cfg(not(any(windows, target_os = "macos", target_os = "linux")))]
 fn read_stored_config() -> Result<Option<StoredAsrConfig>, String> {
     Ok(None)
 }
@@ -470,75 +470,64 @@ fn write_stored_config(config: &StoredAsrConfig) -> Result<(), String> {
         .map_err(|error| format!("无法写入{}: {error}", credential_store_label()))
 }
 
-#[cfg(target_os = "macos")]
+#[cfg(any(target_os = "macos", target_os = "linux"))]
 fn write_stored_config(config: &StoredAsrConfig) -> Result<(), String> {
     write_macos_config_file(&macos_config_path()?, config)
 }
 
-#[cfg(not(any(windows, target_os = "macos")))]
+#[cfg(not(any(windows, target_os = "macos", target_os = "linux")))]
 fn write_stored_config(_config: &StoredAsrConfig) -> Result<(), String> {
     Err("当前平台仅支持通过环境变量配置火山引擎 ASR".to_string())
 }
 
-#[cfg(target_os = "macos")]
+#[cfg(any(target_os = "macos", target_os = "linux"))]
 fn macos_config_path() -> Result<PathBuf, String> {
     MACOS_CONFIG_DIR
         .get()
         .map(|directory| directory.join(MACOS_CONFIG_FILE_NAME))
-        .ok_or_else(|| "macOS ASR 本地配置目录尚未初始化".to_string())
+        .ok_or_else(|| "ASR 应用私有配置目录尚未初始化".to_string())
 }
 
-#[cfg(target_os = "macos")]
+#[cfg(any(target_os = "macos", target_os = "linux"))]
 fn prepare_private_directory(directory: &Path) -> Result<(), String> {
-    fs::create_dir_all(directory).map_err(|error| {
-        format!(
-            "无法创建 macOS ASR 本地配置目录 {}: {error}",
-            directory.display()
-        )
-    })?;
-    fs::set_permissions(directory, fs::Permissions::from_mode(0o700)).map_err(|error| {
-        format!(
-            "无法保护 macOS ASR 本地配置目录 {}: {error}",
-            directory.display()
-        )
-    })
+    crate::secure_config::prepare_private_directory(directory)
 }
 
-#[cfg(target_os = "macos")]
+#[cfg(any(target_os = "macos", target_os = "linux"))]
 fn read_macos_config_file(path: &Path) -> Result<Option<StoredAsrConfig>, String> {
     let directory = path
         .parent()
-        .ok_or_else(|| "macOS ASR 本地配置路径缺少父目录".to_string())?;
+        .ok_or_else(|| "ASR 应用私有配置路径缺少父目录".to_string())?;
     prepare_private_directory(directory)?;
     let metadata = match fs::symlink_metadata(path) {
         Ok(metadata) => metadata,
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(None),
         Err(error) => {
             return Err(format!(
-                "无法检查 macOS ASR 本地配置 {}: {error}",
+                "无法检查 ASR 应用私有配置 {}: {error}",
                 path.display()
             ))
         }
     };
     if metadata.file_type().is_symlink() || !metadata.is_file() {
         return Err(format!(
-            "macOS ASR 本地配置必须是普通文件: {}",
+            "ASR 应用私有配置必须是普通文件: {}",
             path.display()
         ));
     }
     fs::set_permissions(path, fs::Permissions::from_mode(0o600))
-        .map_err(|error| format!("无法保护 macOS ASR 本地配置 {}: {error}", path.display()))?;
+        .map_err(|error| format!("无法保护 ASR 应用私有配置 {}: {error}", path.display()))?;
     let value = crate::secure_config::read(path,"speech-asr")?.ok_or("语音配置未找到")?;
     serde_json::from_str(&value)
         .map(Some)
         .map_err(|error| format!("火山引擎 ASR 本地配置损坏: {error}"))
 }
 
-#[cfg(target_os = "macos")]
+#[cfg(any(target_os = "macos", target_os = "linux"))]
 fn write_macos_config_file(path: &Path, config: &StoredAsrConfig) -> Result<(), String> {
     let directory = path
         .parent()
-        .ok_or_else(|| "macOS ASR 本地配置路径缺少父目录".to_string())?;
+        .ok_or_else(|| "ASR 应用私有配置路径缺少父目录".to_string())?;
     prepare_private_directory(directory)?;
 
     let value = serde_json::to_vec(config)
@@ -556,22 +545,27 @@ fn credential_source_name() -> &'static str {
     "windows-credential-manager"
 }
 
+#[cfg(target_os = "linux")]
+fn credential_source_name() -> &'static str {
+    "linux-private-file"
+}
+
 #[cfg(target_os = "macos")]
 fn credential_source_name() -> &'static str {
     "macos-private-file"
 }
 
-#[cfg(not(any(windows, target_os = "macos")))]
+#[cfg(not(any(windows, target_os = "macos", target_os = "linux")))]
 fn credential_source_name() -> &'static str {
     "environment"
 }
 
-#[cfg(target_os = "macos")]
+#[cfg(any(target_os = "macos", target_os = "linux"))]
 fn credential_saved_message() -> &'static str {
     "火山引擎云端 ASR 配置已保存到当前用户的应用私有目录"
 }
 
-#[cfg(not(target_os = "macos"))]
+#[cfg(not(any(target_os = "macos", target_os = "linux")))]
 fn credential_saved_message() -> &'static str {
     "火山引擎云端 ASR 配置已安全保存"
 }
@@ -1089,6 +1083,25 @@ mod tests {
         );
     }
 
+    #[cfg(any(target_os = "macos", target_os = "linux"))]
+    #[test]
+    fn private_storage_rejects_app_root_links_without_chmod() {
+        use std::os::unix::fs::symlink;
+        let root = tempfile::tempdir().unwrap();
+        let target = tempfile::tempdir().unwrap();
+        fs::set_permissions(target.path(), fs::Permissions::from_mode(0o755)).unwrap();
+        let link = root.path().join("linked-app-data");
+        symlink(target.path(), &link).unwrap();
+        assert!(prepare_private_directory(&link).is_err());
+        assert_eq!(fs::metadata(target.path()).unwrap().permissions().mode() & 0o777, 0o755);
+    }
+
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn linux_asr_reports_private_file_storage() {
+        assert_eq!(credential_source_name(), "linux-private-file");
+    }
+
     #[test]
     fn unconfigured_asr_status_requests_a_user_key() {
         let status = public_status(false, DEFAULT_RESOURCE_ID.to_string(), "none", "请配置火山引擎语音识别 API Key");
@@ -1097,7 +1110,7 @@ mod tests {
         assert_eq!(status.resource_id, DEFAULT_RESOURCE_ID);
     }
 
-    #[cfg(target_os = "macos")]
+    #[cfg(any(target_os = "macos", target_os = "linux"))]
     #[test]
     fn macos_private_file_round_trip_is_owner_only() {
         let temp = tempfile::tempdir().unwrap();
@@ -1125,7 +1138,7 @@ mod tests {
         assert_eq!(actual.resource_id, expected.resource_id);
     }
 
-    #[cfg(target_os = "macos")]
+    #[cfg(any(target_os = "macos", target_os = "linux"))]
     #[test]
     fn macos_private_file_does_not_follow_symlinks() {
         use std::os::unix::fs::symlink;

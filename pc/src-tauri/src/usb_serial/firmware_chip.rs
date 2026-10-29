@@ -9,6 +9,7 @@ pub(crate) const V3_FIRMWARE_RESOURCE: &str = "firmware/esp32-p4/firmware-v3.bin
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum P4ChipTarget {
+    S3,
     Revision(u16),
     // Pre-v3 ESP-IDF runtime diagnostics prove the family, not the exact revision.
     LegacyV1,
@@ -77,6 +78,7 @@ pub(crate) fn chip_target_from_device(
 
 pub(crate) fn bundled_resource_for_chip(target: P4ChipTarget) -> &'static str {
     match target {
+        P4ChipTarget::S3 => "firmware/esp32-s3/firmware.bin",
         P4ChipTarget::Revision(300..=399) => V3_FIRMWARE_RESOURCE,
         _ => V1_FIRMWARE_RESOURCE,
     }
@@ -88,6 +90,7 @@ pub(crate) fn validate_firmware_chip(
 ) -> Result<(), String> {
     let compatible = match target {
         P4ChipTarget::Revision(revision) => revision >= range.min && revision <= range.max,
+        P4ChipTarget::S3 => false,
         P4ChipTarget::LegacyV1 => range.min <= 1 && range.max == 199,
     };
     if compatible {
@@ -95,6 +98,22 @@ pub(crate) fn validate_firmware_chip(
     } else {
         Err("固件与设备芯片版本不匹配，已阻止升级".into())
     }
+}
+
+pub(crate) fn validate_firmware_for_target(
+    image: &[u8],
+    target: P4ChipTarget,
+) -> Result<(), String> {
+    if target == P4ChipTarget::S3 {
+        if image.len() < 24 || image[0] != 0xe9 || image[12..14] != [9, 0] {
+            return Err("固件不是 ESP32-S3 应用镜像，已阻止跨芯片升级".into());
+        }
+        if image.len() > 3 * 1024 * 1024 {
+            return Err("ESP32-S3 固件超过 3 MiB OTA 分区".into());
+        }
+        return Ok(());
+    }
+    validate_firmware_chip(firmware_chip_range(image)?, target)
 }
 
 #[cfg(test)]
@@ -108,6 +127,18 @@ mod tests {
         image[15..17].copy_from_slice(&min.to_le_bytes());
         image[17..19].copy_from_slice(&max.to_le_bytes());
         image
+    }
+    #[test]
+    fn s3_never_selects_or_accepts_a_p4_image() {
+        assert_eq!(
+            bundled_resource_for_chip(P4ChipTarget::S3),
+            "firmware/esp32-s3/firmware.bin"
+        );
+        assert!(validate_firmware_for_target(&image(1, 199), P4ChipTarget::S3).is_err());
+        let mut s3 = image(0, 65535);
+        s3[12] = 9;
+        assert!(validate_firmware_for_target(&s3, P4ChipTarget::S3).is_ok());
+        assert!(validate_firmware_for_target(&s3, P4ChipTarget::Revision(100)).is_err());
     }
     #[test]
     fn chip_family_matrix_rejects_cross_flash_and_unbounded_images() {

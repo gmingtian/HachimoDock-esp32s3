@@ -1,3 +1,4 @@
+#include "sdkconfig.h"
 /*
  * [Input] Debounced SW1-SW3/shared center-key/legacy encoder GPIO events,
  *         calibrated four-direction joystick ADC samples, and validated
@@ -26,7 +27,9 @@
 #include <string.h>
 
 #include "driver/gpio.h"
+#if !CONFIG_IDF_TARGET_ESP32S3
 #include "esp_adc/adc_oneshot.h"
+#endif
 #include "esp_heap_caps.h"
 #include "esp_log.h"
 #include "esp_timer.h"
@@ -34,13 +37,16 @@
 #include "freertos/queue.h"
 #include "freertos/task.h"
 #include "nvs.h"
+#if !CONFIG_IDF_TARGET_ESP32S3
 #include "soc/adc_channel.h"
+#endif
 
 #include "pet_p4_audio.h"
 #include "pet_p4_input_core.h"
 #include "pet_p4_miniapp.h"
 #include "pet_p4_media.h"
 
+#if !CONFIG_IDF_TARGET_ESP32S3
 #define PET_P4_INPUT_SW1_GPIO GPIO_NUM_50
 #define PET_P4_INPUT_SW2_GPIO GPIO_NUM_49
 #define PET_P4_INPUT_SW3_GPIO GPIO_NUM_5
@@ -52,6 +58,8 @@
 #define PET_P4_INPUT_JOYSTICK_X_CHANNEL ADC1_GPIO21_CHANNEL
 #define PET_P4_INPUT_JOYSTICK_Y_CHANNEL ADC1_GPIO20_CHANNEL
 
+#endif
+
 #define PET_P4_INPUT_SAMPLE_MS 5
 #define PET_P4_INPUT_DEBOUNCE_MS 25
 #define PET_P4_INPUT_LONG_PRESS_MS 700
@@ -60,7 +68,11 @@
 #define PET_P4_INPUT_JOYSTICK_REPEAT_DELAY_MS 350
 #define PET_P4_INPUT_JOYSTICK_REPEAT_INTERVAL_MS 140
 #define PET_P4_INPUT_QUEUE_LENGTH 32
+#if CONFIG_IDF_TARGET_ESP32S3
+#define PET_P4_INPUT_NVS_NAMESPACE "pet_input_s3"
+#else
 #define PET_P4_INPUT_NVS_NAMESPACE "pet_input"
+#endif
 #define PET_P4_INPUT_NVS_KEY "config"
 
 typedef struct {
@@ -94,6 +106,7 @@ typedef enum {
   PET_P4_INPUT_GESTURE_ROTATE,
   PET_P4_INPUT_GESTURE_DIRECTION,
   PET_P4_INPUT_GESTURE_REPEAT,
+  PET_S3_INPUT_GESTURE_ACTION,
 } pet_p4_input_gesture_t;
 
 typedef struct {
@@ -114,7 +127,9 @@ static QueueHandle_t g_event_queue;
 static pet_p4_input_config_t g_config;
 static atomic_uint g_dropped_events;
 static unsigned int g_event_sequence;
+#if !CONFIG_IDF_TARGET_ESP32S3
 static adc_oneshot_unit_handle_t g_joystick_adc;
+#endif
 static atomic_bool g_joystick_ready;
 static atomic_int g_joystick_center_x;
 static atomic_int g_joystick_center_y;
@@ -125,6 +140,7 @@ static atomic_int g_joystick_maximum_x;
 static atomic_int g_joystick_minimum_y;
 static atomic_int g_joystick_maximum_y;
 
+#if !CONFIG_IDF_TARGET_ESP32S3
 static void update_atomic_minimum(atomic_int *value, int sample) {
   int current = atomic_load_explicit(value, memory_order_relaxed);
   while (sample < current
@@ -158,9 +174,14 @@ static void record_joystick_sample(int x, int y) {
   update_atomic_maximum(&g_joystick_maximum_y, y);
 }
 
+#endif
+
 static void copy_text(char *dest, size_t dest_size, const char *src) {
   if (!dest || dest_size == 0) return;
-  snprintf(dest, dest_size, "%s", src ? src : "");
+  const char *text=src?src:"";
+  size_t count=0;
+  while(count+1<dest_size && text[count]) { dest[count]=text[count];count++; }
+  dest[count]=0;
 }
 
 static const char *json_string(const cJSON *object, const char *key) {
@@ -247,6 +268,17 @@ static void add_default_binding(
 static void load_default_config(pet_p4_input_config_t *config) {
   memset(config, 0, sizeof(*config));
   config->version = PET_P4_INPUT_CONFIG_VERSION;
+#if CONFIG_IDF_TARGET_ESP32S3
+  add_default_binding(config,"button.sw1.short_press","session_previous","");
+  add_default_binding(config,"button.sw1.long_press","page_back","");
+  add_default_binding(config,"button.sw1.hold","disabled","");
+  add_default_binding(config,"button.sw2.short_press","session_next","");
+  add_default_binding(config,"button.sw2.long_press","component_center","");
+  add_default_binding(config,"button.sw2.hold","disabled","");
+  add_default_binding(config,"button.sw3.short_press","page_enter","");
+  add_default_binding(config,"button.sw3.long_press","disabled","");
+  add_default_binding(config,"button.sw3.hold","voice_ptt","");
+#else
   add_default_binding(config, "button.sw1.short_press", "page_enter", "");
   add_default_binding(config, "button.sw1.long_press", "disabled", "");
   add_default_binding(config, "button.sw1.hold", "voice_ptt", "");
@@ -263,6 +295,7 @@ static void load_default_config(pet_p4_input_config_t *config) {
   add_default_binding(config, "knob.rotate_ccw", "session_previous", "");
   add_default_binding(config, "joystick.up", "session_previous", "");
   add_default_binding(config, "joystick.down", "session_next", "");
+#endif
 }
 
 static bool config_bindings_are_valid(const pet_p4_input_config_t *config) {
@@ -772,6 +805,9 @@ static void queue_event(
   }
 }
 
+#if CONFIG_IDF_TARGET_ESP32S3
+#include "../s3/pet_s3_input_task.inc"
+#else
 static void queue_button_flags(pet_p4_input_control_t control, uint8_t flags) {
   if (flags & PET_P4_BUTTON_EVENT_DOWN) queue_event(control, PET_P4_INPUT_GESTURE_DOWN, 0);
   if (flags & PET_P4_BUTTON_EVENT_SHORT_PRESS) queue_event(control, PET_P4_INPUT_GESTURE_SHORT_PRESS, 0);
@@ -979,6 +1015,8 @@ esp_err_t pet_p4_input_init(void) {
   );
   return ESP_OK;
 }
+
+#endif
 
 esp_err_t pet_p4_input_reset_config(void) {
   pet_p4_input_config_t defaults;
@@ -1415,12 +1453,21 @@ static void dispatch_binding_event(
   );
 }
 
+#if CONFIG_IDF_TARGET_ESP32S3
+#include "../s3/pet_s3_input_menu.inc"
+#endif
+
 static void process_button_event(
   pet_p4_runtime_state_t *state,
   pet_p4_send_line_fn send_line,
   void *ctx,
   const pet_p4_input_event_t *event
 ) {
+#if CONFIG_IDF_TARGET_ESP32S3
+  if(event->gesture==PET_S3_INPUT_GESTURE_ACTION) {
+    pet_s3_process_key(state,send_line,ctx,event);return;
+  }
+#endif
   char event_name[PET_P4_INPUT_EVENT_MAX];
   const char *prefix = button_event_prefix(event->control);
   if (!prefix[0]) return;
@@ -1502,6 +1549,9 @@ void pet_p4_input_process(
   pet_p4_send_line_fn send_line,
   void *ctx
 ) {
+#if CONFIG_IDF_TARGET_ESP32S3
+  pet_s3_input_tick(state);
+#endif
   pet_p4_input_event_t event;
   if (!g_event_queue) return;
   while (xQueueReceive(g_event_queue, &event, 0) == pdTRUE) {

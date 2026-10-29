@@ -1,0 +1,10 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "bundle": {
+    "resources": {
+      "generated-runtime/node": "bridge/runtime/node",
+      "../../firmware/tools/prepare_s3_assets.py": "tools/prepare_s3_assets.py",
+      "firmware/esp32-s3/firmware.bin": "firmware/esp32-s3/firmware.bin"
+    }
+  }
+}

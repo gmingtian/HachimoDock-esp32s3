@@ -212,12 +212,12 @@ def test_pc_p4_sync_prefers_native_usb_bulk_transport():
 def test_firmware_contract_accepts_p4_assets_and_rejects_linux_mp4_ota():
     source = read("main/pet_p4_protocol.c")
     cmake = read("main/CMakeLists.txt")
-    assert 'cJSON_AddStringToObject(payload, "runtime", "esp-p4")' in source
-    assert 'cJSON_AddStringToObject(payload, "deviceModel", "ESP32-P4 RISC-V Dual-Core + ESP32-C6")' in source
-    assert 'cJSON_AddStringToObject(hardware, "hpCpu", "HP@360MHz(Max 400MHz)")' in source
-    assert 'cJSON_AddStringToObject(hardware, "onChipSram", "768KB L2MEM + 32KB LP SRAM + 8KB TCM")' in source
-    assert 'cJSON_AddStringToObject(hardware, "psram", "32MB In-package stacked")' in source
-    assert 'cJSON_AddStringToObject(hardware, "flash", "32MB QSPI NOR Flash")' in source
+    assert 'cJSON_AddStringToObject(payload, "runtime", PET_TARGET_RUNTIME)' in source
+    assert 'cJSON_AddStringToObject(payload, "deviceModel", PET_TARGET_MODEL)' in source
+    assert 'cJSON_AddStringToObject(hardware, "hpCpu", PET_TARGET_CPU)' in source
+    assert 'cJSON_AddStringToObject(hardware, "onChipSram", PET_TARGET_SRAM)' in source
+    assert 'cJSON_AddStringToObject(hardware, "psram", PET_TARGET_PSRAM)' in source
+    assert 'cJSON_AddStringToObject(hardware, "flash", PET_TARGET_FLASH)' in source
     assert 'cJSON_AddBoolToObject(capabilities, "usbOnly", true)' in source
     assert 'cJSON_AddBoolToObject(capabilities, "mp4", false)' in source
     assert 'cJSON_AddNumberToObject(capabilities, "version", 1)' in source
@@ -942,7 +942,7 @@ def test_p4_identity_and_protocol_nack_are_explicit():
     doc = read("protocol.md")
 
     assert "esp_read_mac(mac, ESP_MAC_BASE)" in main
-    assert '"p4-%02x%02x%02x%02x%02x%02x"' in main
+    assert 'PET_TARGET_DEVICE_PREFIX "%02x%02x%02x%02x%02x%02x"' in main
     assert 'pet_p4_state_init(&g_state, board_device_id)' in main
     assert 'send_topic_payload(send_line, ctx, "protocol/ack", payload)' in source
     assert '"unsupported_topic"' in source
@@ -1335,7 +1335,7 @@ def test_p4_runtime_initializes_waveshare_lcd_bsp():
     assert "override_path: ../components/esp32_p4_wifi6_touch_lcd_4_3" in manifest
     assert "-DBSP_CONFIG_NO_GRAPHIC_LIB=1" in platformio
     assert '"pet_p4_lcd.c"' in cmake
-    assert re.search(r"\bREQUIRES[\s\S]*?\busb\b", cmake)
+    assert "usb tinyusb" in cmake and "${PET_HARDWARE_REQUIRES}" in cmake
     assert "espressif__esp_lcd_touch" in cmake
     assert "espressif__esp_lcd_touch_gt911" in cmake
     assert '#include "bsp/esp-bsp.h"' in lcd
@@ -1587,9 +1587,9 @@ def test_saved_and_codex_imported_appearances_are_prepared_before_sync():
         desktop_lib.index("// --- USB serial Tauri commands ---")
     ]
     assert "codex_import::import_codex_pet" in import_command
-    assert "usb_serial::prepare_p4_appearance" in import_command
+    assert "prepare_connected_appearance" in import_command
     assert import_command.index("codex_import::import_codex_pet") < import_command.index(
-        "usb_serial::prepare_p4_appearance"
+        "prepare_connected_appearance"
     )
     assert 'invoke("prepare_p4_appearance"' in appearance_store
     assert "await installCodexCommunityPet(parsed.petId)" in gallery
@@ -1752,7 +1752,7 @@ def test_p4_ab_firmware_ota_is_verified_acknowledged_and_exposed_by_pc():
     assert "esp_ota_get_next_update_partition" in ota
     assert "esp_ota_begin" in ota
     assert "esp_ota_write" in ota
-    assert "mbedtls_sha256_update" in ota
+    assert "pet_sha256_update" in ota
     assert "esp_ota_get_partition_description" in ota
     assert "esp_ota_set_boot_partition" in ota
     assert "esp_ota_mark_app_valid_cancel_rollback" in ota
@@ -2390,7 +2390,8 @@ def test_p4_gt911_touch_and_local_lifecycle_are_product_integrated():
     assert "behavior->welcome_until_ms = 0" in read_required("main/pet_p4_behavior.c")
     assert "draw_touch_feedback" in renderer
     assert "draw_page_indicator" in renderer
-    assert 'if (strcmp(page, "main") == 0) draw_page_indicator(page);' in renderer
+    assert 'if (!native_home && strcmp(page, "main") == 0) draw_page_indicator(page);' in renderer
+    assert 'const bool native_home=false;' in renderer
     assert "#define PET_P4_PAGE_INDICATOR_Y 16" in renderer
     assert "int y = PET_P4_PAGE_INDICATOR_Y;" in renderer
     assert "PET_P4_PAGE_INDICATOR_TITLE_GAP" in renderer

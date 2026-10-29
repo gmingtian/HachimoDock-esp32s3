@@ -320,7 +320,8 @@ test("Tauri release resources are target-specific and package only audited LGPL 
   assert.match(ffmpeg, /bundled_ffmpeg_candidates|PET_MANAGER_BUNDLED_FFMPEG/);
   assert.match(ffmpeg, /h264_videotoolbox/);
   assert.match(ffmpeg, /h264_mf/);
-  assert.doesNotMatch(ffmpeg, /"libx264"/);
+  assert.match(ffmpeg, /Self::SystemX264 => "libx264"/);
+  assert.match(ffmpeg, /cfg\(target_os = "linux"\)/);
   assert.match(ffmpeg, /find_executable\("ffmpeg", &\[\]\)/);
   assert.match(crossInstaller, /windowsFfmpeg/);
   assert.match(crossInstaller, /tools["', ]+ffmpeg\.exe/);

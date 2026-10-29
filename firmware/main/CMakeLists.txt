@@ -3,6 +3,11 @@
 # [Pos] ESP32-P4 main firmware component build definition.
 # [Sync] If this file changes, update `firmware/.folder.md` and `protocol.md`.
 
+set(PET_HARDWARE_REQUIRES esp_driver_spi esp_driver_i2s esp_driver_i2c)
+if(NOT IDF_TARGET STREQUAL "esp32s3")
+  list(APPEND PET_HARDWARE_REQUIRES esp_driver_jpeg esp_driver_ppa usb tinyusb)
+endif()
+
 idf_component_register(
   SRCS
     "pet_p4_main.c"
@@ -46,24 +51,21 @@ idf_component_register(
     esp_adc
     esp_timer
     esp_driver_gpio
-    esp_driver_jpeg
-    esp_driver_ppa
+    ${PET_HARDWARE_REQUIRES}
     esp_driver_uart
     esp_driver_usb_serial_jtag
     espressif__esp_h264
     espressif__esp-sr
     esp_lcd
     esp_partition
-    usb
     espressif__esp_lcd_touch
     espressif__esp_lcd_touch_gt911
     app_update
-    json
+    espressif__cjson
     lvgl
     mbedtls
     nvs_flash
     spiffs
-    tinyusb
 )
 
 # Shared, OTA-updatable status cues live in the application, not appearance slots.
@@ -74,6 +76,8 @@ set_source_files_properties("pet_p4_renderer.c" PROPERTIES COMPILE_OPTIONS "-fst
 # Keep audio DSP, video and per-pixel rendering at the configured performance
 # optimization; never enlarge OTA partitions to accommodate resource features.
 set_source_files_properties("pet_p4_surface.c" "pet_p4_miniapp.c" PROPERTIES COMPILE_OPTIONS "-Os")
+# Upstream surface interpreter is deliberately compact; retain its semantics under GCC15.
+set_property(SOURCE "pet_p4_surface.c" "pet_p4_media.c" APPEND PROPERTY COMPILE_OPTIONS "-Wno-misleading-indentation")
 foreach(layer body mallet)
   target_add_binary_data(${COMPONENT_LIB} "${CMAKE_CURRENT_LIST_DIR}/../assets/instruments/wooden_fish_${layer}.deflate" BINARY)
 endforeach()
@@ -119,6 +123,7 @@ target_compile_definitions(
     PET_P4_UART_BAUD=${PET_P4_UART_BAUD}
 )
 
+if(NOT IDF_TARGET STREQUAL "esp32s3")
 idf_build_get_property(build_components BUILD_COMPONENTS)
 if(tinyusb IN_LIST build_components)
   set(tinyusb_name tinyusb)
@@ -133,3 +138,5 @@ target_include_directories(${tusb_lib} PUBLIC "${CMAKE_CURRENT_LIST_DIR}")
 
 cmake_policy(SET CMP0079 NEW)
 target_link_libraries(${tusb_lib} PRIVATE ${COMPONENT_LIB})
+
+endif()

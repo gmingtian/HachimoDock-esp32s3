@@ -1,0 +1,36 @@
+#pragma once
+
+/* Hardware identity is distinct from the shared PetUI wire-format versions. */
+#if defined(CONFIG_IDF_TARGET_ESP32S3) && CONFIG_IDF_TARGET_ESP32S3
+#define PET_TARGET_RUNTIME "esp-s3"
+#define PET_TARGET_DEVICE_PREFIX "s3-"
+#define PET_TARGET_MODEL "ESP32-S3 N16R8 / ST7789 / Three buttons"
+#define PET_TARGET_SOC "ESP32-S3 Xtensa LX7 Dual-Core"
+#define PET_TARGET_CPU "240MHz"
+#define PET_TARGET_LP_CPU "ULP"
+#define PET_TARGET_SRAM "512KB SRAM"
+#define PET_TARGET_PSRAM "8MB Octal PSRAM"
+#define PET_TARGET_FLASH "16MB QSPI NOR Flash"
+#define PET_TARGET_PROJECT "pet_manager_s3_runtime"
+#define PET_TARGET_NATIVE_USB false
+#define PET_TARGET_CALIBRATED_AEC false
+#define PET_TARGET_PHYSICAL_WIDTH 240
+#define PET_TARGET_PHYSICAL_HEIGHT 240
+#define PET_TARGET_OTA_BYTES 0x300000
+#else
+#define PET_TARGET_RUNTIME "esp-p4"
+#define PET_TARGET_DEVICE_PREFIX "p4-"
+#define PET_TARGET_MODEL "ESP32-P4 RISC-V Dual-Core + ESP32-C6"
+#define PET_TARGET_SOC "ESP32-P4 RISC-V Dual-Core"
+#define PET_TARGET_CPU "HP@360MHz(Max 400MHz)"
+#define PET_TARGET_LP_CPU "LP@40MHz"
+#define PET_TARGET_SRAM "768KB L2MEM + 32KB LP SRAM + 8KB TCM"
+#define PET_TARGET_PSRAM "32MB In-package stacked"
+#define PET_TARGET_FLASH "32MB QSPI NOR Flash"
+#define PET_TARGET_PROJECT "pet_manager_p4_runtime"
+#define PET_TARGET_NATIVE_USB true
+#define PET_TARGET_CALIBRATED_AEC true
+#define PET_TARGET_PHYSICAL_WIDTH 480
+#define PET_TARGET_PHYSICAL_HEIGHT 640
+#define PET_TARGET_OTA_BYTES 0x280000
+#endif

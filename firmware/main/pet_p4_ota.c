@@ -26,7 +26,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
 #include "mbedtls/base64.h"
-#include "mbedtls/sha256.h"
+#include "pet_sha256.h"
 #include "pet_p4_diagnostics.h"
 
 #define PET_P4_OTA_TRANSFER_ID_MAX 64
@@ -62,7 +62,7 @@ static unsigned int g_next_sequence;
 static unsigned int g_last_chunk_sequence;
 static size_t g_last_chunk_size;
 static bool g_last_chunk_valid;
-static mbedtls_sha256_context g_sha256;
+static pet_sha256_context g_sha256;
 static bool g_sha256_initialized;
 static bool g_active;
 static bool g_runtime_ready;
@@ -273,7 +273,7 @@ static void clear_transfer(bool abort_write) {
     (void) esp_ota_abort(g_ota_handle);
   }
   if (g_sha256_initialized) {
-    mbedtls_sha256_free(&g_sha256);
+    pet_sha256_free(&g_sha256);
     g_sha256_initialized = false;
   }
   g_ota_handle = 0;
@@ -373,8 +373,8 @@ static void handle_begin(const cJSON *payload, pet_p4_send_line_fn send_line, vo
     clear_transfer(false);
     return;
   }
-  mbedtls_sha256_init(&g_sha256);
-  if (mbedtls_sha256_starts(&g_sha256, false) != 0) {
+  pet_sha256_init(&g_sha256);
+  if (pet_sha256_starts(&g_sha256, false) != 0) {
     snprintf(g_transfer_id, sizeof(g_transfer_id), "%s", transfer_id);
     g_active = true;
     send_ack(send_line, ctx, g_transfer_id, "begin", false, "SHA-256 initialization failed");
@@ -538,7 +538,7 @@ static void handle_chunk(const cJSON *payload, pet_p4_send_line_fn send_line, vo
     }
   }
   esp_err_t write_err = esp_ota_write(g_ota_handle, decoded, actual_size);
-  int sha_err = write_err == ESP_OK ? mbedtls_sha256_update(&g_sha256, decoded, actual_size) : -1;
+  int sha_err = write_err == ESP_OK ? pet_sha256_update(&g_sha256, decoded, actual_size) : -1;
   free(decoded);
   if (write_err != ESP_OK || sha_err != 0) {
     send_chunk_ack(
@@ -592,12 +592,12 @@ static void handle_commit(const cJSON *payload, pet_p4_send_line_fn send_line, v
     send_ack(send_line, ctx, g_transfer_id, "commit", false, "firmware byte total mismatch");
     return;
   }
-  if (mbedtls_sha256_finish(&g_sha256, digest) != 0) {
+  if (pet_sha256_finish(&g_sha256, digest) != 0) {
     send_ack(send_line, ctx, g_transfer_id, "commit", false, "SHA-256 finalize failed");
     clear_transfer(true);
     return;
   }
-  mbedtls_sha256_free(&g_sha256);
+  pet_sha256_free(&g_sha256);
   g_sha256_initialized = false;
   digest_hex(digest, actual_sha256);
   if (strcmp(actual_sha256, g_expected_sha256) != 0) {

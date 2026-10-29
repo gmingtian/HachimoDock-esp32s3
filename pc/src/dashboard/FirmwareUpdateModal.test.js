@@ -16,10 +16,10 @@ const here = dirname(fileURLToPath(import.meta.url));
 const source = readFileSync(join(here, "FirmwareUpdateModal.jsx"), "utf8");
 const styles = readFileSync(join(here, "..", "styles.css"), "utf8");
 
-test("firmware modal selects only ESP32-P4 .bin images", () => {
+test("firmware modal accepts ESP32-P4 and ESP32-S3 application .bin images", () => {
   assert.match(source, /openDialog/);
   assert.match(source, /extensions:\s*\["bin"\]/);
-  assert.match(source, /ESP32-P4 firmware/);
+  assert.match(source, /ESP32-P4 \/ ESP32-S3 firmware/);
 });
 
 test("firmware modal invokes the ACK-gated backend and listens for progress", () => {

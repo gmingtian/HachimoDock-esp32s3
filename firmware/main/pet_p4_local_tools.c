@@ -30,7 +30,8 @@ bool pet_local_parse(const cJSON *j,pet_local_config_t *o){
   if(!str(get(j,"engine"),engine,sizeof(engine))||strcmp(engine,PET_LOCAL_ENGINE)||!str(get(j,"kind"),kind,sizeof(kind)))return false;
   if(strcmp(kind,"deck")&&strcmp(kind,"countdown"))return false;
   o->countdown=!strcmp(kind,"countdown");int delay;
-  if(!number(get(j,"reveal_ms"),300,2000,&delay))return false;o->reveal_ms=delay;
+  if(!number(get(j,"reveal_ms"),300,2000,&delay))return false;
+  o->reveal_ms=delay;
   if(!str(get(j,"idle"),o->idle,sizeof(o->idle))||!str(get(j,"busy"),o->busy,sizeof(o->busy))||!str(get(j,"hint"),o->hint,sizeof(o->hint)))return false;
   const cJSON *groups=get(j,"groups"),*g;
   if(!cJSON_IsArray(groups)||cJSON_GetArraySize(groups)<1||cJSON_GetArraySize(groups)>3)return false;
@@ -55,7 +56,8 @@ bool pet_local_parse(const cJSON *j,pet_local_config_t *o){
   static const char *const ops[]={"","draw","exclude","reset","close","previous","next","edit","cancel","up","down"};
   unsigned used=0;
   cJSON_ArrayForEach(a,actions){
-    if(!safe_action(a->string)||!cJSON_IsString(a))return false;int op=0;
+    if(!safe_action(a->string)||!cJSON_IsString(a))return false;
+    int op=0;
     for(int i=0;i<o->action_count;i++)if(!strcmp(o->actions[i],a->string))return false;
     for(int i=1;i<=10;i++)if(!strcmp(a->valuestring,ops[i]))op=i;
     if(!op||(used&(1u<<op))||(o->countdown?(op<5):(op>6)))return false;
@@ -94,7 +96,8 @@ static void repair(const pet_local_config_t *c,int32_t v[7]){
     else {v[1+i*2]&=(1<<c->groups[i].count)-1;v[2+i*2]=clamp(v[2+i*2],-1,c->groups[i].count-1);}
 }
 bool pet_local_action(const pet_local_config_t *c,pet_local_state_t *s,int32_t v[7],const char *action,uint64_t ms,int64_t now,uint32_t random){
-  if(!c->enabled||!pet_local_enabled(c,s,action))return false;int op=0;for(int i=0;i<c->action_count;i++)if(!strcmp(action,c->actions[i]))op=c->operations[i];if(!op)return false;
+  if(!c->enabled||!pet_local_enabled(c,s,action))return false;
+  int op=0;for(int i=0;i<c->action_count;i++)if(!strcmp(action,c->actions[i]))op=c->operations[i];if(!op)return false;
   repair(c,v);int at=v[0],a=1+2*at,b=a+1;const pet_local_group_t *g=&c->groups[at];
   if(!c->countdown){
     if(s->phase==1&&op!=PET_LOCAL_CLOSE)return false;
@@ -129,12 +132,14 @@ bool pet_local_action(const pet_local_config_t *c,pet_local_state_t *s,int32_t v
     if(f==2)d=wrap(d-1+step,month_days(y,m))+1;
     d=clamp(d,1,month_days(y,m));s->draft_day=pet_local_day(y,m,d);
     int hour=s->draft_minute/60,minute=s->draft_minute%60;
-    if(f==3)hour=wrap(hour+step,24);if(f==4)minute=wrap(minute+step,60);
+    if(f==3)hour=wrap(hour+step,24);
+    if(f==4)minute=wrap(minute+step,60);
     s->draft_minute=hour*60+minute;return true;
   }return false;
 }
 bool pet_local_tick(const pet_local_config_t *c,pet_local_state_t *s,int32_t v[7],uint64_t ms,int64_t now){
-  if(!c->enabled)return false;repair(c,v);
+  if(!c->enabled)return false;
+  repair(c,v);
   if(!c->countdown&&s->phase==1&&ms>=s->reveal_at){v[2+2*v[0]]=s->pending;s->phase=2;s->pending=-1;return true;}
   if(c->countdown&&(now!=s->last_second||(s->phase==5&&now>=0))){s->last_second=now;if(s->phase==5&&now>=0)s->phase=0;return true;}
   if(!c->countdown&&(s->last_second==-2||(s->phase==1&&s->last_second!=(int64_t)(ms/50)))){s->last_second=ms/50;return true;}

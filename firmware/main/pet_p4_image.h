@@ -16,8 +16,10 @@ static inline bool pet_image_jpeg(const uint8_t *p,size_t n) {
   if(w!=640||h!=480||size!=n||p[12]!=255||p[13]!=216||p[n-2]!=255||p[n-1]!=217)return false;
   bool frame=false;
   for(size_t at=14;at+4<=n;){
-    if(p[at++]!=255)return false;while(at<n&&p[at]==255)at++;
-    if(at>=n)return false;unsigned marker=p[at++];
+    if(p[at++]!=255)return false;
+    while(at<n&&p[at]==255)at++;
+    if(at>=n)return false;
+    unsigned marker=p[at++];
     if(marker==0xda)return frame; /* entropy data is checked by bounded decoder */
     if(marker==0||marker==0xd8||marker==0xd9||(marker>=0xd0&&marker<=0xd7)||at+2>n)return false;
     size_t len=((size_t)p[at]<<8)|p[at+1];if(len<2||len>n-at)return false;

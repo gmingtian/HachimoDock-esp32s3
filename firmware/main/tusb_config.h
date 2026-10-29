@@ -7,7 +7,11 @@ extern "C" {
 #endif
 
 #ifndef CFG_TUSB_MCU
+#if CONFIG_IDF_TARGET_ESP32S3
+#define CFG_TUSB_MCU OPT_MCU_ESP32S3
+#else
 #define CFG_TUSB_MCU OPT_MCU_ESP32P4
+#endif
 #endif
 
 #ifndef CFG_TUSB_OS
@@ -15,8 +19,10 @@ extern "C" {
 #endif
 
 #define CFG_TUSB_OS_INC_PATH freertos/
-#define CFG_TUD_ENABLED 1
+#define CFG_TUD_ENABLED (!CONFIG_IDF_TARGET_ESP32S3)
+#if !CONFIG_IDF_TARGET_ESP32S3
 #define CFG_TUSB_RHPORT1_MODE (OPT_MODE_DEVICE | OPT_MODE_HIGH_SPEED)
+#endif
 #define CFG_TUSB_DEBUG 0
 
 #ifndef CFG_TUD_ENDPOINT0_SIZE

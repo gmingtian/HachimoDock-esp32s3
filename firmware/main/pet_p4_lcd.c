@@ -1,3 +1,7 @@
+#include "sdkconfig.h"
+#if CONFIG_IDF_TARGET_ESP32S3
+#include "../s3/pet_s3_lcd.inc"
+#else
 /*
  * [Input] Waveshare panel/BSP operations, boot lifecycle, and RGB565 pixels.
  * [Output] Backlight-gated LCD initialization, first-frame reveal, and draws.
@@ -267,3 +271,5 @@ int pet_p4_lcd_scan_i2c(char *buffer, size_t buffer_size) {
   ESP_LOGI(TAG, "I2C scan found %d device(s): %s", found, found > 0 ? buffer : "none");
   return found;
 }
+
+#endif

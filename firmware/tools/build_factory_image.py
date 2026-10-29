@@ -586,7 +586,7 @@ def build_default_appearance_tree(
     ready_profile = str(appearance.get("readyProfile", "")).strip()
     if not ready_profile:
         raise ValueError("factory appearance readyProfile is required")
-    ready_root = clips_dir / "p4-ready" / ready_profile
+    ready_root = (project_dir / appearance["readyRoot"]).resolve() if appearance.get("readyRoot") else clips_dir / "p4-ready" / ready_profile
     ready_manifest_path = ready_root / P4_MANIFEST_LOGICAL_PATH
     if not ready_manifest_path.is_file():
         raise FileNotFoundError(
@@ -670,7 +670,7 @@ def build_default_appearance_tree(
         data=ready_manifest_bytes,
     )
     logical_files.append(P4_MANIFEST_LOGICAL_PATH)
-    partition_path = project_dir / "partitions.csv"
+    partition_path = project_dir / config.get("partitionFile", "partitions.csv")
     _, builtin_partition_bytes = partition_entry(
         partition_path, BUILTIN_APPEARANCE_PARTITION_LABEL
     )
@@ -713,6 +713,7 @@ def build_raw_appearance_image(
     project_dir: Path,
     build_dir: Path,
     appearance_summary: dict,
+    partition_file: str = "partitions.csv",
 ) -> tuple[Path, int, int]:
     raw_files = appearance_summary["rawFiles"]
     if not raw_files or len(raw_files) > RAW_APPEARANCE_MAX_FILES:
@@ -720,7 +721,7 @@ def build_raw_appearance_image(
             f"factory raw appearance requires 1-{RAW_APPEARANCE_MAX_FILES} video files"
         )
     offset, size = partition_entry(
-        project_dir / "partitions.csv", BUILTIN_APPEARANCE_PARTITION_LABEL
+        project_dir / partition_file, BUILTIN_APPEARANCE_PARTITION_LABEL
     )
     output = build_dir / RAW_APPEARANCE_IMAGE_NAME
     image = bytearray(b"\xff" * size)
@@ -766,7 +767,7 @@ def build_spiffs_image(
 ) -> tuple[Path, int, int]:
     spiffs = config["spiffs"]
     offset, size = partition_entry(
-        project_dir / "partitions.csv", str(spiffs["partitionLabel"])
+        project_dir / config.get("partitionFile", "partitions.csv"), str(spiffs["partitionLabel"])
     )
     output = build_dir / SPIFFS_IMAGE_NAME
     if output.exists():

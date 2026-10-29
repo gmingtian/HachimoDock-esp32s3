@@ -13,8 +13,8 @@
 //! directory name always equals the public pet id.
 //! FFmpeg discovery prefers the packaged LGPL-only runtime and falls back to
 //! the desktop host PATH resolver/current-user Windows package-manager roots.
-//! H.264 output is restricted to the operating system encoder
-//! (VideoToolbox/Media Foundation); GPL/nonfree external encoders are never
+//! macOS/Windows H.264 output uses the operating system encoder. Linux
+//! uses separately installed system FFmpeg/libx264; GPL/nonfree binaries are never
 //! selected by Pet Manager.
 //! Writes a manifest.json that matches the shape produced by
 //! `pc/src/lib/appearance-store.js` so the gallery/detail UI can render it
@@ -386,6 +386,8 @@ fn can_run_ffmpeg(candidate: &str) -> bool {
 pub(crate) enum PlatformH264Encoder {
     VideoToolbox,
     MediaFoundation,
+    // Linux uses the user-installed FFmpeg; never bundled into macOS/Windows releases.
+    SystemX264,
 }
 
 impl PlatformH264Encoder {
@@ -393,6 +395,7 @@ impl PlatformH264Encoder {
         match self {
             Self::VideoToolbox => "h264_videotoolbox",
             Self::MediaFoundation => "h264_mf",
+            Self::SystemX264 => "libx264",
         }
     }
 
@@ -402,6 +405,7 @@ impl PlatformH264Encoder {
             // h264_mf uses AVCodecContext's integer profile option; unlike
             // VideoToolbox, it does not register named H.264 profile constants.
             Self::MediaFoundation => "66",
+            Self::SystemX264 => "baseline",
         }
     }
 
@@ -410,11 +414,13 @@ impl PlatformH264Encoder {
             Self::VideoToolbox => "3.0",
             // The generic FFmpeg integer option represents Level 3.0 as 30.
             Self::MediaFoundation => "30",
+            Self::SystemX264 => "3.0",
         }
     }
 
     pub(crate) fn append_quality_args(self, args: &mut Vec<String>) {
         match self {
+            Self::SystemX264 => args.extend(["-preset".into(), "medium".into(), "-x264-params".into(), "cabac=0:bframes=0:ref=1:weightp=0:slices=1:aud=1".into()]),
             Self::VideoToolbox => args.extend([
                 "-allow_sw".to_string(),
                 "1".to_string(),
@@ -442,7 +448,9 @@ fn expected_platform_h264_encoder() -> Result<PlatformH264Encoder, String> {
     return Ok(PlatformH264Encoder::VideoToolbox);
     #[cfg(windows)]
     return Ok(PlatformH264Encoder::MediaFoundation);
-    #[cfg(not(any(target_os = "macos", windows)))]
+    #[cfg(target_os = "linux")]
+    return Ok(PlatformH264Encoder::SystemX264);
+    #[cfg(not(any(target_os = "macos", target_os = "linux", windows)))]
     Err("当前桌面平台没有受支持的系统 H.264 编码器".to_string())
 }
 

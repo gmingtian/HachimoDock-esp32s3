@@ -43,7 +43,7 @@ test("touch revision 2 cannot silently install onto the earlier single-mode firm
   device.capabilities.widgetSliceRevision=2;
   assert.equal(check(component,device),"");
   device.capabilities.touchInput.ready=false;
-  assert.match(check(component,device),/连续触控/);
+  assert.match(check(component,device),/触屏或按键虚拟指针/);
 });
 
 test("opening ordinary, data and media components executes the actual shared capability check", () => {
@@ -102,4 +102,21 @@ test("app graphics cannot be silently installed on legacy app-surface firmware",
  const capabilities={widgetAppSurface:"p4-app-surface-v1",widgetSurfaceImages:"p4-surface-images-v1"};
  assert.match(check(c,{capabilities}),/高清背景/);
  assert.equal(check(c,{capabilities:{...capabilities,widgetAppGraphics:"p4-app-graphics-v1"}}),"");
+});
+
+test('S3 declared virtual pointer enables slice scenes without claiming a touch panel',()=>{
+ const component={scene:{engine:'p4-touch-slice-v1',revision:2},sceneEngine:'p4-touch-slice-v1',runtimeEngine:'p4-bounded-runtime-v4'};
+ const device={runtime:'esp-s3',capabilities:{widgetPointer:'p4-pointer-v1',widgetSliceRevision:2,widgetRuntime:'p4-bounded-runtime-v4',widgetScenes:['p4-touch-slice-v1'],touchInput:{ready:false},virtualPointer:true}};
+ assert.equal(check(component,device),'');
+ device.capabilities.virtualPointer=false;
+ assert.notEqual(check(component,device),'');
+});
+
+test('virtual pointer action menus can satisfy screen event bindings without touch hardware',()=>{
+ const physical=ast.program.body.find(n=>n.type==='FunctionDeclaration'&&n.id.name==='deviceTouchReady');
+ const pointer=ast.program.body.find(n=>n.type==='FunctionDeclaration'&&n.id.name==='devicePointerReady');
+ assert.ok(pointer,'pointer availability needs a separate contract from physical touch');
+ const ready=vm.runInNewContext(source.slice(physical.start,physical.end)+'\n'+source.slice(pointer.start,pointer.end)+'\ndevicePointerReady');
+ assert.equal(ready({capabilities:{touchInput:{ready:false},virtualPointer:true}}),true);
+ assert.equal(ready({capabilities:{touchInput:{ready:false},virtualPointer:false}}),false);
 });

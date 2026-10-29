@@ -1,3 +1,5 @@
+#include "sdkconfig.h"
+#include "pet_target.h"
 #include "pet_p4_audio.h"
 #include "pet_p4_instrument_core.h"
 #include "pet_p4_audio_frontend.h"
@@ -7,10 +9,14 @@
 #include <stdio.h>
 #include <string.h>
 
+#if CONFIG_IDF_TARGET_ESP32S3
+#include "../s3/pet_s3_audio_codec.h"
+#else
 #include "bsp/esp-bsp.h"
-#include "cJSON.h"
 #include "driver/i2c_master.h"
 #include "esp_codec_dev.h"
+#endif
+#include "cJSON.h"
 #include "esp_app_desc.h"
 #include "esp_heap_caps.h"
 #include "esp_log.h"
@@ -98,9 +104,11 @@ static void add_conversation_metadata(cJSON *payload) {
   char session[64];
   conversation_session_copy(session);
   cJSON_AddStringToObject(payload, "conversationSessionId", session);
-  cJSON_AddBoolToObject(payload, "audioAecPreparing", atomic_load(&g_conversation_starting)
-    || (pet_p4_audio_conversation_active() && !atomic_load(&g_conversation_half_duplex) && pet_p4_afe_preparing()));
-  cJSON_AddStringToObject(payload, "aecReason", pet_p4_afe_failure());
+  cJSON_AddBoolToObject(payload, "audioAecPreparing", PET_TARGET_CALIBRATED_AEC
+    && (atomic_load(&g_conversation_starting)
+      || (pet_p4_audio_conversation_active() && !atomic_load(&g_conversation_half_duplex) && pet_p4_afe_preparing())));
+  cJSON_AddStringToObject(payload, "aecReason",
+    PET_TARGET_CALIBRATED_AEC ? pet_p4_afe_failure() : "uncalibrated_hardware");
   pet_p4_afe_metrics_t dsp = pet_p4_afe_metrics();
   cJSON_AddNumberToObject(payload, "dspFrames", dsp.frames);
   cJSON_AddNumberToObject(payload, "dspLastUs", dsp.last_us);
@@ -242,16 +250,20 @@ void pet_p4_audio_send_status(void) {
   cJSON_AddStringToObject(
     payload,
     "playbackCodec",
+#if CONFIG_IDF_TARGET_ESP32S3
+    pet_p4_audio_playback_ready() ? "MAX98357A" : "unavailable"
+#else
     pet_p4_audio_playback_ready() ? "ES8311" : "unavailable"
+#endif
   );
   cJSON_AddNumberToObject(payload, "sampleRate", PET_P4_AUDIO_SAMPLE_RATE);
   cJSON_AddNumberToObject(payload, "channels", PET_P4_AUDIO_CHANNELS);
   cJSON_AddNumberToObject(payload, "bitsPerSample", PET_P4_AUDIO_BITS_PER_SAMPLE);
   cJSON_AddNumberToObject(payload, "frameMs", PET_P4_AUDIO_FRAME_MS);
   cJSON_AddBoolToObject(payload, "conversation", pet_p4_audio_conversation_active());
-  cJSON_AddBoolToObject(payload, "audioAec", pet_p4_afe_ready());
+  cJSON_AddBoolToObject(payload, "audioAec", PET_TARGET_CALIBRATED_AEC && pet_p4_afe_ready());
   cJSON_AddBoolToObject(payload, "audioVad", pet_p4_afe_ready());
-  cJSON_AddBoolToObject(payload, "audioFullDuplex", pet_p4_afe_ready());
+  cJSON_AddBoolToObject(payload, "audioFullDuplex", PET_TARGET_CALIBRATED_AEC && pet_p4_afe_ready());
   add_conversation_metadata(payload);
   cJSON_AddBoolToObject(payload, "streamActive", atomic_load_explicit(&g_stream_active, memory_order_acquire));
   cJSON_AddNumberToObject(payload, "streamBufferedMs", (double) (stream_buffered() * 1000ULL / 32000ULL));
@@ -787,6 +799,13 @@ esp_err_t pet_p4_audio_init(
   pet_p4_audio_set_transport(send_line, ctx);
   snprintf(g_board_device_id, sizeof(g_board_device_id), "%s",
            board_device_id && board_device_id[0] ? board_device_id : "p4-unknown");
+  bool initialized = false;
+  bool es8311_duplex = false;
+#if CONFIG_IDF_TARGET_ESP32S3
+  if (!g_microphone) g_microphone=pet_s3_codec_new(true);
+  if (!g_speaker) g_speaker=pet_s3_codec_new(false);
+  if (g_microphone) g_microphone_codec="I2S-digital-microphone";
+#else
   esp_err_t i2c_err = bsp_i2c_init();
   i2c_master_bus_handle_t i2c_bus = bsp_i2c_get_handle();
   if (i2c_err != ESP_OK || !i2c_bus) {
@@ -794,8 +813,6 @@ esp_err_t pet_p4_audio_init(
     return i2c_err == ESP_OK ? ESP_ERR_INVALID_STATE : i2c_err;
   }
 
-  bool initialized = false;
-  bool es8311_duplex = false;
   esp_err_t es7210_probe = i2c_master_probe(
     i2c_bus, PET_P4_ES7210_I2C_ADDRESS, 100
   );
@@ -822,6 +839,7 @@ esp_err_t pet_p4_audio_init(
     ESP_LOGI(TAG, "no supported audio codec detected; audio features disabled");
   }
 
+#endif
   esp_codec_dev_sample_info_t format = {
     .sample_rate = PET_P4_AUDIO_SAMPLE_RATE,
     .channel = PET_P4_AUDIO_CHANNELS,
@@ -849,7 +867,9 @@ esp_err_t pet_p4_audio_init(
     }
   }
 
+#if !CONFIG_IDF_TARGET_ESP32S3
   if (!g_speaker && es8311_available) g_speaker = bsp_audio_codec_speaker_init();
+#endif
   if (g_speaker) {
     g_stream_lock = xSemaphoreCreateRecursiveMutex();
     int volume_result = esp_codec_dev_set_out_vol(g_speaker, PET_P4_AUDIO_PLAYBACK_VOLUME);
@@ -863,11 +883,11 @@ esp_err_t pet_p4_audio_init(
       pet_p4_behavior_init(&g_playback_behavior);
       atomic_store_explicit(&g_playback_ready, true, memory_order_release);
       initialized = true;
-      ESP_LOGI(TAG, "ES8311 speaker ready: %d Hz, %d-bit mono volume=%d%s",
+      ESP_LOGI(TAG, "speaker ready: %d Hz, %d-bit mono volume=%d%s",
                PET_P4_AUDIO_SAMPLE_RATE, PET_P4_AUDIO_BITS_PER_SAMPLE,
                PET_P4_AUDIO_PLAYBACK_VOLUME, es8311_duplex ? " duplex" : "");
     } else {
-      ESP_LOGW(TAG, "ES8311 speaker open/task setup failed volume=%d open=%d queue=%d",
+      ESP_LOGW(TAG, "speaker open/task setup failed volume=%d open=%d queue=%d",
                volume_result, open_result, g_playback_queue ? 1 : 0);
       if (g_playback_queue) {
         vQueueDelete(g_playback_queue);
@@ -1002,6 +1022,12 @@ bool pet_p4_audio_conversation_active(void) {
 }
 
 esp_err_t pet_p4_audio_conversation_set(bool enabled, bool half_duplex, const char *session_id) {
+#if CONFIG_IDF_TARGET_ESP32S3
+  /* Separate I2S clocks, DMA latency and the enclosure's acoustic delay have
+   * not been calibrated. Keep the upstream software AEC pipeline available,
+   * but do not run or advertise full duplex until physical bench validation. */
+  half_duplex=true;
+#endif
   if (!enabled) {
     pet_p4_audio_diagnostic("conversation_stopped", "", 0, true);
     atomic_store_explicit(&g_conversation, false, memory_order_release);

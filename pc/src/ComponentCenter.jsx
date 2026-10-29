@@ -136,8 +136,8 @@ function gameInstallBlockedReason(component, usb) {
   if(component?.scene?.engine === "p4-touch-slice-v1" && (component.scene.revision||1)>(usb?.capabilities?.widgetSliceRevision||1)) {
     return "这个游戏版本需要新版切果能力，请先升级设备固件。";
   }
-  if(component?.scene?.engine === "p4-touch-slice-v1" && (usb?.capabilities?.widgetPointer!=="p4-pointer-v1" || usb?.capabilities?.touchInput?.ready!==true)) {
-    return "这个游戏需要连续触控，请更新固件并确认触屏就绪。";
+  if(component?.scene?.engine === "p4-touch-slice-v1" && (usb?.capabilities?.widgetPointer!=="p4-pointer-v1" || (usb?.capabilities?.touchInput?.ready!==true && usb?.capabilities?.virtualPointer!==true))) {
+    return "这个游戏需要触屏或按键虚拟指针，请更新设备固件。";
   }
   if (component?.instrumentSource && usb?.capabilities?.widgetInstrument !== "p4-instrument-v1") {
     return "这个组件需要本地木鱼音效能力，请先升级设备固件。";
@@ -211,6 +211,10 @@ function deviceTouchReady(usb) {
   const reportedReady = usb?.capabilities?.touchInput?.ready;
   if (typeof reportedReady === "boolean") return reportedReady;
   return usb?.capabilities?.touch === true;
+}
+
+function devicePointerReady(usb) {
+  return deviceTouchReady(usb) || usb?.capabilities?.virtualPointer === true;
 }
 
 function loadComponentButtonOverrides() {
@@ -553,7 +557,7 @@ export default function ComponentCenter({ active = true }) {
 
   useEffect(() => {
     const boardDeviceId = String(usb.boardDeviceId || "").trim();
-    if (!usb.connected || !boardDeviceId || String(usb.runtime || "").toLowerCase() !== "esp-p4") {
+    if (!usb.connected || !boardDeviceId || !["esp-p4", "esp-s3"].includes(String(usb.runtime || "").toLowerCase())) {
       setGlobalExitBinding({ boardDeviceId: "", events: [], status: "idle" });
       return undefined;
     }
@@ -1202,7 +1206,7 @@ export default function ComponentCenter({ active = true }) {
     const boardDeviceId = String(usb.boardDeviceId || "").trim();
     if (
       usb.connected
-      && String(usb.runtime || "").toLowerCase() === "esp-p4"
+      && ["esp-p4", "esp-s3"].includes(String(usb.runtime || "").toLowerCase())
       && boardDeviceId
       && (globalExitBinding.boardDeviceId !== boardDeviceId || globalExitBinding.status === "loading")
     ) {
@@ -1210,7 +1214,7 @@ export default function ComponentCenter({ active = true }) {
     }
     if (
       usb.connected
-      && String(usb.runtime || "").toLowerCase() === "esp-p4"
+      && ["esp-p4", "esp-s3"].includes(String(usb.runtime || "").toLowerCase())
       && boardDeviceId
       && globalExitBinding.boardDeviceId === boardDeviceId
       && globalExitBinding.status === "error"
@@ -1219,7 +1223,7 @@ export default function ComponentCenter({ active = true }) {
     }
     const seen = new Map();
     for (const binding of resolveComponentBindings(component)) {
-      if (binding.event.startsWith("screen.") && !deviceTouchReady(usb)) {
+      if (binding.event.startsWith("screen.") && !devicePointerReady(usb)) {
         return `${binding.label} 使用了屏幕手势，但当前设备未报告触屏可用，请改为未被全局退出占用的按键或摇杆`;
       }
       for (const eventSlot of componentInputEventSlots(binding.event)) {
@@ -1262,17 +1266,19 @@ export default function ComponentCenter({ active = true }) {
         .flatMap((candidate) => componentInputEventSlots(candidate.event)),
     );
     return COMPONENT_CONTROL_OPTIONS
+      .filter((option) => usb.runtime !== "esp-s3" || /^button\.sw[123]\.(short_press|long_press)$/.test(option.event) || (usb.capabilities?.virtualPointer === true && option.event.startsWith("screen.")))
       .filter((option) => componentControlOptionAllowed(option, binding, component))
       .filter((option) => (
         !option.event.startsWith("screen.")
-        || deviceTouchReady(usb)
+        || devicePointerReady(usb)
         || option.event === currentEvent
       ))
       .map((option) => ({
         ...option,
+        ...(usb.runtime === "esp-s3" && option.event.startsWith("screen.") ? { label: `按键菜单：${option.label}` } : {}),
         disabled: (
           componentInputEventSlots(option.event).some((event) => globalExitEvents.includes(event))
-          || (option.event.startsWith("screen.") && !deviceTouchReady(usb))
+          || (option.event.startsWith("screen.") && !devicePointerReady(usb))
           || (
             option.event !== currentEvent
             && componentInputEventSlots(option.event).some((event) => usedEvents.has(event))

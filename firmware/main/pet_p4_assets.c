@@ -10,8 +10,17 @@
 #define PET_P4_ASSET_DEFAULT_WIDTH 640
 #define PET_P4_ASSET_DEFAULT_HEIGHT 480
 #define PET_P4_ASSET_DEFAULT_FPS 10
+#if CONFIG_IDF_TARGET_ESP32S3
+#define PET_P4_ASSET_MAX_JPEG_BYTES (128 * 1024)
+#else
 #define PET_P4_ASSET_MAX_JPEG_BYTES (512 * 1024)
+#endif
+#if CONFIG_IDF_TARGET_ESP32S3
+#include "../s3/pet_s3_render.h"
+#define PET_P4_ASSET_MAX_STREAM_BYTES PET_S3_ASSET_MAX_STREAM_BYTES
+#else
 #define PET_P4_ASSET_MAX_STREAM_BYTES (4 * 1024 * 1024)
+#endif
 
 static bool family_is_selftest(const char *family, const char *path) {
   return (family && strstr(family, "selftest")) || (path && strstr(path, "selftest"));
@@ -402,6 +411,9 @@ bool pet_p4_asset_catalog_parse(pet_p4_asset_catalog_t *catalog, const char *man
       entry->stream_bytes = (uint32_t) stream_bytes;
     }
     if (entry->fps == 0) entry->fps = parsed->fps;
+#if CONFIG_IDF_TARGET_ESP32S3
+    if (!pet_s3_asset_bounds(entry->width, entry->height, entry->fps, entry->stream_bytes)) goto parse_failed;
+#endif
     if (entry->duration_ms == 0) {
       fallback_duration_ms = entry->frame_duration_ms > 0
         ? (uint64_t) entry->frames * entry->frame_duration_ms
@@ -409,6 +421,10 @@ bool pet_p4_asset_catalog_parse(pet_p4_asset_catalog_t *catalog, const char *man
       if (fallback_duration_ms == 0 || fallback_duration_ms > UINT32_MAX) goto parse_failed;
       entry->duration_ms = (uint32_t) fallback_duration_ms;
     }
+#if CONFIG_IDF_TARGET_ESP32S3
+    /* Validate resolved duration, including the frameDurationMs fallback. */
+    if ((uint64_t)entry->frames * 1000 > (uint64_t)entry->duration_ms * PET_S3_ASSET_MAX_FPS) goto parse_failed;
+#endif
     if (entry->frame_duration_ms == 0) {
       entry->frame_duration_ms = (uint32_t) (
         ((uint64_t) entry->duration_ms + entry->frames - 1U) / entry->frames

@@ -22,11 +22,13 @@ export function deriveCurrentDisplay(agentAppearanceMap, enabledAgents, appearan
 
 export function resolveUsbRuntime(status) {
   const explicit = String(status?.runtime || "").trim().toLowerCase();
+  if (["esp-s3", "esp32-s3", "esp32_s3", "s3"].includes(explicit)) return "esp-s3";
   if (["esp-p4", "esp32-p4", "esp32_p4", "p4"].includes(explicit)) return "esp-p4";
   if (["linux", "linux-board", "raspberry-pi", "raspberry", "radxa"].includes(explicit)) return "linux";
   if (explicit) return explicit;
 
   const model = String(status?.deviceModel || "").trim().toLowerCase();
+  if (model.includes("esp32-s3") || model.includes("esp-s3")) return "esp-s3";
   if (model.includes("esp32-p4") || model.includes("esp-p4")) return "esp-p4";
 
   const capabilities = status?.capabilities && typeof status.capabilities === "object"

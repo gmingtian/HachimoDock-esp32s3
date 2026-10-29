@@ -10,7 +10,7 @@ def test_private_save_generations_audio_deferral_and_corruption(tmp_path):
         'freertos/FreeRTOS.h':'#define portMAX_DELAY 0\n#define pdPASS 1\n#define pdMS_TO_TICKS(x) (x)\n',
         'freertos/semphr.h':'typedef int SemaphoreHandle_t;\n#define xSemaphoreCreateMutex() 1\n#define xSemaphoreTake(a,b) ((void)0)\n#define xSemaphoreGive(a) ((void)0)\n',
         'freertos/task.h':'typedef int TaskHandle_t;\n#define xTaskCreate(a,b,c,d,e,f) ((void)(a),*(f)=1,1)\n#define vTaskDelay(n) ((void)(n))\n',
-        'mbedtls/sha256.h':'#include <string.h>\nstatic int mbedtls_sha256(const unsigned char *p,size_t n,unsigned char *o,int b){(void)b;memset(o,0,32);for(size_t i=0;i<n;i++)o[i%32]^=p[i];return 0;}\n'
+        'mbedtls/sha256.h':'#include <string.h>\ntypedef struct {int unused;} mbedtls_sha256_context;\nstatic int mbedtls_sha256(const unsigned char *p,size_t n,unsigned char *o,int b){(void)b;memset(o,0,32);for(size_t i=0;i<n;i++)o[i%32]^=p[i];return 0;}\n'
     }
     for name,body in stubs.items():
         p=tmp_path/name;p.parent.mkdir(exist_ok=True,parents=True);p.write_text(body)

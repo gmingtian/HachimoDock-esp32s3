@@ -6,7 +6,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/semphr.h"
-#include "mbedtls/sha256.h"
+#include "pet_sha256.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
@@ -30,7 +30,7 @@ static bool valid_id(const char *id){
   return true;
 }
 static void path_for(const char *id,unsigned slot,char out[64]){
-  unsigned char hash[32];mbedtls_sha256((const unsigned char*)id,strlen(id),hash,0);
+  unsigned char hash[32];pet_sha256((const unsigned char*)id,strlen(id),hash,0);
   snprintf(out,64,PET_APP_SAVE_ROOT "/as-%02x%02x%02x%02x%02x%02x%02x%02x-%u",hash[0],hash[1],hash[2],hash[3],hash[4],hash[5],hash[6],hash[7],slot);
 }
 static bool read_slot(const char *id,unsigned slot,save_t *out){

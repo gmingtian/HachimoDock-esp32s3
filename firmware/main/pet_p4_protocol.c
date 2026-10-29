@@ -27,7 +27,10 @@
 
 #include "cJSON.h"
 #include "mbedtls/base64.h"
+#include "pet_target.h"
+#if !CONFIG_IDF_TARGET_ESP32S3
 #include "bsp/display.h"
+#endif
 #include "esp_app_desc.h"
 #include "esp_chip_info.h"
 #include "esp_log.h"
@@ -513,7 +516,9 @@ static bool clear_slot_files(int slot) {
     if (!dir) return false;
     while ((entry = readdir(dir)) != NULL) {
       if (strncmp(entry->d_name, prefix, strlen(prefix)) != 0) continue;
-      snprintf(fs_path, sizeof(fs_path), PET_P4_SPIFFS_PREFIX "/%s", entry->d_name);
+      if (strlen(entry->d_name) > sizeof(fs_path) - sizeof(PET_P4_SPIFFS_PREFIX) - 1) continue;
+      snprintf(fs_path, sizeof(fs_path), PET_P4_SPIFFS_PREFIX "/%.*s",
+               (int)sizeof(fs_path) - (int)sizeof(PET_P4_SPIFFS_PREFIX) - 1, entry->d_name);
       found = true;
       break;
     }
@@ -810,7 +815,9 @@ void pet_p4_asset_clean_legacy_files(void) {
     char fs_path[PET_P4_FS_PATH_MAX];
     const char *name = entry->d_name;
     if (name[0] != 'a') continue;
-    snprintf(fs_path, sizeof(fs_path), PET_P4_SPIFFS_PREFIX "/%s", name);
+    if (strlen(name) > sizeof(fs_path) - sizeof(PET_P4_SPIFFS_PREFIX) - 1) continue;
+    snprintf(fs_path, sizeof(fs_path), PET_P4_SPIFFS_PREFIX "/%.*s",
+             (int)sizeof(fs_path) - (int)sizeof(PET_P4_SPIFFS_PREFIX) - 1, name);
     remove(fs_path);
   }
   closedir(dir);
@@ -1637,7 +1644,7 @@ static bool send_widget_inventory(
     "boardDeviceId",
     state ? state->board_device_id : ""
   );
-  cJSON_AddStringToObject(payload, "runtime", "esp-p4");
+  cJSON_AddStringToObject(payload, "runtime", PET_TARGET_RUNTIME);
   cJSON_AddNumberToObject(
     payload,
     "queriedAtMs",
@@ -1757,26 +1764,26 @@ void pet_p4_send_hello(const pet_p4_runtime_state_t *state, pet_p4_send_line_fn 
   cJSON *controls = cJSON_CreateObject();
   cJSON *touch_input = cJSON_CreateObject();
   cJSON_AddStringToObject(payload, "boardDeviceId", state ? state->board_device_id : "p4-unknown");
-  cJSON_AddStringToObject(payload, "runtime", "esp-p4");
-  cJSON_AddStringToObject(payload, "deviceModel", "ESP32-P4 RISC-V Dual-Core + ESP32-C6");
+  cJSON_AddStringToObject(payload, "runtime", PET_TARGET_RUNTIME);
+  cJSON_AddStringToObject(payload, "deviceModel", PET_TARGET_MODEL);
   cJSON_AddStringToObject(payload, "fw", app ? app->version : "");
   cJSON_AddStringToObject(payload, "buildId", PET_P4_BUILD_ID);
   cJSON_AddStringToObject(payload, "gitSha", PET_P4_BUILD_GIT_SHA);
   cJSON_AddBoolToObject(payload, "buildDirty", PET_P4_BUILD_DIRTY != 0);
   cJSON_AddNumberToObject(payload, "protocolSchema", PET_P4_PROTOCOL_SCHEMA);
   cJSON_AddStringToObject(payload, "wireProtocol", PET_P4_WIRE_PROTOCOL);
-  cJSON_AddStringToObject(hardware, "soc", "ESP32-P4 RISC-V Dual-Core");
-  cJSON_AddStringToObject(hardware, "hpCpu", "HP@360MHz(Max 400MHz)");
-  cJSON_AddStringToObject(hardware, "lpCpu", "LP@40MHz");
-  cJSON_AddStringToObject(hardware, "onChipSram", "768KB L2MEM + 32KB LP SRAM + 8KB TCM");
-  cJSON_AddStringToObject(hardware, "psram", "32MB In-package stacked");
-  cJSON_AddStringToObject(hardware, "flash", "32MB QSPI NOR Flash");
+  cJSON_AddStringToObject(hardware, "soc", PET_TARGET_SOC);
+  cJSON_AddStringToObject(hardware, "hpCpu", PET_TARGET_CPU);
+  cJSON_AddStringToObject(hardware, "lpCpu", PET_TARGET_LP_CPU);
+  cJSON_AddStringToObject(hardware, "onChipSram", PET_TARGET_SRAM);
+  cJSON_AddStringToObject(hardware, "psram", PET_TARGET_PSRAM);
+  cJSON_AddStringToObject(hardware, "flash", PET_TARGET_FLASH);
   cJSON_AddItemToObject(payload, "hardware", hardware);
 
   cJSON_AddNumberToObject(capabilities, "version", 1);
   cJSON_AddBoolToObject(capabilities, "usbOnly", true);
-  cJSON_AddBoolToObject(capabilities, "nativeUsb", true);
-  cJSON_AddBoolToObject(capabilities, "bulk", true);
+  cJSON_AddBoolToObject(capabilities, "nativeUsb", PET_TARGET_NATIVE_USB);
+  cJSON_AddBoolToObject(capabilities, "bulk", PET_TARGET_NATIVE_USB);
   cJSON_AddNumberToObject(capabilities, "maxAppearanceSlots", 2);
   cJSON_AddBoolToObject(capabilities, "appearanceSlotReuse", true);
   cJSON_AddBoolToObject(
@@ -1886,17 +1893,17 @@ void pet_p4_send_hello(const pet_p4_runtime_state_t *state, pet_p4_send_line_fn 
   cJSON_AddStringToObject(touch_input, "controller", touch_ready ? pet_p4_touch_controller() : "unavailable");
   cJSON_AddBoolToObject(touch_input, "ready", touch_ready);
   cJSON_AddStringToObject(touch_input, "coordinates", "logical-640x480");
-  cJSON_AddBoolToObject(touch_input, "tap", true);
-  cJSON_AddBoolToObject(touch_input, "longPress", true);
-  cJSON_AddBoolToObject(touch_input, "swipe", true);
+  cJSON_AddBoolToObject(touch_input, "tap", touch_ready);
+  cJSON_AddBoolToObject(touch_input, "longPress", touch_ready);
+  cJSON_AddBoolToObject(touch_input, "swipe", touch_ready);
   cJSON_AddItemToObject(capabilities, "touchInput", touch_input);
   cJSON_AddBoolToObject(capabilities, "firmwareOta", true);
   cJSON_AddStringToObject(firmware_update, "transport", "usb-jsonl-ota-v1");
   cJSON_AddNumberToObject(firmware_update, "slots", 2);
-  cJSON_AddNumberToObject(firmware_update, "maxImageBytes", 0x280000);
+  cJSON_AddNumberToObject(firmware_update, "maxImageBytes", PET_TARGET_OTA_BYTES);
   cJSON_AddNumberToObject(firmware_update, "chunkBytes", 4 * 1024);
   cJSON_AddStringToObject(firmware_update, "checksum", "sha256");
-  cJSON_AddStringToObject(firmware_update, "projectName", "pet_manager_p4_runtime");
+  cJSON_AddStringToObject(firmware_update, "projectName", PET_TARGET_PROJECT);
   esp_chip_info_t chip_info;
   esp_chip_info(&chip_info);
   cJSON_AddNumberToObject(firmware_update, "chipRevision", chip_info.revision);
@@ -1907,8 +1914,8 @@ void pet_p4_send_hello(const pet_p4_runtime_state_t *state, pet_p4_send_line_fn 
   cJSON_AddBoolToObject(capabilities, "screenshot", true);
   cJSON_AddNumberToObject(display, "width", 640);
   cJSON_AddNumberToObject(display, "height", 480);
-  cJSON_AddNumberToObject(display, "physicalWidth", 480);
-  cJSON_AddNumberToObject(display, "physicalHeight", 640);
+  cJSON_AddNumberToObject(display, "physicalWidth", PET_TARGET_PHYSICAL_WIDTH);
+  cJSON_AddNumberToObject(display, "physicalHeight", PET_TARGET_PHYSICAL_HEIGHT);
   cJSON_AddStringToObject(display, "pixelFormat", "rgb565");
   cJSON_AddItemToObject(capabilities, "display", display);
   cJSON_AddItemToArray(asset_formats, cJSON_CreateString("p4-mjpeg-v1"));
@@ -1922,8 +1929,8 @@ void pet_p4_send_hello(const pet_p4_runtime_state_t *state, pet_p4_send_line_fn 
   cJSON_AddBoolToObject(transport, "rawAssetChunks", true);
   cJSON_AddBoolToObject(transport, "rawAssetReadyAck", true);
   cJSON_AddNumberToObject(transport, "rawAssetChunkBytes", PET_P4_RAW_ASSET_CHUNK_LIMIT);
-  cJSON_AddBoolToObject(transport, "nativeUsb", true);
-  cJSON_AddBoolToObject(transport, "bulk", true);
+  cJSON_AddBoolToObject(transport, "nativeUsb", PET_TARGET_NATIVE_USB);
+  cJSON_AddBoolToObject(transport, "bulk", PET_TARGET_NATIVE_USB);
   cJSON_AddStringToObject(transport, "nativeProtocol", "pet-usb-native-v1");
   cJSON_AddItemToObject(capabilities, "transport", transport);
 
@@ -1970,10 +1977,10 @@ void pet_p4_send_hello(const pet_p4_runtime_state_t *state, pet_p4_send_line_fn 
   cJSON_AddBoolToObject(features, "voiceCapture", audio_ready);
   cJSON_AddBoolToObject(features, "audioPlayback", audio_playback_ready);
   cJSON_AddBoolToObject(features, "conversationSubtitles", true);
-  cJSON_AddBoolToObject(features, "audioAec", pet_p4_afe_ready());
+  cJSON_AddBoolToObject(features, "audioAec", PET_TARGET_CALIBRATED_AEC && pet_p4_afe_ready());
   cJSON_AddBoolToObject(features, "audioVad", pet_p4_afe_ready());
-  cJSON_AddBoolToObject(features, "audioFullDuplex", pet_p4_afe_ready());
-  cJSON_AddBoolToObject(features, "audioAecRecovery", audio_ready && audio_playback_ready);
+  cJSON_AddBoolToObject(features, "audioFullDuplex", PET_TARGET_CALIBRATED_AEC && pet_p4_afe_ready());
+  cJSON_AddBoolToObject(features, "audioAecRecovery", PET_TARGET_CALIBRATED_AEC && audio_ready && audio_playback_ready);
   cJSON_AddBoolToObject(features, "touchInput", touch_ready);
   cJSON_AddBoolToObject(features, "touchGestures", touch_ready);
   cJSON_AddBoolToObject(features, "firmwareOta", true);
@@ -1982,12 +1989,25 @@ void pet_p4_send_hello(const pet_p4_runtime_state_t *state, pet_p4_send_line_fn 
   cJSON_AddBoolToObject(features, "safeReboot", true);
   cJSON_AddItemToObject(capabilities, "features", features);
 
+#if CONFIG_IDF_TARGET_ESP32S3
+  cJSON_AddNumberToObject(appearance, "maxPackageBytes", 3 * 1024 * 1024);
+  cJSON_AddNumberToObject(appearance, "width", 240);
+  cJSON_AddNumberToObject(appearance, "height", 180);
+  cJSON_AddNumberToObject(appearance, "maxFps", 10);
+  cJSON_AddBoolToObject(capabilities, "virtualPointer", true);
+  cJSON_AddNumberToObject(controls, "sw1", 39);
+  cJSON_AddNumberToObject(controls, "sw2", 38);
+  cJSON_AddNumberToObject(controls, "sw3", 0);
+  cJSON_AddNumberToObject(controls, "buttonCount", 3);
+  cJSON_AddBoolToObject(controls, "joystick", false);
+#else
   cJSON_AddNumberToObject(controls, "sw1", 50);
   cJSON_AddNumberToObject(controls, "sw2", 49);
   cJSON_AddNumberToObject(controls, "sw3", 5);
   cJSON_AddNumberToObject(controls, "encoderPress", 4);
   cJSON_AddNumberToObject(controls, "encoderB", 3);
   cJSON_AddNumberToObject(controls, "encoderA", 2);
+#endif
   cJSON_AddBoolToObject(controls, "activeLow", true);
   cJSON_AddBoolToObject(controls, "configPersistent", true);
   cJSON_AddBoolToObject(controls, "touchscreen", touch_ready);

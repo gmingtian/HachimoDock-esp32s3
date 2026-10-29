@@ -293,3 +293,8 @@ test("provider resolves currentComponent through the exact USB or SSH target", (
   assert.match(source, /transport: "ssh", sshHost/);
   assert.match(source, /readActiveComponentForTarget\(currentComponentTarget\)/);
 });
+
+ test("S3 identity survives legacy P4 format capabilities", () => {
+ assert.equal(resolveUsbRuntime({deviceModel:"ESP32-S3 N16R8", capabilities:{appearance:{formats:["p4-h264-v1"]}}}), "esp-s3");
+ assert.equal(resolveUsbRuntime({runtime:"esp32_s3"}), "esp-s3");
+ });

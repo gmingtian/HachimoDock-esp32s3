@@ -32,6 +32,7 @@
  * [Sync] If this file changes, update this header and `pc/src/.folder.md`.
  */
 
+import { s3ButtonRows } from "./lib/s3-controls.js";
 import React, { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { RefreshCw } from "lucide-react";
@@ -289,7 +290,8 @@ const P4_V8_DEFAULT_BUTTON_ACTIONS = {
   p4_joystick_down: "disabled",
 };
 
-const ALL_BUTTON_CONTROL_ROWS = [...BOARD_BUTTON_CONTROL_ROWS, ...P4_BUTTON_CONTROL_ROWS];
+const S3_BUTTON_CONTROL_ROWS = s3ButtonRows(P4_CUSTOM_ACTION_OPTIONS);
+const ALL_BUTTON_CONTROL_ROWS = [...BOARD_BUTTON_CONTROL_ROWS, ...P4_BUTTON_CONTROL_ROWS, ...S3_BUTTON_CONTROL_ROWS];
 
 function preferredVoiceRow(rows, buttonActions, trigger) {
   return rows.find((row) => (
@@ -299,6 +301,7 @@ function preferredVoiceRow(rows, buttonActions, trigger) {
 
 export function buttonControlRowsForRuntime(runtime) {
   const runtimeId = String(runtime || "").trim().toLowerCase();
+  if (runtimeId === "esp-s3") return S3_BUTTON_CONTROL_ROWS;
   if (runtimeId === P4_RUNTIME_ID) return P4_BUTTON_CONTROL_ROWS;
   if (["linux", "linux-board", "raspberry-pi", "raspberry", "radxa"].includes(runtimeId)) {
     return BOARD_BUTTON_CONTROL_ROWS;
@@ -477,10 +480,10 @@ export function mergeBoardButtonConfig(currentConfig = {}, response = {}, runtim
     ? boardConfig.voiceEnabled
     : typeof boardConfig?.voice_enabled === "boolean"
       ? boardConfig.voice_enabled
-      : runtimeId === P4_RUNTIME_ID
+      : [P4_RUNTIME_ID, "esp-s3"].includes(runtimeId)
         ? p4VoiceBindingEnabled
         : Boolean(voiceRow);
-  const trigger = runtimeId === P4_RUNTIME_ID
+  const trigger = [P4_RUNTIME_ID, "esp-s3"].includes(runtimeId)
     ? voiceRow?.voiceTriggerId
       || (P4_VOICE_BUTTON_OPTIONS.some((option) => option.id === boardVoiceButton)
         ? boardVoiceButton
@@ -505,7 +508,7 @@ export function mergeBoardButtonConfig(currentConfig = {}, response = {}, runtim
 export function resolveButtonConfigForRuntime(value = {}, runtime = "") {
   const config = normalizeVoiceConfig(value);
   const runtimeId = String(runtime || "").trim().toLowerCase();
-  if (runtimeId !== P4_RUNTIME_ID) {
+  if (![P4_RUNTIME_ID, "esp-s3"].includes(runtimeId)) {
     return {
       config,
       voiceButton: config.trigger,
@@ -513,7 +516,7 @@ export function resolveButtonConfigForRuntime(value = {}, runtime = "") {
     };
   }
   const voiceRow = preferredVoiceRow(
-    P4_BUTTON_CONTROL_ROWS,
+    buttonControlRowsForRuntime(runtime),
     config.buttonActions,
     config.trigger,
   );
@@ -547,8 +550,8 @@ export function boardButtonConfigMatchesClient(clientConfig = {}, response = {},
 
 export function applyVoiceEnabledForRuntime(value = {}, enabled = false, runtime = "") {
   const next = normalizeVoiceConfig({ ...value, enabled: enabled === true });
-  if (String(runtime || "").trim().toLowerCase() === P4_RUNTIME_ID) {
-    const voiceRows = P4_BUTTON_CONTROL_ROWS.filter((row) => row.voiceTriggerId);
+  if ([P4_RUNTIME_ID, "esp-s3"].includes(String(runtime || "").trim().toLowerCase())) {
+    const voiceRows = buttonControlRowsForRuntime(runtime).filter((row) => row.voiceTriggerId);
     const selectedRow = voiceRows.find(
       (row) => row.voiceTriggerId === next.trigger && next.buttonActions[row.id] === "voice_ptt",
     ) || voiceRows.find((row) => row.voiceTriggerId === next.trigger)
@@ -801,10 +804,10 @@ export default function DeviceDashboard({ active = true, binding, onUnbind, onOp
   const [dismissedP4Sessions, setDismissedP4Sessions] = useState({});
   const buttonConfigRevisionRef = useRef(0);
   const buttonConfigQueryTokenRef = useRef(0);
-  const isP4Runtime = String(usb.runtime || "").toLowerCase() === P4_RUNTIME_ID;
+  const isP4Runtime = [P4_RUNTIME_ID, "esp-s3"].includes(String(usb.runtime || "").toLowerCase());
   const hasKnownRuntime = buttonControlRowsForRuntime(usb.runtime).length > 0;
   const p4VoiceRow = isP4Runtime
-    ? preferredVoiceRow(P4_BUTTON_CONTROL_ROWS, voiceConfig.buttonActions, voiceConfig.trigger)
+    ? preferredVoiceRow(buttonControlRowsForRuntime(usb.runtime), voiceConfig.buttonActions, voiceConfig.trigger)
     : null;
   const runtimeVoiceEnabled = isP4Runtime
     ? voiceConfig.enabled && Boolean(p4VoiceRow)
@@ -819,7 +822,7 @@ export default function DeviceDashboard({ active = true, binding, onUnbind, onOp
     [activeVoiceTriggerId, isP4Runtime, runtimeVoiceEnabled, voiceConfig],
   );
   const runtimeVoiceTriggerOptions = isP4Runtime
-    ? P4_VOICE_BUTTON_OPTIONS
+    ? P4_VOICE_BUTTON_OPTIONS.filter(option => buttonControlRowsForRuntime(usb.runtime).some(row => row.voiceTriggerId === option.id))
     : VOICE_BUTTON_OPTIONS.filter((option) => option.id === "encoder_button.hold");
   const selectedVoiceTrigger = runtimeVoiceTriggerOptions.find((option) => option.id === activeVoiceTriggerId)
     || runtimeVoiceTriggerOptions[0];
@@ -1480,13 +1483,13 @@ export default function DeviceDashboard({ active = true, binding, onUnbind, onOp
           onUnbind={onUnbindClick}
           onDeviceReturnHome={onDeviceReturnHome}
           onForceSyncAppearance={onForceSyncAppearance}
-          onUpdateFirmware={usb.connected && usb.runtime === P4_RUNTIME_ID
+          onUpdateFirmware={usb.connected && [P4_RUNTIME_ID, "esp-s3"].includes(usb.runtime)
             ? () => {
               setFirmwareTargetBoardDeviceId(usb.boardDeviceId || "");
               setFirmwareModalOpen(true);
             }
             : undefined}
-          onDiagnostics={usb.connected && usb.runtime === P4_RUNTIME_ID
+          onDiagnostics={usb.connected && [P4_RUNTIME_ID, "esp-s3"].includes(usb.runtime)
             ? () => {
               setDiagnosticsTargetBoardDeviceId(usb.boardDeviceId || "");
               setDiagnosticsModalOpen(true);
@@ -1498,6 +1501,10 @@ export default function DeviceDashboard({ active = true, binding, onUnbind, onOp
       <Card>
         <DeviceStatusBar />
       </Card>
+
+      {typeof navigator !== "undefined" && /Linux/i.test(navigator.platform || navigator.userAgent || "") && <div role="status" className="message-banner">
+        Linux 支持设备连接、会话监控、素材转换与板端语音；自动写入或发送到其他应用的前台输入框尚未支持。
+      </div>}
 
       {realtimeChat?.error && !isRecoveringAsr(realtimeChat) && <div role="alert" className="message-banner message-banner--error">
         实时对话失败：{realtimeChat.error}。详情与诊断日志见下方「实时对话」。

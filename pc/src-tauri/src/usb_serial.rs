@@ -69,6 +69,8 @@ mod windows_serial;
 mod firmware_transaction;
 mod firmware_chip;
 pub(crate) use firmware_chip::{bundled_resource_for_chip, chip_target_from_device, P4ChipTarget};
+use firmware_chip::validate_firmware_for_target;
+#[cfg(test)]
 use firmware_chip::{firmware_chip_range, validate_firmware_chip};
 mod native_usb_protocol;
 mod transaction_waiters;
@@ -726,6 +728,7 @@ fn serial_baud_candidates_for_device(device: Option<&UsbDeviceInfo>) -> Vec<u32>
 
 fn canonical_runtime_id(runtime: &str) -> String {
     match runtime.trim().to_ascii_lowercase().as_str() {
+        "esp-s3" | "esp32-s3" | "esp32_s3" | "s3" => "esp-s3".to_string(),
         "esp-p4" | "esp32-p4" | "esp32_p4" | "p4" => "esp-p4".to_string(),
         "linux" | "linux-board" | "board-runtime" | "board-server-c" | "pet-screen"
         | "raspberry-pi" | "raspberry" | "radxa" => "linux".to_string(),
@@ -737,13 +740,16 @@ fn runtime_from_hello_payload(payload: &serde_json::Value) -> String {
     let explicit = first_json_string(payload, &["runtime", "runtimeKind", "deviceRuntime"]);
     if !explicit.is_empty() {
         let runtime = canonical_runtime_id(&explicit);
-        if matches!(runtime.as_str(), "esp-p4" | "linux") {
+        if matches!(runtime.as_str(), "esp-p4" | "esp-s3" | "linux") {
             return runtime;
         }
     }
 
     let model =
         first_json_string(payload, &["deviceModel", "model", "boardModel"]).to_ascii_lowercase();
+    if model.contains("esp32-s3") || model.contains("esp-s3") {
+        return "esp-s3".to_string();
+    }
     if model.contains("esp32-p4") || model.contains("esp-p4") {
         return "esp-p4".to_string();
     }
@@ -851,7 +857,7 @@ fn validate_hello_message(message: &mut SerialMessage) -> Result<(), String> {
         return Err("hello did not include a board device id".to_string());
     }
     let runtime = runtime_from_hello_payload(&message.payload);
-    if !matches!(runtime.as_str(), "esp-p4" | "linux") {
+    if !matches!(runtime.as_str(), "esp-p4" | "esp-s3" | "linux") {
         return Err("hello did not identify a supported device runtime".to_string());
     }
     if let Some(object) = message.payload.as_object_mut() {
@@ -2188,6 +2194,9 @@ impl UsbSerialManager {
 
     pub(crate) fn firmware_chip_target(&self, expected_board_device_id: &str) -> Result<P4ChipTarget, String> {
         let status = self.connected_board_status(expected_board_device_id)?;
+        if status.runtime.eq_ignore_ascii_case("esp-s3") {
+            return Ok(P4ChipTarget::S3);
+        }
         if status.capabilities.pointer("/firmwareUpdate/chipRevision").is_some() {
             return chip_target_from_device(&status.capabilities, None);
         }
@@ -2215,23 +2224,26 @@ impl UsbSerialManager {
             .map_err(|error| error.to_string())?;
         let (status, firmware_connection_id) =
             self.connected_board_snapshot(&expected_board_device_id)?;
-        if !status.runtime.eq_ignore_ascii_case("esp-p4") {
+        if !matches!(status.runtime.as_str(), "esp-p4" | "esp-s3") {
             return Err(format!(
-                "firmware OTA is only supported by ESP32-P4, connected runtime is {}",
+                "firmware OTA is only supported by ESP32-P4 / ESP32-S3, connected runtime is {}",
                 status.runtime
             ));
         }
         // Validate the image before any abort, erase or upload side effect.
         let firmware = std::fs::read(firmware_path)
             .map_err(|error| format!("read firmware {}: {error}", firmware_path.display()))?;
-        if firmware.is_empty() || firmware.len() > P4_FIRMWARE_MAX_IMAGE_SIZE {
+        let max_image_size = if status.runtime == "esp-s3" { 3 * 1024 * 1024 } else { P4_FIRMWARE_MAX_IMAGE_SIZE };
+        if firmware.is_empty() || firmware.len() > max_image_size {
             return Err(format!("firmware image must be 1..={} bytes, got {}",
-                P4_FIRMWARE_MAX_IMAGE_SIZE, firmware.len()));
+                max_image_size, firmware.len()));
         }
         let descriptor = parse_esp_idf_app_descriptor(&firmware)?;
-        let chip_range = firmware_chip_range(&firmware)?;
         let chip_target = self.firmware_chip_target(&expected_board_device_id)?;
-        validate_firmware_chip(chip_range, chip_target)?;
+        validate_firmware_for_target(&firmware, chip_target)?;
+        if (chip_target == P4ChipTarget::S3) != (descriptor.project_name == "pet_manager_s3_runtime") {
+            return Err("firmware project does not match connected chip family".into());
+        }
         self.recover_stale_firmware_transfer(&expected_board_device_id, firmware_connection_id)?;
         let preferred_chunk_size =
             preferred_firmware_chunk_size(status.protocol_schema, &status.capabilities);
@@ -2301,8 +2313,8 @@ impl UsbSerialManager {
             "transferId": transfer_id,
             "size": total_bytes,
             "sha256": sha256,
-            "chipRevisionMin": chip_range.min,
-            "chipRevisionMax": chip_range.max,
+            "chipRevisionMin": u16::from_le_bytes([firmware[15], firmware[16]]),
+            "chipRevisionMax": u16::from_le_bytes([firmware[17], firmware[18]]),
         });
         let begin_ack = self.begin_firmware_transfer(
             &expected_board_device_id,
@@ -4060,9 +4072,9 @@ impl UsbSerialManager {
             if widget_definition["scene"]["revision"].as_u64().unwrap_or(1)>capabilities["widgetSliceRevision"].as_u64().unwrap_or(1) {
                 return Err("这个切果版本需要更新固件后再安装".into());
             }
-            if capabilities["widgetPointer"]!="p4-pointer-v1" || capabilities["touchInput"]["ready"]!=true
+            if capabilities["widgetPointer"]!="p4-pointer-v1" || (capabilities["touchInput"]["ready"]!=true && capabilities["virtualPointer"]!=true)
                 || !capabilities["widgetScenes"].as_array().is_some_and(|v|v.iter().any(|e|e=="p4-touch-slice-v1")) {
-                return Err("设备尚未支持连续触控切果，请更新固件并确认触屏就绪".into());
+                return Err("设备未声明触屏或按键虚拟指针切果能力，请更新固件".into());
             }
         }
         if widget_definition.get("instrument").is_some()
@@ -4534,9 +4546,9 @@ impl UsbSerialManager {
             .asset_transfer_guard
             .lock()
             .map_err(|error| error.to_string())?;
-        self.connected_board_status(expected_board_device_id)?;
+        let board_status = self.connected_board_status(expected_board_device_id)?;
         self.ensure_appearance_sync_not_cancelled(None)?;
-        if p4_native_usb_available() {
+        if board_status.runtime == "esp-p4" && p4_native_usb_available() {
             match sync_appearance_p4_native(
                 appearance_dir,
                 app_data_dir,
@@ -4570,7 +4582,11 @@ impl UsbSerialManager {
             return Ok((0,0,true));
         }
         let _ = app_data_dir;
-        let assets = load_prepared_p4_appearance_pack(appearance_dir)?;
+        let assets = if board_status.runtime == "esp-s3" {
+            load_s3_appearance_pack(appearance_dir)?.0
+        } else {
+            load_prepared_p4_appearance_pack(appearance_dir)?
+        };
         self.ensure_appearance_sync_not_cancelled(None)?;
 
         let total_files: u32 = assets.len() as u32;
@@ -5279,15 +5295,20 @@ fn load_p4_pack_from_profile_root(
     })?;
     let manifest: serde_json::Value = serde_json::from_slice(&manifest_bytes)
         .map_err(|error| format!("parse P4 ready manifest failed: {error}"))?;
+    let s3 = manifest.get("target").and_then(|v| v.as_str()) == Some("esp32s3");
+    let width = if s3 { 240 } else { P4_APPEARANCE_WIDTH };
+    let height = if s3 { 180 } else { P4_APPEARANCE_HEIGHT };
+    let max_frames = if s3 { 320 } else { P4_APPEARANCE_MAX_FRAMES };
+    let fps = if s3 { 10 } else { P4_APPEARANCE_FPS };
     if manifest.get("format").and_then(|value| value.as_str()) != Some("p4-h264-v1")
         || manifest.get("codec").and_then(|value| value.as_str()) != Some("h264")
         || manifest.get("container").and_then(|value| value.as_str()) != Some("annex-b")
         || manifest.get("width").and_then(|value| value.as_u64())
-            != Some(u64::from(P4_APPEARANCE_WIDTH))
+            != Some(u64::from(width))
         || manifest.get("height").and_then(|value| value.as_u64())
-            != Some(u64::from(P4_APPEARANCE_HEIGHT))
+            != Some(u64::from(height))
         || manifest.get("fps").and_then(|value| value.as_u64())
-            != Some(u64::from(P4_APPEARANCE_FPS))
+            != Some(u64::from(fps))
     {
         return Err(format!(
             "P4 ready manifest does not match profile {}",
@@ -5325,7 +5346,7 @@ fn load_p4_pack_from_profile_root(
         let frame_count = family
             .get("frames")
             .and_then(|value| value.as_u64())
-            .filter(|value| *value > 0 && *value <= u64::from(P4_APPEARANCE_MAX_FRAMES))
+            .filter(|value| *value > 0 && *value <= u64::from(max_frames))
             .ok_or_else(|| format!("P4 ready family {family_name} has an invalid frame count"))?;
         let expected_stream_bytes = family
             .get("streamBytes")
@@ -5335,7 +5356,7 @@ fn load_p4_pack_from_profile_root(
         let family_fps = family
             .get("fps")
             .and_then(|value| value.as_u64())
-            .filter(|value| *value > 0 && *value <= u64::from(P4_APPEARANCE_FPS))
+            .filter(|value| *value > 0 && *value <= u64::from(fps))
             .ok_or_else(|| format!("P4 ready family {family_name} has an invalid fps"))?;
         let frame_duration_ms = family
             .get("frameDurationMs")
@@ -5370,8 +5391,9 @@ fn load_p4_pack_from_profile_root(
                 error
             )
         })?;
+        if s3 && stream_bytes.len() > 384 * 1024 { return Err("S3 video exceeds 384 KiB decoder limit".into()); }
         let actual =
-            parse_p4_h264_stream(&stream_bytes, P4_APPEARANCE_WIDTH, P4_APPEARANCE_HEIGHT)?;
+            parse_p4_h264_stream(&stream_bytes, width, height)?;
         if u64::from(actual.frames) != frame_count
             || u64::from(actual.stream_bytes) != expected_stream_bytes
         {
@@ -5424,7 +5446,11 @@ fn load_p4_pack_from_profile_root(
             "P4 ready pack checksum mismatch: manifest={pack_id} computed={computed_pack_id}"
         ));
     }
-    let summary = prepared_p4_summary(&assets, pack_id)?;
+    let mut summary = prepared_p4_summary(&assets, pack_id)?;
+    if s3 {
+        if summary.byte_count + 4096 + 3 * u64::from(summary.file_count) > 3 * 1024 * 1024 { return Err("S3 appearance exceeds 3 MiB slot including metadata".into()); }
+        summary.profile = "s3-240x180-10fps".into();
+    }
     Ok((assets, summary))
 }
 
@@ -5452,6 +5478,37 @@ pub fn prepared_p4_requires_system_cues(appearance_dir: &Path) -> Result<bool, S
         .map_err(|e| e.to_string())?;
     let manifest: serde_json::Value = serde_json::from_slice(&bytes).map_err(|e| e.to_string())?;
     Ok(manifest["systemCues"] == true)
+}
+
+const S3_READY_DIR: &str = "s3-ready";
+
+fn load_s3_appearance_pack(appearance_dir: &Path) -> Result<(Vec<AppearanceAssetEntry>, PreparedP4Appearance), String> {
+    let root = appearance_dir.join(S3_READY_DIR);
+    let manifest: serde_json::Value = serde_json::from_slice(&std::fs::read(root.join("p4/manifest.json")).map_err(|e| e.to_string())?).map_err(|e| e.to_string())?;
+    if manifest["target"] != "esp32s3" { return Err("S3 appearance target must be esp32s3".into()); }
+    load_p4_pack_from_profile_root(&root)
+}
+
+pub fn prepare_s3_appearance(appearance_dir: &Path, app_data_dir: &Path, converter: &Path) -> Result<PreparedP4Appearance, String> {
+    let _guard = p4_ready_prepare_lock().lock().map_err(|e| e.to_string())?;
+    let stage = tempfile::Builder::new().prefix(".s3-").tempdir_in(appearance_dir).map_err(|e| e.to_string())?;
+    let ffmpeg = crate::codex_import::resolve_ffmpeg()?;
+    let result = crate::command_for_host("python3")
+        .arg(converter).arg("--source").arg(appearance_dir)
+        .arg("--app-data-dir").arg(app_data_dir)
+        .arg("--output").arg(stage.path())
+        .arg("--ffmpeg").arg(ffmpeg).output().map_err(|e| format!("S3 conversion requires Python3: {e}"))?;
+    if !result.status.success() { return Err(format!("S3 asset conversion failed: {}", String::from_utf8_lossy(&result.stderr))); }
+    let (_, summary) = load_p4_pack_from_profile_root(stage.path())?;
+    let final_root = appearance_dir.join(S3_READY_DIR);
+    let backup = appearance_dir.join(format!(".s3-backup-{}", uuid::Uuid::new_v4()));
+    if final_root.exists() { std::fs::rename(&final_root, &backup).map_err(|e| e.to_string())?; }
+    if let Err(e) = std::fs::rename(stage.path(), &final_root) {
+        if backup.exists() { let _ = std::fs::rename(&backup, &final_root); }
+        return Err(format!("activate S3 appearance: {e}"));
+    }
+    if backup.exists() { let _ = std::fs::remove_dir_all(backup); }
+    Ok(summary)
 }
 
 pub fn prepare_p4_appearance(
@@ -7253,6 +7310,16 @@ mod tests {
     }
 
     #[test]
+    fn s3_default_pack_is_small_and_keeps_genuine_target() {
+        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../firmware/assets/s3-default");
+        let (assets, prepared) = load_p4_pack_from_profile_root(&root).unwrap();
+        assert_eq!(prepared.profile, "s3-240x180-10fps");
+        assert!(prepared.byte_count + 4096 + 3 * u64::from(prepared.file_count) <= 3 * 1024 * 1024);
+        assert_eq!(prepared.file_count as usize, assets.len());
+        assert!(assets.iter().filter(|a| a.kind == "p4-h264").count() >= 1);
+    }
+
+    #[test]
     fn protocol_hello_not_port_metadata_decides_the_runtime() {
         let p4 = serde_json::json!({
             "boardDeviceId": "board-a",
@@ -7268,6 +7335,9 @@ mod tests {
         });
         let unknown = serde_json::json!({ "boardDeviceId": "board-a" });
 
+        let mut s3 = SerialMessage { topic: "hello".into(), payload: serde_json::json!({"boardDeviceId":"s3-test","runtime":"esp-s3","capabilities":{"appearance":{"formats":["p4-h264-v1"]}}}) };
+        validate_hello_message(&mut s3).unwrap();
+        assert_eq!(s3.payload["runtime"], "esp-s3");
         assert_eq!(runtime_from_hello_payload(&p4), "esp-p4");
         assert_eq!(runtime_from_hello_payload(&nested_p4), "esp-p4");
         assert_eq!(runtime_from_hello_payload(&unknown), "");
@@ -7780,6 +7850,7 @@ mod tests {
             // Assert the external encoder contract, not the value returned by
             // the implementation under test (which hid the Windows regression).
             match encoder {
+                crate::codex_import::PlatformH264Encoder::SystemX264 => unreachable!("this matrix covers release OS encoders"),
                 crate::codex_import::PlatformH264Encoder::MediaFoundation => {
                     assert!(args.windows(2).any(|pair| pair == ["-profile:v", "66"]));
                     assert!(args.windows(2).any(|pair| pair == ["-level:v", "30"]));

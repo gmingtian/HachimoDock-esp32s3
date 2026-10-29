@@ -4084,7 +4084,9 @@ impl CodexComposerBridge {
         Err("当前系统不支持桌面任务派发".into())
     }
 
-    pub fn preserve_draft(&self) -> Result<(), String> { Ok(()) }
+    pub fn preserve_draft(&self) -> Result<(), String> {
+        Err("Linux 尚不支持前台输入框草稿保留；可使用 CLI 会话监控及组件功能".into())
+    }
 
     pub fn update_confirmed(&self, _revision: u64, _text: &str) -> Result<(), String> {
         Err("当前系统不支持前台语音输入".into())

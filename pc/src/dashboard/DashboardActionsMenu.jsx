@@ -104,7 +104,7 @@ export default function DashboardActionsMenu({
               onClick={dispatch(onUpdateFirmware)}
             >
               <FileUp size={14} />
-              升级 ESP32-P4 固件
+              升级设备固件
             </button>
           )}
           {onDiagnostics && (
@@ -115,7 +115,7 @@ export default function DashboardActionsMenu({
               onClick={dispatch(onDiagnostics)}
             >
               <Activity size={14} />
-              ESP32-P4 设备诊断
+              设备诊断
             </button>
           )}
           <button

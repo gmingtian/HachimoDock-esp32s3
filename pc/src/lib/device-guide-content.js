@@ -180,3 +180,15 @@ export const P4_CARDS = [
     ],
   },
 ];
+
+
+export const S3_CARDS = [
+ {id:"controls", title:"ESP32-S3 三键操作", shortTitle:"三键导航", controls:[
+  {control:"sw1",rows:[{gesture:"GPIO39 短按",action:"上一个"},{gesture:"长按",action:"返回 / 主界面"}]},
+  {control:"sw2",rows:[{gesture:"GPIO38 短按",action:"下一个"},{gesture:"长按",action:"组件菜单"}]},
+  {control:"sw3",rows:[{gesture:"GPIO0 短按",action:"确认"},{gesture:"按住后松开",action:"录音 / 结束录音"}]}]},
+ {id:"widget-takeover",title:"组件与游戏",shortTitle:"组件按键",headline:"组件动作可分配到三颗按键。长按上一个始终保留返回路径。",example:{name:"操作方式",rows:[
+  {control:"sw1",gesture:"短按",action:"上一个 / 组件动作"},
+  {control:"sw2",gesture:"短按",action:"下一个 / 组件动作"},
+  {control:"sw3",gesture:"短按",action:"确认 / 组件动作"}]},footnotes:["本设备无触屏和摇杆；可在组件中心调整支持的按键动作。","GPIO0 同时是启动引脚，设备上电时请松开确认键。"]}
+];

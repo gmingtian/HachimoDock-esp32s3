@@ -38,7 +38,7 @@ export default function FirmwareUpdateNavItem({ usb = {} }) {
     return () => {
       cancelled = true;
     };
-  }, [usb.connected, usb.boardDeviceId, usb.firmware, usb.capabilities?.firmwareUpdate?.chipRevision]);
+  }, [usb.connected, usb.runtime, usb.boardDeviceId, usb.firmware, usb.capabilities?.firmwareUpdate?.chipRevision]);
 
   useEffect(() => {
     if (pending) return;
@@ -67,7 +67,7 @@ export default function FirmwareUpdateNavItem({ usb = {} }) {
   const currentVersion = (completed?.boardDeviceId === usb.boardDeviceId && completed.version) || String(usb.firmware || "");
   const stageLabel = ({begin:"准备升级",upload:"写入中",recover:"恢复连接",verify:"校验中",reboot:"等待重启",validate:"确认版本"})[stage] || "准备升级";
   const isDetectedP4 = usb.connected === true
-    && usb.runtime === "esp-p4"
+    && ["esp-p4", "esp-s3"].includes(usb.runtime)
     && Boolean(usb.boardDeviceId);
   const disposition = isDetectedP4
     ? firmwareUpdateDisposition(currentVersion, bundledFirmware?.version)

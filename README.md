@@ -1,3 +1,21 @@
+## 本分支：ESP32-S3 N16R8 与 Linux 适配
+
+在原 HachimoDock 基础上，适配现有的 **16MB Flash / 8MB PSRAM、240×240
+ST7789、I2S 麦克风、MAX98357A 喇叭和三个按键**，原 IO 接线保持不变。
+保留共享组件、桌宠动画、会话同步和语音路径；增加中文原生菜单、多会话气泡、
+三键操作/软件光标及 Linux 原生客户端构建支持。原 P4 构建方案继续保留。
+
+[接线、按键与固件构建](docs/ESP32-S3-Linux.md) ·
+[Linux 构建与运行](pc/docs/linux-native.md) ·
+[中文菜单预览](docs/images/s3-menu-preview.png)
+
+![S3 中文会话界面模拟预览](docs/images/s3-session-preview.png)
+
+当前 S3 固件版本：`0.7.103-s3-r2`。固件主机测试 240 项通过、1 项跳过；
+Linux 原生客户端已构建并做启动检查。**尚未进行实机验收**，语音暂用半双工；
+Linux 跨应用自动填字/发送不支持。预览使用模拟会话，不能代表实机帧率与颜色。
+S3 请按上述说明构建对应固件，下面原项目的 P4 下载包不适用于 S3。
+
 <div align="center">
   <img src="assets/hachimodock-mark.png" width="112" alt="HachimoDock（哈基米机）logo" />
   <h1>HachimoDock（哈基米机）</h1>

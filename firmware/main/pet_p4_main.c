@@ -16,6 +16,7 @@
 #include <string.h>
 
 #include "esp_check.h"
+#include "esp_attr.h"
 #include "esp_err.h"
 #include "esp_heap_caps.h"
 #include "esp_log.h"
@@ -32,6 +33,7 @@
 #include "nvs_flash.h"
 
 #include "pet_p4_lcd.h"
+#include "pet_target.h"
 #include "pet_p4_audio.h"
 #include "pet_p4_audio_frontend.h"
 #include "pet_p4_diagnostics.h"
@@ -50,7 +52,11 @@
 static const char *TAG = "pet-p4";
 
 #define PET_P4_UART_NUM UART_NUM_0
+#if CONFIG_IDF_TARGET_ESP32S3
+#define PET_P4_UART_RX_BUFFER_BYTES (32 * 1024)
+#else
 #define PET_P4_UART_RX_BUFFER_BYTES (128 * 1024)
+#endif
 #define PET_P4_UART_READ_CHUNK_BYTES 2048
 #define PET_P4_TRANSPORT_RX_TASK_STACK_BYTES 8192
 #define PET_P4_PROTOCOL_TASK_STACK_BYTES 12288
@@ -59,7 +65,13 @@ static const char *TAG = "pet-p4";
 #define PET_P4_MAIN_LOOP_DELAY_MS 1
 #define PET_P4_MAIN_RX_HEALTH_TIMEOUT_MS 1000ULL
 
+#if CONFIG_IDF_TARGET_ESP32S3
+/* Session/asset state is task-owned, never accessed by an ISR. Keep the full
+ * runtime in PSRAM so internal memory remains available for RTOS/I2S/USB. */
+static EXT_RAM_BSS_ATTR pet_p4_runtime_state_t g_state;
+#else
 static pet_p4_runtime_state_t g_state;
+#endif
 #define PET_P4_PROTOCOL_LINE_BUFFER_BYTES 32768
 // RX tasks parse/copy these buffers in task context; they are not DMA buffers.
 static char *g_line_buffer;
@@ -108,13 +120,13 @@ static esp_err_t build_board_device_id(char *out, size_t out_size) {
   if (!out || out_size < 16) return ESP_ERR_INVALID_ARG;
   esp_err_t err = esp_read_mac(mac, ESP_MAC_BASE);
   if (err != ESP_OK) {
-    snprintf(out, out_size, "p4-unknown");
+    snprintf(out, out_size, PET_TARGET_DEVICE_PREFIX "unknown");
     return err;
   }
   snprintf(
     out,
     out_size,
-    "p4-%02x%02x%02x%02x%02x%02x",
+    PET_TARGET_DEVICE_PREFIX "%02x%02x%02x%02x%02x%02x",
     mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]
   );
   return ESP_OK;
@@ -619,7 +631,7 @@ void app_main(void) {
   unsigned long long last_rx_health_warning_ms = 0;
   bool transfer_was_active = false;
   bool runtime_render_healthy = false;
-  char lcd_status[192];
+  char lcd_status[384];
   char i2c_devices[128];
   char board_device_id[PET_P4_DEVICE_ID_MAX];
   esp_err_t backlight_hide_err = pet_p4_lcd_prepare_boot();
@@ -760,7 +772,7 @@ void app_main(void) {
              (long) usb_rx_created, (long) uart_rx_created);
   }
   // Optional DSP must not take RAM needed to create display/USB tasks.
-  if (pet_p4_audio_ready() && pet_p4_audio_playback_ready()) (void)pet_p4_afe_init();
+  if (PET_TARGET_CALIBRATED_AEC && pet_p4_audio_ready() && pet_p4_audio_playback_ready()) (void)pet_p4_afe_init();
   ESP_LOGI(TAG, "Pet Manager ESP-P4 USB Serial/JTAG, USB-UART and native USB runtime ready");
   xSemaphoreTake(g_state_mutex, portMAX_DELAY);
   pet_p4_send_hello(&g_state, transport_send_line, NULL);

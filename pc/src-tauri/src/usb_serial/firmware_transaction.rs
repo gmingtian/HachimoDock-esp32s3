@@ -241,7 +241,7 @@ pub(super) fn parse_esp_idf_app_descriptor(firmware: &[u8]) -> Result<EspIdfAppD
         &firmware[descriptor_offset + 48..descriptor_offset + 80],
         "projectName",
     )?;
-    if project_name != P4_FIRMWARE_PROJECT_NAME {
+    if project_name != P4_FIRMWARE_PROJECT_NAME && project_name != "pet_manager_s3_runtime" {
         return Err(format!(
             "firmware projectName must be {P4_FIRMWARE_PROJECT_NAME}, got {project_name}"
         ));
@@ -256,10 +256,11 @@ pub(super) fn parse_esp_idf_app_descriptor(firmware: &[u8]) -> Result<EspIdfAppD
 pub fn inspect_firmware_image(path: &std::path::Path) -> Result<FirmwareImageInfo, String> {
     let firmware = std::fs::read(path)
         .map_err(|error| format!("read firmware {}: {error}", path.display()))?;
-    if firmware.is_empty() || firmware.len() > P4_FIRMWARE_MAX_IMAGE_SIZE {
+    let max_image_size = if firmware.get(12..14) == Some(&[9, 0]) { 3 * 1024 * 1024 } else { P4_FIRMWARE_MAX_IMAGE_SIZE };
+    if firmware.is_empty() || firmware.len() > max_image_size {
         return Err(format!(
             "firmware image must be 1..={} bytes, got {}",
-            P4_FIRMWARE_MAX_IMAGE_SIZE,
+            max_image_size,
             firmware.len()
         ));
     }

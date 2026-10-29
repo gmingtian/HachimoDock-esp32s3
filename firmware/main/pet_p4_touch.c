@@ -1,3 +1,17 @@
+#include "sdkconfig.h"
+#if CONFIG_IDF_TARGET_ESP32S3
+#include "pet_p4_touch.h"
+esp_err_t pet_p4_touch_init(void) { return ESP_ERR_NOT_SUPPORTED; }
+bool pet_p4_touch_ready(void) { return false; }
+const char *pet_p4_touch_controller(void) { return "none"; }
+void pet_p4_touch_health(pet_p4_touch_health_t *out) {
+  if(out)*out=(pet_p4_touch_health_t){.stage="not_fitted",.error=ESP_ERR_NOT_SUPPORTED};
+}
+void pet_p4_touch_process(pet_p4_runtime_state_t *state,pet_p4_send_line_fn send_line,void *ctx) {
+  (void)state;(void)send_line;(void)ctx;
+}
+unsigned int pet_p4_touch_dropped_events(void) { return 0; }
+#else
 #include "pet_p4_touch.h"
 #include "pet_p4_conversation.h"
 
@@ -552,3 +566,5 @@ void pet_p4_touch_process(
 unsigned int pet_p4_touch_dropped_events(void) {
   return atomic_load_explicit(&g_dropped_events, memory_order_relaxed);
 }
+
+#endif

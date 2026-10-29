@@ -72,7 +72,7 @@ fn ensure_p4_widget_capability(
     capability: &str,
     capability_label: &str,
 ) -> Result<(), String> {
-    if !status.runtime.eq_ignore_ascii_case("esp-p4") {
+    if !matches!(status.runtime.as_str(), "esp-p4" | "esp-s3") {
         return Ok(());
     }
     let advertised = status

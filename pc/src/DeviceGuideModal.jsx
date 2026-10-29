@@ -20,7 +20,7 @@ import {
   SlidersHorizontal,
   X,
 } from "lucide-react";
-import { CARDS, P4_CARDS, CONTROLS, SCREENS } from "./lib/device-guide-content.js";
+import { CARDS, P4_CARDS, S3_CARDS, CONTROLS, SCREENS } from "./lib/device-guide-content.js";
 import {
   clearOnboardingSeen,
   markOnboardingSeen,
@@ -196,7 +196,8 @@ export default function DeviceGuideModal({ isOpen, onClose, runtime = "" }) {
 
   if (!isOpen) return null;
 
-  const cards = String(runtime).toLowerCase() === "esp-p4" ? P4_CARDS : CARDS;
+  const cards = String(runtime).toLowerCase() === "esp-s3" ? S3_CARDS
+    : String(runtime).toLowerCase() === "esp-p4" ? P4_CARDS : CARDS;
   const card = cards[index];
   const isFirst = index === 0;
   const isLast = index === cards.length - 1;

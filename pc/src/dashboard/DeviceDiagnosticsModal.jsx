@@ -143,13 +143,13 @@ export default function DeviceDiagnosticsModal({
         className="modal-card device-diagnostics-modal"
         role="dialog"
         aria-modal="true"
-        aria-label="ESP32-P4 设备诊断"
+        aria-label="设备诊断"
         onMouseDown={(event) => event.stopPropagation()}
       >
         <div className="modal-header">
           <div>
             <h3 className="modal-title">设备诊断</h3>
-            <p className="device-diagnostics-modal__subtitle">ESP32-P4 实时运行状态与恢复工具</p>
+            <p className="device-diagnostics-modal__subtitle">设备实时运行状态与恢复工具</p>
           </div>
           <button type="button" className="icon-btn" onClick={() => onClose?.()} aria-label="关闭">
             <X size={16} />

@@ -1,4 +1,4 @@
-//! Authenticated config encryption. macOS uses an owner-only local key; Windows
+//! Authenticated config encryption. macOS/Linux use an owner-only local key; Windows
 //! retains its existing credential vault. macOS never accesses Keychain.
 //! Existing unreadable ciphertext is not overwritten with a replacement key.
 use base64::{engine::general_purpose::STANDARD as B64, Engine};
@@ -13,7 +13,7 @@ static KEY: Mutex<Option<[u8; 32]>> = Mutex::new(None);
 static PROVIDERS: Mutex<()> = Mutex::new(());
 static FILES: Mutex<()> = Mutex::new(());
 const FORMAT: &str = "pet-manager-aes256gcm-v1";
-#[cfg(any(target_os = "macos", test))]
+#[cfg(any(target_os = "macos", target_os = "linux", test))]
 #[path = "secure_config_local.rs"]
 mod local;
 
@@ -50,8 +50,13 @@ fn vault_key(create: bool) -> Result<[u8; 32], String> {
     Ok(key)
 }
 
+#[cfg(any(target_os = "macos", target_os = "linux"))]
+pub(crate) fn prepare_private_directory(path: &Path) -> Result<(), String> {
+    local::prepare_root(path)
+}
+
 fn config_key(path: &Path, create: bool) -> Result<[u8; 32], String> {
-    #[cfg(any(target_os = "macos", test))]
+    #[cfg(any(target_os = "macos", target_os = "linux", test))]
     {
         let dir = path.parent().ok_or("配置目录无效")?;
         local::load_key(dir, create, || {
@@ -65,14 +70,14 @@ fn config_key(path: &Path, create: bool) -> Result<[u8; 32], String> {
     {
         vault_key(create)
     }
-    #[cfg(all(not(any(target_os = "macos", windows)), not(test)))]
+    #[cfg(all(not(any(target_os = "macos", target_os = "linux", windows)), not(test)))]
     {
         let _ = (path, create);
         Err("此平台暂不支持安全配置存储".into())
     }
 }
 
-#[cfg(any(target_os = "macos", test))]
+#[cfg(any(target_os = "macos", target_os = "linux", test))]
 fn encrypted_configs(dir: &Path) -> Result<Vec<(serde_json::Value, &'static str)>, String> {
     let mut encrypted = Vec::new();
     for (name, purpose) in [

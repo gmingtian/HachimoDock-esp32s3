@@ -83,7 +83,7 @@ export default function FirmwareUpdateModal({
     const selected = await openDialog({
       multiple: false,
       directory: false,
-      filters: [{ name: "ESP32-P4 firmware", extensions: ["bin"] }],
+      filters: [{ name: "ESP32-P4 / ESP32-S3 firmware", extensions: ["bin"] }],
     });
     if (typeof selected === "string") setFirmwarePath(selected);
   };
@@ -121,12 +121,12 @@ export default function FirmwareUpdateModal({
         className="modal-card firmware-update-modal"
         role="dialog"
         aria-modal="true"
-        aria-label="ESP32-P4 固件升级"
+        aria-label="设备固件升级"
         onMouseDown={(event) => event.stopPropagation()}
       >
         <div className="modal-header">
           <div>
-            <h3 className="modal-title">ESP32-P4 固件升级</h3>
+            <h3 className="modal-title">设备固件升级</h3>
             <p className="firmware-update-modal__subtitle">
               当前版本：<code>{currentFirmware || "未知"}</code>
             </p>

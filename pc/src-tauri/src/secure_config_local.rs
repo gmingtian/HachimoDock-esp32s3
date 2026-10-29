@@ -9,12 +9,26 @@ use std::{
 };
 const KEY_FILE: &str = "config-key-v1";
 
-fn private_dir(root: &Path) -> Result<std::path::PathBuf, String> {
+pub(super) fn prepare_root(root: &Path) -> Result<(), String> {
     fs::create_dir_all(root).map_err(|_| "无法创建配置目录")?;
     let meta = fs::symlink_metadata(root).map_err(|_| "无法检查配置目录")?;
     if !meta.is_dir() || meta.file_type().is_symlink() {
         return Err("配置目录无效；原配置保留".into());
     }
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::{MetadataExt, PermissionsExt};
+        if meta.uid() != unsafe { libc::geteuid() } {
+            return Err("配置目录不属于当前用户；原配置保留".into());
+        }
+        fs::set_permissions(root, fs::Permissions::from_mode(0o700))
+            .map_err(|_| "无法保护配置目录")?;
+    }
+    Ok(())
+}
+
+fn private_dir(root: &Path) -> Result<std::path::PathBuf, String> {
+    prepare_root(root)?;
     let dir = root.join("private");
     match fs::create_dir(&dir) {
         Ok(()) => (),
@@ -73,6 +87,17 @@ fn read_key(path: &Path) -> Result<Option<[u8; 32]>, String> {
         .map_err(|_| "本地配置密钥大小无效；原配置保留".into())
 }
 
+fn sync_key_directory(root: &Path, private: &Path) -> Result<(), String> {
+    #[cfg(unix)]
+    for directory in [private, root] {
+        fs::File::open(directory).and_then(|file| file.sync_all())
+            .map_err(|_| "无法同步私有密钥目录；原配置保留")?;
+    }
+    #[cfg(not(unix))]
+    let _ = (root, private);
+    Ok(())
+}
+
 pub(super) fn load_key(
     root: &Path,
     create: bool,
@@ -81,6 +106,7 @@ pub(super) fn load_key(
     let dir = private_dir(root)?;
     let path = dir.join(KEY_FILE);
     if let Some(key) = read_key(&path)? {
+        sync_key_directory(root, &dir)?;
         return Ok(key);
     }
     // Existing local keys are used directly. A lost key never causes automatic
@@ -107,9 +133,13 @@ pub(super) fn load_key(
         .and_then(|_| temp.as_file().sync_all())
         .map_err(|_| "无法写入本地配置密钥")?;
     match temp.persist_noclobber(&path) {
-        Ok(_) => Ok(key),
+        Ok(_) => {
+            sync_key_directory(root, &dir)?;
+            Ok(key)
+        },
         Err(e) if e.error.kind() == std::io::ErrorKind::AlreadyExists => {
             let winner = read_key(&path)?.ok_or("本地配置密钥发生变化；原配置保留")?;
+            sync_key_directory(root, &dir)?;
             Ok(winner)
         }
         Err(_) => Err("无法提交本地配置密钥；原配置保留".into()),
@@ -119,6 +149,16 @@ pub(super) fn load_key(
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[cfg(unix)]
+    #[test]
+    fn application_root_is_owner_only_before_key_creation() {
+        use std::os::unix::fs::PermissionsExt;
+        let dir = tempfile::tempdir().unwrap();
+        fs::set_permissions(dir.path(), fs::Permissions::from_mode(0o755)).unwrap();
+        load_key(dir.path(), true, || Ok(())).unwrap();
+        assert_eq!(fs::metadata(dir.path()).unwrap().permissions().mode() & 0o777, 0o700);
+    }
+
     #[test]
     fn new_keys_are_stable_and_never_call_legacy_storage() {
         let dir = tempfile::tempdir().unwrap();

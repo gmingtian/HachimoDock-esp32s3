@@ -108,13 +108,13 @@ static void pet_s3_menu_execute(pet_p4_runtime_state_t *state,pet_p4_send_line_f
   if(g_s3_network_menu){
     if(g_s3_network_confirm){
       if(selected==1){
-        bool busy=state->asset_transfer_active||pet_p4_ota_active()||pet_p4_miniapp_transfer_active()||pet_p4_audio_active()||pet_p4_audio_playback_active()||pet_p4_audio_conversation_active()||pet_p4_audio_music_active();
+        bool busy=state->asset_transfer_active||pet_p4_ota_active()||pet_p4_miniapp_transfer_active()||pet_p4_audio_transport_busy();
         if(busy)snprintf(g_s3_network_notice,sizeof(g_s3_network_notice),"请先停止录音或传输");
         else {bool ok=pet_s3_wifi_menu_action(g_s3_network_confirm);snprintf(g_s3_network_notice,sizeof(g_s3_network_notice),"%s",ok?"":"保存失败，请重试");}
       }
       g_s3_network_confirm=0;g_s3_menu_selected=0;
     }else if(selected==1){
-      bool busy=state->asset_transfer_active||pet_p4_ota_active()||pet_p4_miniapp_transfer_active()||pet_p4_audio_active()||pet_p4_audio_playback_active()||pet_p4_audio_conversation_active()||pet_p4_audio_music_active();
+      bool busy=state->asset_transfer_active||pet_p4_ota_active()||pet_p4_miniapp_transfer_active()||pet_p4_audio_transport_busy();
       if(!busy){bool ok=pet_s3_wifi_menu_action(1);snprintf(g_s3_network_notice,sizeof(g_s3_network_notice),"%s",ok?"":"保存失败，请重试");}else snprintf(g_s3_network_notice,sizeof(g_s3_network_notice),"请先停止录音或传输");
     }else if(selected==2||selected==3){g_s3_network_confirm=selected;g_s3_menu_selected=0;}
     else if(selected==4){g_s3_network_menu=false;g_s3_menu_selected=0;}

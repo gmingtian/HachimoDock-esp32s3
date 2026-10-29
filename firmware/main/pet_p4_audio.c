@@ -926,6 +926,15 @@ bool pet_p4_audio_active(void) {
   return atomic_load_explicit(&g_capture_active, memory_order_acquire);
 }
 
+bool pet_p4_audio_transport_busy(void) {
+  return atomic_load_explicit(&g_capture_requested, memory_order_acquire)
+    || atomic_load_explicit(&g_capture_active, memory_order_acquire)
+    || atomic_load_explicit(&g_stream_active, memory_order_acquire)
+    || atomic_load_explicit(&g_playback_active, memory_order_acquire)
+    || atomic_load_explicit(&g_conversation, memory_order_acquire)
+    || atomic_load_explicit(&g_music, memory_order_acquire);
+}
+
 const char *pet_p4_audio_codec_name(void) {
   return pet_p4_audio_ready() ? g_microphone_codec : "unavailable";
 }

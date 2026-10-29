@@ -95,3 +95,10 @@ embedded bootstrap and new installations. Existing upgraded catalogs hide these
 four IDs without deleting packages or saves. P4 defaults and original packages
 remain unchanged. The canonical list is `component-policy.json`; this policy
 covers reviewed built-ins and does not classify arbitrary custom applications.
+
+Transport switching is also blocked while a capture request is accepted but its
+worker has not started, or while a playback stream is buffering before audible
+output. USB legacy `type: hello` probes are read-only and do not acquire control;
+malformed non-owner USB frames reset that endpoint's parser without disturbing
+the controlling Wi-Fi session. Release acknowledgements are queued before the
+network task drains bounded output and closes the connection.

@@ -31,6 +31,8 @@ bool pet_p4_audio_ready(void);
 void pet_p4_audio_set_transport(pet_p4_send_line_fn send_line, void *ctx);
 bool pet_p4_audio_enabled(void);
 bool pet_p4_audio_active(void);
+/* Includes accepted capture requests and playback streams still buffering. */
+bool pet_p4_audio_transport_busy(void);
 const char *pet_p4_audio_codec_name(void);
 bool pet_p4_audio_playback_ready(void);
 bool pet_p4_audio_playback_active(void);

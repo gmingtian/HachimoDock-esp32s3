@@ -21,17 +21,14 @@ static pet_p4_runtime_state_t g_state={.board_device_id="board-one"};
 static uintptr_t g_s3_owner,g_s3_uart_token=5,g_s3_usb_token=10;
 static int g_protocol_queue=1;
 static uint64_t clock_ms=1;
-static bool audio_busy,raw_active,widget_busy,ota_busy;
+static bool audio_busy,raw_active,widget_busy,ota_busy,capture_pending,stream_buffering;
 static unsigned dispatches,cleanup_count,raw_received,hello_count;
 static uintptr_t closed,authed;
 static char replies[12][2048];static unsigned reply_count;
 static uint64_t esp_timer_get_time(void){return clock_ms*1000;}
 static bool pet_p4_miniapp_transfer_active(void){return widget_busy;}
 static bool pet_p4_ota_active(void){return ota_busy;}
-static bool pet_p4_audio_active(void){return audio_busy;}
-static bool pet_p4_audio_playback_active(void){return false;}
-static bool pet_p4_audio_conversation_active(void){return false;}
-static bool pet_p4_audio_music_active(void){return false;}
+static bool pet_p4_audio_transport_busy(void){return audio_busy||capture_pending||stream_buffering;}
 static void pet_p4_audio_conversation_set(bool a,bool b,void *c){(void)a;(void)b;(void)c;}
 static void pet_p4_audio_capture_stop(void){}
 static void pet_p4_audio_stream_flush(void){}
@@ -78,5 +75,17 @@ int main(void){
   feed(19,"old\n");assert(g_s3_owner==23&&dispatches==2);
   feed(23,"te\",\"payload\":{}}\n");assert(g_s3_owner==23&&dispatches==3);
   assert(!s3_enqueue_bytes(23,(const uint8_t*)"x",2049));
+  /* A background USB probe/malformed line must not poison future fallback. */
+  reply_count=0;unsigned cleaned=cleanup_count;
+  feed(10,"\n");assert(!g_s3_frames[2].failed && g_s3_owner==23 && cleanup_count==cleaned);
+  feed(10,"{\"v\":1,\"type\":\"hello\",\"namespace\":\"desk\"}\n");
+  assert(!g_s3_frames[2].failed && g_s3_owner==23 && hello_count==3);
+  capture_pending=true;feed(23,"{\"topic\":\"transport/release\",\"payload\":{}}\n");assert(!last_ok() && g_s3_owner==23);
+  reply_count=0;s3_protocol_line((void*)27,"{\"topic\":\"wifi/auth\",\"payload\":{\"token\":\"paired\",\"takeover\":true}}\n");assert(!last_ok() && g_s3_owner==23);
+  capture_pending=false;stream_buffering=true;
+  feed(23,"{\"topic\":\"transport/release\",\"payload\":{}}\n");assert(!last_ok() && g_s3_owner==23);
+  s3_protocol_line((void*)31,"{\"topic\":\"wifi/auth\",\"payload\":{\"token\":\"paired\",\"takeover\":true}}\n");assert(!last_ok() && g_s3_owner==23);
+  stream_buffering=false;feed(23,"{\"topic\":\"transport/release\",\"payload\":{}}\n");assert(last_ok() && !g_s3_owner);
+  feed(10,"{\"topic\":\"state\",\"payload\":{}}\n");assert(g_s3_owner==10 && dispatches==4);
   puts("S3 real protocol ingress/session tests passed");
 }

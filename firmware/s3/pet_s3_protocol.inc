@@ -7,8 +7,7 @@ static pet_s3_framer_t g_s3_frames[4];
 static uintptr_t g_s3_frame_tokens[4];
 static bool s3_busy(void) {
   return g_state.asset_transfer_active||pet_p4_miniapp_transfer_active()||pet_p4_ota_active()
-    ||pet_p4_audio_active()||pet_p4_audio_playback_active()||pet_p4_audio_conversation_active()
-    ||pet_p4_audio_music_active();
+    ||pet_p4_audio_transport_busy();
 }
 static void s3_cleanup_owner(uintptr_t token) {
   if(g_s3_lease.owner!=token)return;
@@ -24,7 +23,7 @@ static void s3_cleanup_owner(uintptr_t token) {
 
 }
 static void s3_expire_owner(void) {
-  if(g_s3_cleanup_pending&&!pet_p4_audio_active()&&!pet_p4_audio_playback_active())g_s3_cleanup_pending=false;
+  if(g_s3_cleanup_pending&&!pet_p4_audio_transport_busy())g_s3_cleanup_pending=false;
   if(pet_s3_lease_expired(&g_s3_lease,esp_timer_get_time()/1000))s3_cleanup_owner(g_s3_lease.owner);
 }
 static void s3_response(uintptr_t token,const char *topic,const cJSON *p,bool ok,const char *error) {
@@ -38,6 +37,12 @@ static bool s3_protocol_line(void *ctx,const char *line) {
   uintptr_t token=(uintptr_t)ctx;unsigned route=token&3;
   cJSON *root=cJSON_Parse(line);const cJSON *topic=root?cJSON_GetObjectItemCaseSensitive(root,"topic"):NULL;
   const cJSON *payload=root?cJSON_GetObjectItemCaseSensitive(root,"payload"):NULL;
+  /* USB discovery uses this legacy hello after bind. It is read-only and
+   * must not claim/revoke another connection or poison a non-owner parser. */
+  const cJSON *type=root?cJSON_GetObjectItemCaseSensitive(root,"type"):NULL;
+  if(route!=3&&cJSON_IsString(type)&&!strcmp(type->valuestring,"hello")){
+    pet_p4_send_hello(&g_state,transport_send_line,ctx);cJSON_Delete(root);return true;
+  }
   if(!cJSON_IsString(topic)||!cJSON_IsObject(payload)){cJSON_Delete(root);return false;}
   const char *name=topic->valuestring;bool authed=g_s3_lease.owner==token;
   if(!strcmp(name,"wifi/auth")){
@@ -108,7 +113,11 @@ static void s3_process_bytes(const pet_p4_protocol_request_t *request) {
     }
     if(!pet_s3_frame(f,(uint8_t*)request->line+offset,1,s3_protocol_line,(void*)token)){
       if(route==3)pet_s3_wifi_close(token);
-      s3_cleanup_owner(token);return;
+      s3_cleanup_owner(token);
+      /* USB is a persistent physical endpoint. A malformed non-owner probe
+       * resets only its own framer, allowing later recovery without reboot. */
+      if(route!=3){f->used=0;f->failed=false;}
+      return;
     }
     offset++;
   }

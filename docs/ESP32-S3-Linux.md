@@ -63,7 +63,7 @@ bash firmware/tools/build_s3.sh
 Linux电脑端的依赖、构建和启动见[Linux原生客户端](../pc/docs/linux-native.md)。
 开发板使用原USB接口通信；S3支持USB Serial/JTAG和USB-UART，不宣称P4专用高速USB批量接口。
 
-## 验收边界
+## 兼容性与限制
 
 自动验证覆盖源码编译、芯片/项目识别、分区和资源边界、动画解码与缩放、
 按键长短按、组件附加动作、软件光标、音频格式转换和电脑端相关逻辑。

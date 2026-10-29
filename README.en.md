@@ -4,7 +4,7 @@ An ESP32-S3, three-button adaptation of [YizhengWw/HachimoDock](https://github.c
 
 **Attribution:** The original HachimoDock project is created by **Yizheng Wang ([@YizhengWw](https://github.com/YizhengWw))**. This modified repository is maintained by [gmingtian](https://github.com/gmingtian) for ESP32-S3 and Linux compatibility. It is not an official upstream release or endorsement. Original copyrights, the [project license](LICENSE) and [third-party notices](THIRD_PARTY_NOTICES.md) are retained.
 
-[简体中文](README.md) · [S3 downloads](https://github.com/gmingtian/HachimoDock-esp32-s3/releases) · [Wiring and firmware](docs/ESP32-S3-Linux.md) · [Linux build](pc/docs/linux-native.md) · [Installation](docs/INSTALLATION.md) · [Compatibility](docs/COMPATIBILITY.md)
+[简体中文](README.md) · [S3 downloads](https://github.com/gmingtian/HachimoDock-esp32-s3/releases) · [Wiring and firmware](docs/ESP32-S3-Linux.md) · [Linux build](pc/docs/linux-native.md) · [Installation](docs/INSTALLATION.md) · [Upstream feature comparison](docs/FEATURE-COMPARISON.md) · [Compatibility](docs/COMPATIBILITY.md)
 
 ## Adaptation scope
 

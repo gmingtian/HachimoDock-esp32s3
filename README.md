@@ -4,7 +4,7 @@
 
 > **来源与署名**：原项目 HachimoDock 由 **Yizheng Wang（[@YizhengWw](https://github.com/YizhengWw)）** 创作。本仓库由 [gmingtian](https://github.com/gmingtian) 维护 S3、三键和 Linux 适配，属于修改版本，并非原作者官方发布或背书。原项目的版权、[许可证](LICENSE)和[第三方声明](THIRD_PARTY_NOTICES.md)均予保留；使用及再分发须遵守原许可，项目内修改不改变原作品的权属。
 
-[下载 S3 固件与客户端](https://github.com/gmingtian/HachimoDock-esp32-s3/releases) · [接线与刷机](docs/ESP32-S3-Linux.md) · [Linux 构建](pc/docs/linux-native.md) · [安装使用](docs/INSTALLATION.md) · [兼容性](docs/COMPATIBILITY.md) · [English](README.en.md)
+[下载 S3 固件与客户端](https://github.com/gmingtian/HachimoDock-esp32-s3/releases) · [接线与刷机](docs/ESP32-S3-Linux.md) · [Linux 构建](pc/docs/linux-native.md) · [安装使用](docs/INSTALLATION.md) · [原版功能对比](docs/FEATURE-COMPARISON.md) · [兼容性](docs/COMPATIBILITY.md) · [English](README.en.md)
 
 ## 功能特性
 
@@ -14,6 +14,19 @@
 - **保留共享能力**：默认形象、29 个内置组件、Agent 状态同步、素材同步与语音路径。内置组件包括贪吃蛇、像素方块、飞鸟、番茄钟等；服务功能需要自行配置凭据。
 - **跨平台客户端**：支持 Linux x86_64、Windows x64 和 Apple 芯片 macOS 构建；安装包通过本仓库 Releases 分发。
 - **约束资源与升级**：S3 素材转为 240×180、最高 10fps，保留资源容量校验、事务更新和固件芯片识别；这是一组素材上限，并非实测帧率。
+
+## 与原版的主要区别
+
+| 项目 | 原版 P4 | 当前 S3 适配 |
+|---|---|---|
+| 桌宠、会话、组件与电脑端服务 | 原版功能 | 保留共享功能与 29 个出厂组件 |
+| 屏幕 | 480×640，横向逻辑画布 640×480 | 240×240；组件等比例显示为 240×180，主界面与菜单原生适配 |
+| 操作 | 按键、摇杆 / 触摸等对应硬件 | 沿用 GPIO39 / 38 / 0 三键，配合动作菜单和软件光标 |
+| 语音 | 有全双工 / 打断处理路径 | 半双工，未启用经过校准的 AEC |
+| USB | 原生高速 vendor bulk | 当前使用串口路径，不具备 P4 的 480Mbps 高速模式 |
+| 桌面系统 | Windows / macOS | 保留 Windows / macOS，并增加 Linux 原生客户端 |
+
+详细支持情况、资源限制和平台差异见 [与原版的功能对比](docs/FEATURE-COMPARISON.md)。
 
 ## 硬件接线
 

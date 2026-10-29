@@ -53,3 +53,15 @@ connected ESP32-S3 revision 0.2 / N16R8 board was updated through COM3. The user
 confirmed the display and desktop pet became visible after the startup fix.
 Final USB, reboot and test results are recorded with the release artifacts.
 This does not claim Wi-Fi, microphone, speaker or gameplay acceptance.
+
+## r4 follow-up: SDK console driver buffer
+
+Windows COM3 opened successfully but probes at all baud rates received no hello.
+A direct read-only legacy hello query returned short renderer logs and blank
+lines. IDF 6.1 console initialization calls USB_SERIAL_JTAG_DRIVER_CONFIG_DEFAULT
+with a 256-byte TX ring before app_main. init_usb sees that installed driver and
+retains it, so the initial r4 build's 512-byte atomic writes fail while short logs/newlines succeed.
+The corrected r4 uses 128-byte writes, compatible with both the console default and the
+application's requested 4096-byte ring. The regression now simulates the actual
+256-byte limit; the original build fails and corrected r4 passes a 12 KiB frame including partial writes.
+Host tests/build do not establish physical Windows acceptance.

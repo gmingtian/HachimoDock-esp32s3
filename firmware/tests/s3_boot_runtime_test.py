@@ -115,9 +115,9 @@ static unsigned char output[20000];
 static size_t used,calls,fail_at;
 static int usb_serial_jtag_write_bytes(const void*src,size_t size,unsigned timeout){
   assert(timeout>0);++calls;
-  if(size>4096||(fail_at&&calls>=fail_at))return 0;
+  if(size>256||(fail_at&&calls>=fail_at))return 0;
   /* Also exercise a driver returning fewer bytes than requested. */
-  size_t n=size>333?333:size;memcpy(output+used,src,n);used+=n;return (int)n;
+  size_t n=size>97?97:size;memcpy(output+used,src,n);used+=n;return (int)n;
 }
 ''' + code[start:end] + r'''
 int main(void){
@@ -125,7 +125,7 @@ int main(void){
   usb_queue_all(input,sizeof(input));
   assert(used==sizeof(input)&&!memcmp(input,output,used));
   used=0;calls=0;fail_at=2;usb_queue_all(input,sizeof(input));
-  assert(calls==2&&used==333&&!memcmp(input,output,used));
+  assert(calls==2&&used==97&&!memcmp(input,output,used));
   used=0;calls=0;usb_queue_all(input,0);assert(!calls&&!used);return 0;
 }
 ''')

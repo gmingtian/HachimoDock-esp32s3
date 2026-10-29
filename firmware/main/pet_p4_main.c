@@ -177,10 +177,11 @@ static bool rx_tasks_healthy(void) {
 static void usb_queue_all(const char *data, size_t len) {
   size_t written = 0;
   while (written < len) {
-    /* The driver enqueues each call atomically into its 4 KiB ring. A
-     * capabilities hello exceeds that size and would otherwise vanish. */
+    /* IDF console startup may already own the driver with its default
+     * 256-byte TX ring; init_usb then preserves that installed driver.
+     * Keep atomic writes below BOTH the console and runtime ring sizes. */
     size_t chunk = len - written;
-    if (chunk > 512) chunk = 512;
+    if (chunk > 128) chunk = 128;
     int n = usb_serial_jtag_write_bytes(data + written, chunk, pdMS_TO_TICKS(20));
     if (n <= 0) break;
     written += (size_t) n;

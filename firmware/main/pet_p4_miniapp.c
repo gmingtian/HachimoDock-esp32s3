@@ -11,6 +11,7 @@
  */
 
 #include "pet_p4_miniapp.h"
+#include "../s3/pet_s3_component_policy.h"
 #include "pet_p4_local_tools.h"
 #include "esp_random.h"
 #include "pet_p4_media.h"
@@ -4289,6 +4290,9 @@ static bool recover_catalog_items(miniapp_catalog_snapshot_t *latest,
 }
 
 static bool catalog_entry_visible(size_t index) {
+#if defined(CONFIG_IDF_TARGET_ESP32S3) && CONFIG_IDF_TARGET_ESP32S3
+  if (index < g_catalog_count && !pet_s3_component_allowed(g_catalog[index].widget_id)) return false;
+#endif
   return index < g_catalog_count && strcmp(g_catalog[index].widget_id, "music-player") != 0;
 }
 
@@ -4657,6 +4661,12 @@ static bool transfer_matches(const cJSON *payload) {
 bool pet_p4_miniapp_install_begin(const cJSON *payload, char *error, size_t error_size) {
   const char *transfer_id = json_string(payload, "transferId");
   const char *widget_id = json_string(payload, "widgetId");
+#if defined(CONFIG_IDF_TARGET_ESP32S3) && CONFIG_IDF_TARGET_ESP32S3
+  if (!pet_s3_component_allowed(widget_id)) {
+    set_error(error, error_size, "component requires controls unavailable on ESP32-S3");
+    return false;
+  }
+#endif
   if (!g_builtin_sync_in_progress && strcmp(widget_id, "music-player") == 0) {
     set_error(error, error_size, "music player is unavailable in this release");
     return false;
@@ -5304,6 +5314,7 @@ esp_err_t pet_p4_miniapp_sync_builtins(void) {
   g_builtin_sync_in_progress = true;
   cJSON_ArrayForEach(package, components) {
     const char *widget_id = json_string(package, "id");
+    if (!pet_s3_component_allowed(widget_id)) continue;
     /* Artwork-rich packages are upgraded by PC/factory resource transactions.
      * Never replace an installed complete package with the OTA bootstrap. */
     if (cJSON_IsTrue(cJSON_GetObjectItemCaseSensitive(package, "resourcePackage"))

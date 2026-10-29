@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Build a 16 MiB S3 factory image; this command never opens a serial port."""
 import argparse
+import copy
 import hashlib
 import json
 from pathlib import Path
@@ -12,6 +13,15 @@ if str(TOOLS) not in sys.path:
 import build_factory_image as factory
 
 FLASH_BYTES = 16 * 1024 * 1024
+
+def s3_factory_config(config):
+    """Derive target defaults without changing the shared P4 configuration."""
+    config = copy.deepcopy(config)
+    policy = json.loads((TOOLS.parent / "s3/component-policy.json").read_text())
+    excluded = set(policy["unsupportedBuiltins"])
+    config["components"]["ids"] = [identifier for identifier in config["components"]["ids"]
+                                    if identifier not in excluded]
+    return config
 
 def assemble_image(segments, output):
     ordered = sorted(segments, key=lambda entry: entry[0])
@@ -42,7 +52,7 @@ def assemble_image(segments, output):
 def build(build_dir, output, spiffsgen):
     project = TOOLS.parent
     build_dir = Path(build_dir).resolve()
-    config = json.loads((project / "factory-config.json").read_text())
+    config = s3_factory_config(json.loads((project / "factory-config.json").read_text()))
     manifest = json.loads((project / "assets/s3-default/p4/manifest.json").read_text())
     config["partitionFile"] = "partitions.s3.csv"
     config["appearance"].update(width=240, height=180, fps=10,

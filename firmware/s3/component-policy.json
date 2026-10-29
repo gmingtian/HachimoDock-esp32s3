@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "target": "esp32s3",
+  "unsupportedBuiltins": [
+    "block-combo",
+    "fresh-fruit-slice",
+    "cloud-hop",
+    "bloomfrog_companion"
+  ],
+  "supportedGames": [
+    "snake-turn",
+    "two-key-pong",
+    "flappy-bird"
+  ]
+}

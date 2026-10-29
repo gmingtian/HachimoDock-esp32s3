@@ -85,3 +85,13 @@ SDK: its generated picolibc specs mishandle Chinese build-directory names.
 verification when an existing release must remain untouched. No board was
 flashed. RF reliability, real NVS power loss, audio latency/underflow, framebuffer
 rate, IP changes and prolonged connection stability require physical testing.
+
+## Three-key built-in component policy
+
+The S3 catalog keeps `snake-turn`, `two-key-pong` and `flappy-bird`, which can be
+played directly with the three physical keys. `block-combo`, `fresh-fruit-slice`,
+`cloud-hop` and `bloomfrog_companion` are excluded from S3 factory defaults,
+embedded bootstrap and new installations. Existing upgraded catalogs hide these
+four IDs without deleting packages or saves. P4 defaults and original packages
+remain unchanged. The canonical list is `component-policy.json`; this policy
+covers reviewed built-ins and does not classify arbitrary custom applications.

@@ -107,7 +107,11 @@ jobs:
             export FFMPEG="$GITHUB_WORKSPACE/pc/src-tauri/generated-runtime/s3/s3-ffmpeg"
           fi
           python -m unittest discover -s pc/scripts/tests -p 'test_*.py' -v
-          python pc/scripts/test-s3-ffmpeg-build.py
+          if [ '${{ matrix.target }}' = windows ]; then
+            S3_TEST_BASH="$(cygpath -w "$BASH")" python pc/scripts/test-s3-ffmpeg-build.py
+          else
+            python pc/scripts/test-s3-ffmpeg-build.py
+          fi
           npm --prefix pc run build:web
       - name: Native S3 routing regression tests
         working-directory: pc/src-tauri

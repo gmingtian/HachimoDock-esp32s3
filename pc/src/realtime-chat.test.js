@@ -213,5 +213,5 @@ test("live captions are isolated from Agent state and follow PCM playback", () =
   assert.match(view, /out->stats_json = ""/);
   const renderer = read("firmware/main/pet_p4_renderer.c");
   assert.match(renderer, /show_session_queue = !realtime/);
-  assert.match(renderer, /if \(!realtime\) draw_session_queue/);
+  assert.match(renderer, /if \(!native_home && !realtime\) draw_session_queue/);
 });

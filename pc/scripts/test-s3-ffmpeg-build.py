@@ -4,19 +4,22 @@ import json
 import os
 from pathlib import Path
 import subprocess
+import sys
+import shlex
 import tempfile
 import unittest
 
 BUILD = Path(__file__).with_name('build-s3-ffmpeg.sh')
 MIRROR = 'https://github.com/YizhengWw/HachimoDock/releases/download/v0.1.167/FFmpeg-8.1.2-source.tar.xz'
 AUTHORITATIVE = 'https://ffmpeg.org/releases/ffmpeg-8.1.2.tar.xz'
+BASH = os.environ.get('S3_TEST_BASH', 'bash')
 
 
 class SourceIntegrityTests(unittest.TestCase):
     def invoke(self, cache, output):
         return subprocess.run(
-            ['bash', str(BUILD), str(output)], capture_output=True, text=True,
-            env={**os.environ, 'S3_FFMPEG_SOURCE_DIR': str(cache),
+            [BASH, BUILD.resolve().as_posix(), output.resolve().as_posix()], capture_output=True, text=True,
+            env={**os.environ, 'S3_FFMPEG_SOURCE_DIR': cache.resolve().as_posix(),
                  'S3_FFMPEG_OFFLINE': '1'},
         )
 
@@ -42,7 +45,8 @@ class SourceDownloadTests(unittest.TestCase):
     def invoke(self, root, mode):
         """Replace only the external HTTP transport; keep all validation real."""
         transport = root / 'curl'
-        transport.write_text('''#!/usr/bin/env python3
+        fixture = root / 'curl_fixture.py'
+        fixture.write_text('''
 import json
 import os
 from pathlib import Path
@@ -57,15 +61,21 @@ if mode == 'local-fail':
     sys.exit(23)
 sys.exit(28 if mode == 'all-fail' or (mode == 'first-fail' and not previous) else 0)
 ''')
+        # Use the exact test interpreter, including on Git Bash where python3
+        # can resolve to the Windows Store alias instead of setup-python.
+        transport.write_text('#!/usr/bin/env bash\nexec ' +
+                             shlex.quote(Path(sys.executable).as_posix()) + ' ' +
+                             shlex.quote(fixture.as_posix()) + ' "$@"\n', newline='\n')
         transport.chmod(0o755)
         calls = root / 'requests.jsonl'
         result = subprocess.run(
-            ['bash', str(BUILD), str(root / 'output directory')],
+            [BASH, BUILD.resolve().as_posix(), (root / 'output directory').as_posix()],
             capture_output=True, text=True,
             env={**os.environ, 'PATH': str(root) + os.pathsep + os.environ['PATH'],
-                 'S3_FFMPEG_SOURCE_DIR': str(root / 'cache'), 'S3_FFMPEG_OFFLINE': '0',
+                 'S3_FFMPEG_SOURCE_DIR': (root / 'cache').as_posix(), 'S3_FFMPEG_OFFLINE': '0',
                  'S3_TEST_CURL_CALLS': str(calls), 'S3_TEST_CURL_MODE': mode},
         )
+        self.assertTrue(calls.exists(), f'HTTP fixture was not invoked: {result.stdout}\n{result.stderr}')
         requests = [json.loads(line) for line in calls.read_text().splitlines()]
         return result, requests
 

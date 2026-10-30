@@ -417,7 +417,7 @@ bool pet_p4_asset_catalog_parse(pet_p4_asset_catalog_t *catalog, const char *man
     if (entry->duration_ms == 0) {
       fallback_duration_ms = entry->frame_duration_ms > 0
         ? (uint64_t) entry->frames * entry->frame_duration_ms
-        : ((uint64_t) entry->frames * 1000ULL) / entry->fps;
+        : ((uint64_t) entry->frames * 1000ULL + entry->fps - 1U) / entry->fps;
       if (fallback_duration_ms == 0 || fallback_duration_ms > UINT32_MAX) goto parse_failed;
       entry->duration_ms = (uint32_t) fallback_duration_ms;
     }

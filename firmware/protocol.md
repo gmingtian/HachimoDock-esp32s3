@@ -1323,3 +1323,13 @@ begin/commit 遇到录音、对话或播放则拒绝；客户端每次连接仅�
 修复其他组件不切换当前页面。已存在完整图片资源时拒绝已知无图启动包覆盖。
 无有效备用包时设备明确提示需要恢复，完整美术仍来自 PC/出厂资源区，不占应用 OTA 两份空间。
 
+
+### S3 animation frame rate
+
+S3 firmware 0.7.103-s3-r6 advertises `capabilities.appearance.maxFps: 15`.
+The converter in desktop 0.1.169 prepares new 240×180 animations at 15 fps;
+existing 10 fps packs remain accepted at their original timing. The 320-frame,
+384 KiB stream and 3 MiB slot limits remain unchanged. A 15 fps stream can
+therefore last at most about 21.3 seconds. These are accepted asset limits,
+not measured display performance. Updating the application does not replace
+existing animation partitions; re-sync the appearance to install new assets.

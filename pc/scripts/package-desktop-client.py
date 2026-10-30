@@ -110,7 +110,7 @@ def main():
         shutil.copy2(ROOT/name,output/name)
     identity={'sourceCommit':subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip(),
               'target':args.target,'releaseChannel':'prerelease','signing':'unsigned' if args.target=='windows' else 'ad-hoc-not-notarized',
-              'firmware':'0.7.103-s3-r1','nativeStartupSeconds':10,'physicalBoardTested':False,
+              'firmware':'0.7.103-s3-r6','nativeStartupSeconds':10,'physicalBoardTested':False,
               'artifact':artifact.name,'bytes':artifact.stat().st_size,
               'sha256':hashlib.sha256(artifact.read_bytes()).hexdigest()}
     (output/(args.target+'-build.json')).write_text(json.dumps(identity,indent=2)+'\n',encoding='utf-8')

@@ -5393,7 +5393,7 @@ fn load_p4_pack_from_profile_root(
     let width = if s3 { 240 } else { P4_APPEARANCE_WIDTH };
     let height = if s3 { 180 } else { P4_APPEARANCE_HEIGHT };
     let max_frames = if s3 { 320 } else { P4_APPEARANCE_MAX_FRAMES };
-    let fps = if s3 { 10 } else { P4_APPEARANCE_FPS };
+    let fps = if s3 { 15 } else { P4_APPEARANCE_FPS };
     if manifest.get("format").and_then(|value| value.as_str()) != Some("p4-h264-v1")
         || manifest.get("codec").and_then(|value| value.as_str()) != Some("h264")
         || manifest.get("container").and_then(|value| value.as_str()) != Some("annex-b")
@@ -5402,7 +5402,7 @@ fn load_p4_pack_from_profile_root(
         || manifest.get("height").and_then(|value| value.as_u64())
             != Some(u64::from(height))
         || manifest.get("fps").and_then(|value| value.as_u64())
-            != Some(u64::from(fps))
+            .is_none_or(|value| if s3 { value == 0 || value > u64::from(fps) } else { value != u64::from(fps) })
     {
         return Err(format!(
             "P4 ready manifest does not match profile {}",
@@ -5543,7 +5543,7 @@ fn load_p4_pack_from_profile_root(
     let mut summary = prepared_p4_summary(&assets, pack_id)?;
     if s3 {
         if summary.byte_count + 4096 + 3 * u64::from(summary.file_count) > 3 * 1024 * 1024 { return Err("S3 appearance exceeds 3 MiB slot including metadata".into()); }
-        summary.profile = "s3-240x180-10fps".into();
+        summary.profile = format!("s3-240x180-{}fps", manifest["fps"].as_u64().unwrap());
     }
     Ok((assets, summary))
 }
@@ -5651,6 +5651,7 @@ pub fn prepare_s3_appearance(appearance_dir: &Path, app_data_dir: &Path, convert
         .arg("--source").arg(appearance_dir)
         .arg("--app-data-dir").arg(app_data_dir)
         .arg("--output").arg(stage.path())
+        .arg("--fps").arg("15")
         .arg("--ffmpeg").arg(ffmpeg).output().map_err(|e| {
             let runtime = if converter.extension().is_some_and(|extension| extension == "py") {
                 "Python3 S3 asset converter"
@@ -7554,10 +7555,45 @@ mod tests {
     fn s3_default_pack_is_small_and_keeps_genuine_target() {
         let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../firmware/assets/s3-default");
         let (assets, prepared) = load_p4_pack_from_profile_root(&root).unwrap();
-        assert_eq!(prepared.profile, "s3-240x180-10fps");
+        assert_eq!(prepared.profile, "s3-240x180-15fps");
         assert!(prepared.byte_count + 4096 + 3 * u64::from(prepared.file_count) <= 3 * 1024 * 1024);
         assert_eq!(prepared.file_count as usize, assets.len());
         assert!(assets.iter().filter(|a| a.kind == "p4-h264").count() >= 1);
+    }
+
+    #[test]
+    fn s3_pack_accepts_legacy_10_and_new_15_fps_but_rejects_16() {
+        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../firmware/assets/s3-default");
+        let (assets, _) = load_p4_pack_from_profile_root(&root).unwrap();
+        let original: serde_json::Value = serde_json::from_slice(
+            &std::fs::read(root.join("p4/manifest.json")).unwrap(),
+        ).unwrap();
+        let tmp = tempfile::tempdir().unwrap();
+        for asset in &assets[1..] {
+            let dest = tmp.path().join(&asset.device_path);
+            std::fs::create_dir_all(dest.parent().unwrap()).unwrap();
+            std::fs::copy(&asset.source_path, dest).unwrap();
+        }
+        for fps in [10u64, 15, 16] {
+            let mut manifest = original.clone();
+            manifest["fps"] = fps.into();
+            manifest["packId"] = "".into();
+            for family in manifest["families"].as_array_mut().unwrap() {
+                let frames = family["frames"].as_u64().unwrap();
+                family["fps"] = fps.into();
+                family["frameDurationMs"] = 1000u64.div_ceil(fps).into();
+                family["durationMs"] = (frames * 1000).div_ceil(fps).into();
+            }
+            let identity = serde_json::to_vec(&manifest).unwrap();
+            manifest["packId"] = compute_p4_pack_id(&assets[1..], &identity).unwrap().into();
+            std::fs::write(tmp.path().join("p4/manifest.json"), serde_json::to_vec(&manifest).unwrap()).unwrap();
+            let result = load_p4_pack_from_profile_root(tmp.path());
+            if fps <= 15 {
+                assert_eq!(result.unwrap().1.profile, format!("s3-240x180-{fps}fps"));
+            } else {
+                assert!(result.is_err());
+            }
+        }
     }
 
     #[test]
@@ -10307,26 +10343,31 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "requires a connected ESP32-P4 and P4_FIRMWARE_BIN"]
+    #[ignore = "requires explicit firmware-update permission, a connected P4/S3 and P4_FIRMWARE_BIN"]
     fn p4_firmware_ota_hardware_reboots_into_valid_inactive_slot() {
         let port_name = std::env::var("P4_SERIAL_PORT").unwrap_or_else(|_| "COM5".to_string());
         let firmware_path = std::env::var("P4_FIRMWARE_BIN")
             .map(PathBuf::from)
             .expect("P4_FIRMWARE_BIN is required");
+        let expected_runtime = std::env::var("HACHIMO_EXPECTED_RUNTIME")
+            .unwrap_or_else(|_| "esp-p4".to_string());
+        assert!(matches!(expected_runtime.as_str(), "esp-p4" | "esp-s3"));
         let manager = UsbSerialManager::new();
-        manager.set_desktop_device_id("radio-ota-hil");
+        let desktop_id = std::env::var("HACHIMO_DESKTOP_DEVICE_ID")
+            .unwrap_or_else(|_| "radio-ota-hil".to_string());
+        manager.set_desktop_device_id(&desktop_id);
         manager
             .connect(&port_name, |_topic, _payload| {})
             .expect("connect P4 serial");
 
         let hello_deadline = std::time::Instant::now() + Duration::from_secs(15);
         while std::time::Instant::now() < hello_deadline {
-            if manager.status().runtime.eq_ignore_ascii_case("esp-p4") {
+            if manager.status().runtime.eq_ignore_ascii_case(&expected_runtime) {
                 break;
             }
             thread::sleep(Duration::from_millis(100));
         }
-        assert_eq!(manager.status().runtime, "esp-p4");
+        assert_eq!(manager.status().runtime, expected_runtime);
         let expected_board_device_id = manager.status().board_device_id;
         assert!(!expected_board_device_id.is_empty());
         if let Ok(expected) = std::env::var("P4_EXPECTED_BOARD_ID") {
@@ -10477,7 +10518,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "requires a connected ESP32-P4 and P4_APPEARANCE_DIR"]
+    #[ignore = "requires explicit appearance-sync permission, a connected P4/S3 and P4_APPEARANCE_DIR"]
     fn p4_appearance_hardware_syncs_production_pack_and_samples_performance() {
         let port_name = std::env::var("P4_SERIAL_PORT").unwrap_or_else(|_| "COM5".to_string());
         let appearance_dir = std::env::var("P4_APPEARANCE_DIR")
@@ -10493,21 +10534,30 @@ mod tests {
                     .to_path_buf()
             });
         configure_transfer_logging(&app_data_dir).expect("configure hardware transfer log");
+        let expected_runtime = std::env::var("HACHIMO_EXPECTED_RUNTIME")
+            .unwrap_or_else(|_| "esp-p4".to_string());
+        assert!(matches!(expected_runtime.as_str(), "esp-p4" | "esp-s3"));
         let manager = UsbSerialManager::new();
+        let desktop_id = std::env::var("HACHIMO_DESKTOP_DEVICE_ID")
+            .unwrap_or_else(|_| "appearance-hil".to_string());
+        manager.set_desktop_device_id(&desktop_id);
         manager
             .connect(&port_name, |_topic, _payload| {})
             .expect("connect P4 serial");
 
         let hello_deadline = std::time::Instant::now() + Duration::from_secs(15);
         while std::time::Instant::now() < hello_deadline {
-            if manager.status().runtime.eq_ignore_ascii_case("esp-p4") {
+            if manager.status().runtime.eq_ignore_ascii_case(&expected_runtime) {
                 break;
             }
             thread::sleep(Duration::from_millis(100));
         }
-        assert_eq!(manager.status().runtime, "esp-p4");
+        assert_eq!(manager.status().runtime, expected_runtime);
         let board_device_id = manager.status().board_device_id;
         assert!(!board_device_id.is_empty());
+        if let Ok(expected) = std::env::var("P4_EXPECTED_BOARD_ID") {
+            assert_eq!(board_device_id, expected, "refusing sync to a different board");
+        }
 
         let (file_count, byte_count, reused_slot) = manager
             .sync_appearance_p4(
@@ -10533,7 +10583,7 @@ mod tests {
         } else {
             assert!(
                 file_count > 0,
-                "12 FPS pack should differ from the active pack"
+                "prepared pack should differ from the active pack"
             );
             assert!(byte_count > 0);
         }

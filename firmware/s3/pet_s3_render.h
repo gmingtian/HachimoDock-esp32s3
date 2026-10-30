@@ -9,7 +9,7 @@
 #define PET_S3_PANEL_HEIGHT 240
 #define PET_S3_ASSET_MAX_WIDTH 240
 #define PET_S3_ASSET_MAX_HEIGHT 180
-#define PET_S3_ASSET_MAX_FPS 10
+#define PET_S3_ASSET_MAX_FPS 15
 #define PET_S3_ASSET_MAX_STREAM_BYTES (384U * 1024U)
 
 typedef struct { int x, y, width, height; } pet_s3_rect_t;

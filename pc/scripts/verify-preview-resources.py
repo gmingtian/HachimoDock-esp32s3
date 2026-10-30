@@ -18,7 +18,7 @@ import sys
 import tempfile
 
 ROOT = Path(__file__).resolve().parents[2]
-FIRMWARE_SHA = 'e37a62e63b6a5590d400449c2c4514a83676e91987233e6692bd9dea7aa9a320'
+FIRMWARE_SHA = '38af56e2c53c5a64d1cace4fac2754a279fad26e3870a843c93c83e2f19819eb'
 
 
 def sha256(path):
@@ -40,7 +40,7 @@ def validate_firmware(path):
         raise ValueError('S3 firmware app descriptor is missing')
     version = data[48:80].split(b'\0', 1)[0].decode('utf-8')
     project = data[80:112].split(b'\0', 1)[0].decode('utf-8')
-    if project != 'pet_manager_s3_runtime' or version != '0.7.103-s3-r1':
+    if project != 'pet_manager_s3_runtime' or version != '0.7.103-s3-r6':
         raise ValueError(f'S3 firmware identity mismatch: {project} {version}')
     actual = sha256(path)
     if actual != FIRMWARE_SHA:
@@ -99,7 +99,7 @@ def validate_pack(manifest, root):
             raise ValueError(f'fixture manifest {key} mismatch')
     fps = manifest.get('fps', 0)
     families = manifest.get('families', [])
-    if not isinstance(fps, int) or not 1 <= fps <= 10 or not 1 <= len(families) <= 24:
+    if not isinstance(fps, int) or not 1 <= fps <= 15 or not 1 <= len(families) <= 24:
         raise ValueError('fixture manifest family/fps bounds violated')
     files = {}
     streams = []
@@ -120,10 +120,10 @@ def validate_pack(manifest, root):
         sps = [nal for nal in nals if nal[0] & 31 == 7]
         if not sps or any(nal != expected_sps for nal in sps):
             raise ValueError('fixture stream canonical SPS mismatch')
-        if not 1 <= len(frames) <= 300 or any(len(nal) < 2 or not nal[1] & 0x80 for nal in frames):
+        if not 1 <= len(frames) <= 320 or any(len(nal) < 2 or not nal[1] & 0x80 for nal in frames):
             raise ValueError('fixture stream single-slice/frame bounds violated')
         family_fps = family.get('fps', fps)
-        if not isinstance(family_fps, int) or not 1 <= family_fps <= 10 or len(frames) > 30 * family_fps or family.get('frames') != len(frames):
+        if not isinstance(family_fps, int) or not 1 <= family_fps <= 15 or len(frames) > 30 * family_fps or family.get('frames') != len(frames):
             raise ValueError('fixture stream timing/frame count mismatch')
         files[logical] = path
         if family.get('audioPath'):

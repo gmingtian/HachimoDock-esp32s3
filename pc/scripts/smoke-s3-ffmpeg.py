@@ -54,11 +54,11 @@ def check(helper, converter):
         }))
         manifest = module.prepare(root, root / 'converted', str(helper))
         assert manifest['target'] == 'esp32s3'
-        assert (manifest['width'], manifest['height'], manifest['fps']) == (240, 180, 10)
+        assert (manifest['width'], manifest['height'], manifest['fps']) == (240, 180, 15)
         family, = manifest['families']
         stream_path = root / 'converted' / family['path']
         stream = stream_path.read_bytes()
-        assert family['frames'] == module.frame_count(stream) == 10
+        assert family['frames'] == module.frame_count(stream) == 15
         assert family['streamBytes'] == len(stream) <= 384 * 1024
         nal_units = [nal for nal in re.split(b'\x00\x00\x00?\x01', stream) if nal]
         sps_units = [nal for nal in nal_units if nal[0] & 31 == 7]
@@ -67,7 +67,7 @@ def check(helper, converter):
         # establish that the x264 payload matches the software decoder contract.
         decoded = root / 'decoded.yuv'
         run('-xerror', '-i', stream_path, '-pix_fmt', 'yuv420p', '-f', 'rawvideo', decoded)
-        assert decoded.stat().st_size == 10 * 240 * 180 * 3 // 2
+        assert decoded.stat().st_size == 15 * 240 * 180 * 3 // 2
         audio_path = root / 'converted' / family['audioPath']
         with wave.open(str(audio_path), 'rb') as wav:
             assert (wav.getnchannels(), wav.getsampwidth(), wav.getframerate()) == (1, 2, 16000)
@@ -76,7 +76,7 @@ def check(helper, converter):
         module.validate_bounds(manifest, len(stream) + audio_path.stat().st_size + 6)
         print(json.dumps({'helper': str(helper), 'frames': family['frames'],
                           'streamBytes': len(stream), 'pcmFrames': 16000,
-                          'canonicalSps': True, 'decodedFrames': 10,
+                          'canonicalSps': True, 'decodedFrames': 15,
                           'buildDurationProbe': True}))
 
 

@@ -43,7 +43,7 @@ The verified hello must report `runtime: "esp-s3"` (S3 aliases and explicit S3 m
 
 There is no touch panel or joystick. The button editor exposes only these six gestures. Firmware-declared virtual-pointer capability permits compatible pointer scenes without claiming touch hardware.
 
-Custom appearance synchronization converts the original local family sources into a separate `s3-ready/p4/` package, validates the generated manifest, SHA-256 pack identity, H.264 streams and PCM audio, and only then starts the transactional USB transfer. The limits are 240×180 video, at most 10 fps, 384 KiB per video and 3 MiB per slot including storage metadata. An oversized package fails with a useful error rather than being silently sent as a P4 package. The physical panel is 240×240; firmware aspect-fits the shared logical canvas.
+Custom appearance synchronization converts the original local family sources into a separate `s3-ready/p4/` package, validates the generated manifest, SHA-256 pack identity, H.264 streams and PCM audio, and only then starts the transactional USB transfer. The limits are 240×180 video, at most 15 fps, 384 KiB and 320 frames per video, and 3 MiB per slot including storage metadata. At 15 fps, 320 frames allow about 21.3 seconds per video. An oversized package fails with a useful error rather than being silently sent as a P4 package. The physical panel is 240×240; firmware aspect-fits the shared logical canvas.
 
 The standalone conversion command is:
 

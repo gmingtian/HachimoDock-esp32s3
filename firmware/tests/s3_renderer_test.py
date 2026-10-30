@@ -1,5 +1,6 @@
 """Execute the same bounded scaler used by the S3 renderer with literal pixels."""
 import subprocess
+import pytest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -33,7 +34,8 @@ int main(void) {
   assert(!pet_s3_scale_rgb565(pixels,4,2,3,out,4,4));
   assert(pet_s3_asset_bounds(240,180,10,384*1024));
   assert(!pet_s3_asset_bounds(640,480,10,100));
-  assert(!pet_s3_asset_bounds(240,180,11,100));
+  assert(pet_s3_asset_bounds(240,180,15,100));
+  assert(!pet_s3_asset_bounds(240,180,16,100));
   assert(!pet_s3_asset_bounds(240,180,10,384*1024+1));
   assert(!pet_s3_asset_bounds(240,180,10,0));
   return 0;
@@ -63,7 +65,8 @@ int main(void) {
   char s[512];
   snprintf(s,sizeof(s),format,240,180,10,393216);assert(pet_p4_asset_catalog_parse(c,s));
   snprintf(s,sizeof(s),format,640,480,10,100);assert(!pet_p4_asset_catalog_parse(c,s));
-  snprintf(s,sizeof(s),format,240,180,15,100);assert(!pet_p4_asset_catalog_parse(c,s));
+  snprintf(s,sizeof(s),format,240,180,15,100);assert(pet_p4_asset_catalog_parse(c,s));
+  snprintf(s,sizeof(s),format,240,180,16,100);assert(!pet_p4_asset_catalog_parse(c,s));
   snprintf(s,sizeof(s),format,240,180,10,393217);assert(!pet_p4_asset_catalog_parse(c,s));
   snprintf(s,sizeof(s),format,240,180,0,100);assert(!pet_p4_asset_catalog_parse(c,s));
   const char *hidden_rate="{\"format\":\"p4-h264-v1\",\"width\":240,\"height\":180,\"fps\":10,\"families\":[{\"family\":\"idle\",\"path\":\"p4/families/a.h264\",\"frames\":10,\"frameDurationMs\":1,\"streamBytes\":100}]}";
@@ -88,6 +91,17 @@ def test_converter_bounds_and_h264_slice_count(tmp_path):
     else:raise AssertionError('must reject a slice with first_mb_in_slice != 0')
     manifest={'width':240,'height':180,'fps':10,'families':[{'frames':1,'fps':10,'streamBytes':393216}]}
     mod.validate_bounds(manifest,393216,3*1024*1024)
+    manifest['fps']=15
+    manifest['families'][0]['fps']=15
+    mod.validate_bounds(manifest,393216,3*1024*1024)
+    manifest['fps']=16
+    with pytest.raises(ValueError):
+        mod.validate_bounds(manifest,393216,3*1024*1024)
+    manifest['fps']=15
+    manifest['families'][0]['fps']=16
+    with pytest.raises(ValueError):
+        mod.validate_bounds(manifest,393216,3*1024*1024)
+    manifest['families'][0]['fps']=15
     manifest['families'][0]['streamBytes']=393217
     try:mod.validate_bounds(manifest,393217,3*1024*1024)
     except ValueError:pass
@@ -141,10 +155,12 @@ def test_converter_real_ffmpeg_preserves_annex_b_timing_and_pack_identity(tmp_pa
     (source/'manifest.json').write_text(json.dumps({'fps':15,'families':[{'family':'idle','path':'red.h264','fps':15}]}))
     output=tmp_path/'output';manifest=mod.prepare(source,output,ffmpeg)
     entry=manifest['families'][0]
-    assert entry['frames']==10
+    assert manifest['fps']==15
+    assert entry['fps']==15
+    assert entry['frames']==15
     assert entry['durationMs']==1000
     data=(output/entry['path']).read_bytes()
-    assert mod.frame_count(data)==10
+    assert mod.frame_count(data)==15
     assert mod.minimal_sps() in data
     identity=dict(manifest);identity['packId']=''
     assert manifest['packId']==mod.pack_id(identity,{entry['path']:output/entry['path']})
@@ -167,7 +183,7 @@ def test_converter_rejects_overlong_video_and_unplayable_audio(tmp_path):
     subprocess.run([ffmpeg,'-hide_banner','-loglevel','error','-f','lavfi','-i','color=c=black:s=16x16:r=1',
                     '-t','31','-c:v','libx264','-pix_fmt','yuv420p',str(source/'long.mp4')],check=True)
     with pytest.raises(ValueError,match='30 seconds'):
-        mod.prepare(source,tmp_path/'long-output',ffmpeg)
+        mod.prepare(source,tmp_path/'long-output',ffmpeg,fps=10)
     assert not (tmp_path/'long-output/p4/manifest.json').exists()
     (source/'long.mp4').unlink()
     subprocess.run([ffmpeg,'-hide_banner','-loglevel','error','-f','lavfi','-i','color=c=black:s=16x16:r=1',

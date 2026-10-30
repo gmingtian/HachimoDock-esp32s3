@@ -34,12 +34,12 @@
 | 主界面与菜单 | 原版布局 | 会话气泡、组件列表和三键菜单按 240×240 原生布局 |
 | 输入 | 原版按键、摇杆 / 触摸等对应硬件 | GPIO39 / 38 / 0 三键；菜单和软件光标替代附加输入 |
 | 显示加速 | P4 的 JPEG / PPA 等硬件能力 | CPU 缩放与绘制、软件 H.264 解码；不具备相同硬件加速 |
-| 自定义形象规格 | 原 P4 资源规格 | 最高 240×180、10fps，单视频流 ≤384KiB，每个形象槽 3MiB（含元数据） |
+| 自定义形象规格 | 原 P4 资源规格 | 最高 240×180、15fps，单视频流 ≤384KiB，每个形象槽 3MiB（含元数据） |
 | USB 日常连接 | 上游 README 说明日常走 USB-UART，硬件保留原生 HS OTG 能力 | 当前使用 Serial/JTAG 或 USB-UART；未启用 vendor bulk |
 | USB 芯片能力 | High-Speed 480Mbps | Full-Speed 12Mbps；不能实现 P4 的 480Mbps 高速模式 |
 | 麦克风 / 喇叭 | 原 P4 音频硬件 | 沿用现有 I2S 麦克风与 MAX98357A 接线 |
 
-USB 数值是芯片支持的总线等级，不代表原版当前日常连接已启用高速模式；上游连接说明见[原项目 README](https://github.com/YizhengWw/HachimoDock#硬件方案)。10fps 是素材上限，不等于实测播放帧率。屏幕与外设 IO 见 [接线文档](ESP32-S3-Linux.md)。
+USB 数值是芯片支持的总线等级，不代表原版当前日常连接已启用高速模式；上游连接说明见[原项目 README](https://github.com/YizhengWw/HachimoDock#硬件方案)。15fps 是素材上限，不等于实测播放帧率。屏幕与外设 IO 见 [接线文档](ESP32-S3-Linux.md)。
 
 ## 桌面平台
 

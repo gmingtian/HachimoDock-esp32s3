@@ -55,8 +55,8 @@ def build(build_dir, output, spiffsgen):
     config = s3_factory_config(json.loads((project / "factory-config.json").read_text()))
     manifest = json.loads((project / "assets/s3-default/p4/manifest.json").read_text())
     config["partitionFile"] = "partitions.s3.csv"
-    config["appearance"].update(width=240, height=180, fps=10,
-        readyRoot="assets/s3-default", readyProfile="s3-240x180-10fps",
+    config["appearance"].update(width=240, height=180, fps=manifest["fps"],
+        readyRoot="assets/s3-default", readyProfile=f"s3-240x180-{manifest['fps']}fps",
         packId=manifest["packId"])
     appearance = factory.build_default_appearance_tree(project, build_dir, config)
     components = factory.build_builtin_component_tree(project, config, appearance["tree"])

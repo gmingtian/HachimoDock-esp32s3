@@ -69,14 +69,14 @@ class PreviewVerificationTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'S3|chip'):
             verify.validate_firmware(firmware)
 
-    def test_checked_in_firmware_is_real_pinned_s3_r1(self):
+    def test_checked_in_firmware_is_real_pinned_s3_r6(self):
         verify = load('verify-preview-resources')
         firmware = SCRIPTS.parents[1] / 'pc/src-tauri/firmware/esp32-s3/firmware.bin'
         result = verify.validate_firmware(firmware)
         self.assertEqual(result['chipId'], 9)
         self.assertEqual(result['projectName'], 'pet_manager_s3_runtime')
-        self.assertEqual(result['version'], '0.7.103-s3-r1')
-        self.assertEqual(result['sha256'], 'e37a62e63b6a5590d400449c2c4514a83676e91987233e6692bd9dea7aa9a320')
+        self.assertEqual(result['version'], '0.7.103-s3-r6')
+        self.assertEqual(result['sha256'], '38af56e2c53c5a64d1cace4fac2754a279fad26e3870a843c93c83e2f19819eb')
 
     def test_corrupt_s3_helper_source_is_rejected(self):
         verify = load('verify-preview-resources')
@@ -122,13 +122,14 @@ class PreviewVerificationTests(unittest.TestCase):
                             '--ffmpeg', ffmpeg], check=True, capture_output=True)
             manifest = json.loads((output / 'p4/manifest.json').read_text())
             smoke = verify.validate_pack(manifest, output)
-            self.assertEqual(smoke['streams'][0]['frames'], 10)
+            self.assertEqual(manifest['fps'], 15)
+            self.assertEqual(smoke['streams'][0]['frames'], 15)
             stream = output / smoke['streams'][0]['path']
             decoded = temp / 'decoded.yuv'
             subprocess.run([ffmpeg, '-v', 'error', '-xerror', '-nostdin', '-y',
                             '-i', str(stream), '-pix_fmt', 'yuv420p',
                             '-f', 'rawvideo', str(decoded)], check=True)
-            self.assertEqual(decoded.stat().st_size, 648000)
+            self.assertEqual(decoded.stat().st_size, 15 * 240 * 180 * 3 // 2)
             manifest['packId'] = '0' * 64
             with self.assertRaisesRegex(ValueError, 'packId'):
                 verify.validate_pack(manifest, output)

@@ -70,12 +70,12 @@ def rewrite_sps(stream):
 def validate_bounds(manifest, payload_bytes, slot_bytes=SLOT_BYTES):
     if not 0 < manifest['width'] <= 240 or not 0 < manifest['height'] <= 180:
         raise ValueError('S3 appearance must fit 240x180')
-    if not 0 < manifest['fps'] <= 10:
-        raise ValueError('S3 appearance must be <=10 fps')
+    if not 0 < manifest['fps'] <= 15:
+        raise ValueError('S3 appearance must be <=15 fps')
     for family in manifest['families']:
         if not 0 < family['streamBytes'] <= MAX_STREAM:
             raise ValueError('S3 stream exceeds 384 KiB decoder limit: '+family.get('family',''))
-        if not 0 < family.get('fps', manifest['fps']) <= 10 or not 0 < family['frames'] <= 320:
+        if not 0 < family.get('fps', manifest['fps']) <= 15 or not 0 < family['frames'] <= 320:
             raise ValueError('S3 family timing exceeds bounds')
     if payload_bytes + HEADER_BYTES > slot_bytes:
         raise ValueError(f'S3 appearance payload exceeds flash slot: {payload_bytes}+{HEADER_BYTES}>{slot_bytes}')
@@ -110,9 +110,9 @@ def run(ffmpeg, args):
     subprocess.run([ffmpeg,'-hide_banner','-loglevel','error','-nostdin','-y',*map(str,args)],check=True)
 
 
-def prepare(source, output, ffmpeg, fps=10, slot_bytes=SLOT_BYTES, app_data_dir=None):
+def prepare(source, output, ffmpeg, fps=15, slot_bytes=SLOT_BYTES, app_data_dir=None):
     source=Path(source).resolve();output=Path(output).resolve()
-    if not 1 <= fps <= 10:raise ValueError('fps must be 1..10')
+    if not 1 <= fps <= 15:raise ValueError('fps must be 1..15')
     if source.is_file():
         source_manifest=json.loads(source.read_text());root=source.parent
     elif (source/'p4/manifest.json').exists():
@@ -181,7 +181,7 @@ def main():
     parser.add_argument('--output',required=True,type=Path)
     parser.add_argument('--ffmpeg',default=os.environ.get('FFMPEG') or shutil.which('ffmpeg'))
     parser.add_argument('--app-data-dir',type=Path,help='Root for custom appearance videoPath/audioPath files')
-    parser.add_argument('--fps',type=int,default=10)
+    parser.add_argument('--fps',type=int,default=15)
     parser.add_argument('--slot-bytes',type=int,default=SLOT_BYTES)
     args=parser.parse_args()
     if not args.ffmpeg:parser.error('FFmpeg with libx264 is required; set --ffmpeg or FFMPEG')

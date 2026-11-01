@@ -851,6 +851,14 @@ static uint8_t glyph_alpha_at(const uint8_t *bitmap, const lv_font_glyph_dsc_t *
   return 0;
 }
 
+/* Landscape output halves the logical canvas. Route small text through the
+ * existing 24px rasterizer and use its metrics everywhere (12px on panel). */
+#if CONFIG_IDF_TARGET_ESP32S3 && PET_S3_LANDSCAPE_LEFT
+static int medium_glyph_width(uint32_t codepoint, uint32_t next_codepoint);
+static void text_visual_bounds_medium(const char *text,int *top,int *bottom);
+static const char *draw_text_line_medium(const char *text, int x, int y, int max_px, uint16_t color, bool ellipsis);
+#endif
+
 static int glyph_width(uint32_t codepoint, uint32_t next_codepoint) {
   lv_font_glyph_dsc_t glyph = {0};
   if (codepoint == 0xFE0F || codepoint == 0x200D) return 0;
@@ -907,6 +915,9 @@ static bool glyph_visual_bounds(
 }
 
 static void text_visual_bounds(const char *text, int scale, int *top, int *bottom) {
+#if CONFIG_IDF_TARGET_ESP32S3 && PET_S3_LANDSCAPE_LEFT
+  if(scale<=1){text_visual_bounds_medium(text,top,bottom);return;}
+#endif
   const char *cursor = text ? text : "";
   bool found = false;
   while (*cursor) {
@@ -943,6 +954,12 @@ static int utf8_text_width(const char *text, int byte_limit, int scale) {
     uint32_t cp = utf8_next(&next_cursor);
     if (!cp || (end && next_cursor > end)) break;
     int glyph_advance = glyph_width(cp, utf8_peek(next_cursor));
+#if CONFIG_IDF_TARGET_ESP32S3 && PET_S3_LANDSCAPE_LEFT
+    if (scale == 1) {
+      int advance=medium_glyph_width(cp,utf8_peek(next_cursor));
+      if (advance>0) width+=advance+1;
+    } else
+#endif
     if (glyph_advance > 0) width += glyph_advance * scale + scale;
     cursor = next_cursor;
   }
@@ -1000,6 +1017,31 @@ static int medium_glyph_width(uint32_t codepoint, uint32_t next_codepoint) {
   return width > 0 ? (width * 3 + 1) / 2 : 0;
 }
 
+/* Repeat each area-filtered sample across a logical 2x2 pair, so the final
+ * half-scale pass keeps thin strokes at either pixel phase. Integer weights
+ * express source coverage in thirds; larger text and P4 keep their old raster. */
+static uint8_t medium_glyph_alpha(const uint8_t *bitmap,const lv_font_glyph_dsc_t *g,int dx,int dy) {
+#if CONFIG_IDF_TARGET_ESP32S3 && PET_S3_LANDSCAPE_LEFT
+  int left=(dx/2)*4,top=(dy/2)*4;
+  int right=left+4,bottom=top+4;
+  if(right>g->box_w*3)right=g->box_w*3;
+  if(bottom>g->box_h*3)bottom=g->box_h*3;
+  int area=(right-left)*(bottom-top),sum=0;
+  if(area<=0)return 0;
+  for(int y=top/3;y<(bottom+2)/3;y++)for(int x=left/3;x<(right+2)/3;x++) {
+    int x0=x*3>left?x*3:left,x1=(x+1)*3<right?(x+1)*3:right;
+    int y0=y*3>top?y*3:top,y1=(y+1)*3<bottom?(y+1)*3:bottom;
+    sum+=glyph_alpha_at(bitmap,g,x,y)*(x1-x0)*(y1-y0);
+  }
+  return (uint8_t)((sum+area/2)/area);
+#else
+  int x=dx*2/3,y=dy*2/3;
+  if(x>=g->box_w)x=g->box_w-1;
+  if(y>=g->box_h)y=g->box_h-1;
+  return glyph_alpha_at(bitmap,g,x,y);
+#endif
+}
+
 static bool medium_glyph_visual_bounds(
   uint32_t codepoint,
   uint32_t next_codepoint,
@@ -1028,13 +1070,17 @@ static bool medium_glyph_visual_bounds(
   int first_ink_row = scaled_height;
   int last_ink_row = -1;
   if (bitmap) {
-    for (int dy = 0; dy < scaled_height; dy += 1) {
-      int source_y = dy * 2 / 3;
-      if (source_y >= glyph.box_h) source_y = glyph.box_h - 1;
-      for (int x = 0; x < glyph.box_w; x += 1) {
-        if (!glyph_alpha_at(bitmap, &glyph, x, source_y)) continue;
+#if CONFIG_IDF_TARGET_ESP32S3 && PET_S3_LANDSCAPE_LEFT
+    const int step=2;
+#else
+    const int step=1;
+#endif
+    for (int dy = 0; dy < scaled_height; dy += step) {
+      for (int x = 0; x < (glyph.box_w*3+1)/2; x += step) {
+        if (!medium_glyph_alpha(bitmap, &glyph, x, dy)) continue;
         if (dy < first_ink_row) first_ink_row = dy;
-        if (dy > last_ink_row) last_ink_row = dy;
+        int last=dy+step-1<scaled_height?dy+step-1:scaled_height-1;
+        if (last > last_ink_row) last_ink_row = last;
       }
     }
   }
@@ -1121,14 +1167,16 @@ static void draw_lvgl_glyph_medium(
   uint8_t r = (uint8_t) (((color >> 11) & 0x1F) * 255 / 31);
   uint8_t g = (uint8_t) (((color >> 5) & 0x3F) * 255 / 63);
   uint8_t b = (uint8_t) ((color & 0x1F) * 255 / 31);
-  for (int dy = 0; dy < scaled_h; dy += 1) {
-    int source_y = dy * 2 / 3;
-    if (source_y >= glyph.box_h) source_y = glyph.box_h - 1;
-    for (int dx = 0; dx < scaled_w; dx += 1) {
-      int source_x = dx * 2 / 3;
-      if (source_x >= glyph.box_w) source_x = glyph.box_w - 1;
-      uint8_t alpha = glyph_alpha_at(bitmap, &glyph, source_x, source_y);
-      if (alpha) blend_px(gx0 + dx, gy0 + dy, r, g, b, alpha);
+#if CONFIG_IDF_TARGET_ESP32S3 && PET_S3_LANDSCAPE_LEFT
+  const int step=2;
+#else
+  const int step=1;
+#endif
+  for (int dy = 0; dy < scaled_h; dy += step) {
+    for (int dx = 0; dx < scaled_w; dx += step) {
+      uint8_t alpha = medium_glyph_alpha(bitmap, &glyph, dx, dy);
+      if(alpha)for(int sy=0;sy<step && dy+sy<scaled_h;sy++)for(int sx=0;sx<step && dx+sx<scaled_w;sx++)
+        blend_px(gx0+dx+sx,gy0+dy+sy,r,g,b,alpha);
     }
   }
   lv_font_glyph_release_draw_data(&glyph);
@@ -1142,6 +1190,11 @@ static const char *draw_text_line_medium(
   uint16_t color,
   bool ellipsis
 ) {
+#if CONFIG_IDF_TARGET_ESP32S3 && PET_S3_LANDSCAPE_LEFT
+  int height=(pet_p4_font_cn_16.line_height*3+1)/2;
+  if(y>PET_P4_UI_HEIGHT-height)y=PET_P4_UI_HEIGHT-height;
+  if(y<0)y=0;
+#endif
   const char *cursor = text ? text : "";
   const char *last_fit = cursor;
   int pen_x = x;
@@ -1201,6 +1254,9 @@ static const char *draw_text_line(
   int scale,
   bool ellipsis
 ) {
+#if CONFIG_IDF_TARGET_ESP32S3 && PET_S3_LANDSCAPE_LEFT
+  if (scale <= 1) return draw_text_line_medium(text,x,y,max_px,color,ellipsis);
+#endif
   if (scale < 1) scale = 1;
   const char *cursor = text ? text : "";
   const char *last_fit = cursor;
@@ -4303,12 +4359,47 @@ static float app_font_sample(const pet_surface_font_t *f,int index,int x,int y){
 static float app_glyph_sample(const uint8_t *bitmap,const lv_font_glyph_dsc_t *g,int x,int y){
   return x<0||y<0||x>=g->box_w||y>=g->box_h?0:glyph_alpha_at(bitmap,g,x,y);
 }
+#if CONFIG_IDF_TARGET_ESP32S3 && PET_S3_LANDSCAPE_LEFT
+static void draw_app_glyph_filtered(const pet_surface_font_t *font,int index,
+    const uint8_t *bitmap,const lv_font_glyph_dsc_t *glyph,float x,float y,
+    float scale,int width,int height,uint16_t color,const pet_surface_node_t *clip) {
+  /* Work directly on final screen pixels, averaging every covered source pixel
+   * and repeating into its logical 2x2 cell. The original clip stays authoritative. */
+  int left=(int)floorf(x/2)*2,top=(int)floorf(y/2)*2;
+  int right=(int)ceilf((x+width*scale)/2)*2,bottom=(int)ceilf((y+height*scale)/2)*2;
+  for(int yy=top;yy<bottom;yy+=2)for(int xx=left;xx<right;xx+=2){
+    if(xx+2<=clip->x||yy+2<=clip->y||xx>=clip->x+clip->w||yy>=clip->y+clip->h)continue;
+    float l=(xx-x)/scale,t=(yy-y)/scale,r=(xx+2-x)/scale,b=(yy+2-y)/scale;
+    float area=(r-l)*(b-t),sum=0;
+    int x0=(int)floorf(l),y0=(int)floorf(t),x1=(int)ceilf(r),y1=(int)ceilf(b);
+    if(x0<0)x0=0;
+    if(y0<0)y0=0;
+    if(x1>width)x1=width;
+    if(y1>height)y1=height;
+    for(int sy=y0;sy<y1;sy++)for(int sx=x0;sx<x1;sx++){
+      float coverage=(fminf(r,sx+1)-fmaxf(l,sx))*(fminf(b,sy+1)-fmaxf(t,sy));
+      sum+=coverage*(font?app_font_sample(font,index,sx,sy):app_glyph_sample(bitmap,glyph,sx,sy));
+    }
+    float alpha=sum/area;
+    if(clip->weight)alpha=fminf(255,alpha*1.18f);
+    if(alpha>=.5f)for(int dy=0;dy<2;dy++)for(int dx=0;dx<2;dx++){
+      int px=xx+dx,py=yy+dy;
+      if(px>=clip->x&&py>=clip->y&&px<clip->x+clip->w&&py<clip->y+clip->h)
+        blend_px(px,py,((color>>11)&31)*255/31,((color>>5)&63)*255/63,(color&31)*255/31,(int)(alpha+.5f));
+    }
+  }
+}
+#endif
 static void draw_app_glyph(uint32_t cp,uint32_t next,float x,float y,int px,uint16_t color,const pet_surface_node_t *clip){
   if(cp==0xFE0F||cp==0x200D)return;
   int index;const pet_surface_font_t *font=app_font_glyph(cp,&index);
   if(font){
     float scale=px/(float)(font->cell_h?font->cell_h:32);
     int cw=font->cell_w?font->cell_w:32;
+#if CONFIG_IDF_TARGET_ESP32S3 && PET_S3_LANDSCAPE_LEFT
+    draw_app_glyph_filtered(font,index,NULL,NULL,x,y,scale,cw,font->cell_h?font->cell_h:32,color,clip);
+    return;
+#endif
     for(int yy=(int)floorf(y);yy<(int)ceilf(y+px);yy++)for(int xx=(int)floorf(x);xx<(int)ceilf(x+cw*scale);xx++){
       if(xx<clip->x||yy<clip->y||xx>=clip->x+clip->w||yy>=clip->y+clip->h)continue;
       float sx=(xx+.5f-x)/scale-.5f,sy=(yy+.5f-y)/scale-.5f;int ix=(int)floorf(sx),iy=(int)floorf(sy);float fx=sx-ix,fy=sy-iy;
@@ -4332,6 +4423,10 @@ static void draw_app_glyph(uint32_t cp,uint32_t next,float x,float y,int px,uint
   g.req_raw_bitmap=1;const uint8_t *bitmap=g.resolved_font->get_glyph_bitmap(&g,NULL);
   if(!bitmap){lv_font_glyph_release_draw_data(&g);return;}
   float scale=px/16.0f,gx=x+g.ofs_x*scale,gy=y+(pet_p4_font_cn_16.line_height-pet_p4_font_cn_16.base_line-g.box_h-g.ofs_y)*scale;
+#if CONFIG_IDF_TARGET_ESP32S3 && PET_S3_LANDSCAPE_LEFT
+  draw_app_glyph_filtered(NULL,0,bitmap,&g,gx,gy,scale,g.box_w,g.box_h,color,clip);
+  lv_font_glyph_release_draw_data(&g);return;
+#endif
   int left=(int)floorf(gx)-1,top=(int)floorf(gy)-1,right=(int)ceilf(gx+g.box_w*scale)+1,bottom=(int)ceilf(gy+g.box_h*scale)+1;
   for(int yy=top;yy<bottom;yy++)for(int xx=left;xx<right;xx++){
     if(xx<clip->x||yy<clip->y||xx>=clip->x+clip->w||yy>=clip->y+clip->h)continue;
@@ -4344,6 +4439,13 @@ static void draw_app_glyph(uint32_t cp,uint32_t next,float x,float y,int px,uint
 }
 static void draw_app_label(const pet_surface_node_t *n,const char *text,uint16_t color){
   char rows[8][192]={{0}};int count=0,px=n->font_size,lh=n->line_height;
+#if CONFIG_IDF_TARGET_ESP32S3 && PET_S3_LANDSCAPE_LEFT
+  /* Local type metrics only: never change package nodes or hit targets. Tiny
+   * badges are bounded by their original box instead of clipping larger ink. */
+  if(px<24){px=n->h<24?n->h:24;}
+  if(lh<px)lh=px;
+  if(lh>n->h)lh=n->h;
+#endif
   int icon_space=n->type==8&&n->icon>=0?n->icon_size+((text&&*text)?n->gap:0):0;
   int width=n->w-2*n->padding-icon_space;if(width<1)return;
   int max=n->type==8?1:n->h/lh;if(max<1)max=1;if(max>8)max=8;

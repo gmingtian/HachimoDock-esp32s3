@@ -53,6 +53,8 @@ jobs:
           restore-keys: |
             s3-home-${{ runner.os }}-${{ matrix.target }}-${{ hashFiles('pc/src-tauri/Cargo.lock') }}-
             s3-home-${{ runner.os }}-${{ matrix.target }}-
+      - name: Normalize restored Cargo workspace paths
+        run: python pc/scripts/normalize-cargo-cache.py
       - name: Install native build dependencies
         run: |
           rustup toolchain install 1.95.0 --profile minimal

@@ -9,6 +9,15 @@ per-stream and 3MiB package limits. Square continues to advertise and accept up 
 240×180. Programs must use the advertised dimensions when producing native-size
 packs; existing clients that still encode 240×180 remain compatible.
 
+The landscape-only resource path additionally accepts native opaque 320×240
+`P4J1` backgrounds as the first static full-canvas image, while keeping the
+logical 640×480 element/interaction coordinates. Original 640×480 backgrounds
+remain accepted. S3 landscape has a bounded 102400-byte palette index cache
+(radio background plus cover); the per-image bound remains 98304 pixels.
+Other targets retain the existing 640×480 JPEG and 98304-total-index contract.
+Full factory packages derive every built-in image/font atlas from canonical
+source packages; existing desktop installation formats are unchanged.
+
 ## ESP32-S3 r4 boot and USB recovery
 
 S3 `0.7.103-s3-r4` preserves the r3 wire contract, partition layout and three-key

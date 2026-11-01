@@ -1,0 +1,26 @@
+[
+  {
+    "control": "SW1",
+    "event": "button.sw1.short_press",
+    "action": "stats.show_total",
+    "label": "总量"
+  },
+  {
+    "control": "SW2",
+    "event": "button.sw2.short_press",
+    "action": "stats.show_input",
+    "label": "输入"
+  },
+  {
+    "action": "stats.previous",
+    "event": "knob.rotate_ccw",
+    "label": "上一统计页",
+    "control": "前方摇杆"
+  },
+  {
+    "action": "stats.next",
+    "event": "knob.rotate_cw",
+    "label": "下一统计页",
+    "control": "前方摇杆"
+  }
+]

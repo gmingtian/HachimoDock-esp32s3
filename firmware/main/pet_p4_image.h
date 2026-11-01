@@ -7,13 +7,26 @@
  * Header/palette are retained in flash; indices are expanded only in RAM. */
 #define PET_IMAGE_HEADER 1036U
 #define PET_IMAGE_MAX_BYTES 100000U
+#if CONFIG_IDF_TARGET_ESP32S3 && PET_S3_LANDSCAPE_LEFT
+/* Native radio background plus its rotating 152x152 cover; bounded +4KiB. */
+#define PET_IMAGE_INDEX_CAPACITY 102400U
+#else
+#define PET_IMAGE_INDEX_CAPACITY 98304U
+#endif
+static inline bool pet_image_background_size(unsigned w,unsigned h) {
+  if(w==640&&h==480)return true;
+#if CONFIG_IDF_TARGET_ESP32S3 && PET_S3_LANDSCAPE_LEFT
+  if(w==320&&h==240)return true;
+#endif
+  return false;
+}
 /* P4J1 is a single opaque, full-resolution static background. The package
  * retains PNG; the trusted host emits bounded baseline JPEG, never scripts. */
 static inline bool pet_image_jpeg(const uint8_t *p,size_t n) {
   if(!p||n<16||n>PET_IMAGE_MAX_BYTES||p[0]!='P'||p[1]!='4'||p[2]!='J'||p[3]!='1')return false;
   unsigned w=p[4]|(unsigned)p[5]<<8,h=p[6]|(unsigned)p[7]<<8;
   uint32_t size=(uint32_t)p[8]|(uint32_t)p[9]<<8|(uint32_t)p[10]<<16|(uint32_t)p[11]<<24;
-  if(w!=640||h!=480||size!=n||p[12]!=255||p[13]!=216||p[n-2]!=255||p[n-1]!=217)return false;
+  if(!pet_image_background_size(w,h)||size!=n||p[12]!=255||p[13]!=216||p[n-2]!=255||p[n-1]!=217)return false;
   bool frame=false;
   for(size_t at=14;at+4<=n;){
     if(p[at++]!=255)return false;

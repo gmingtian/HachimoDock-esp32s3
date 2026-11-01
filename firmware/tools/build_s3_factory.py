@@ -55,6 +55,9 @@ def build(build_dir, output, spiffsgen, display_profile="square"):
     project = TOOLS.parent
     build_dir = Path(build_dir).resolve()
     config = s3_factory_config(json.loads((project / "factory-config.json").read_text()))
+    if display_profile == "landscape-left":
+        config["components"].update(packagesDir="assets/s3-landscape-ui/packages",
+                                    surfaceCacheDir="assets/s3-landscape-ui/surfaces")
     ready_root = "assets/s3-landscape-default" if display_profile == "landscape-left" else "assets/s3-default"
     manifest = json.loads((project / ready_root / "p4/manifest.json").read_text())
     config["partitionFile"] = "partitions.s3.csv"

@@ -2809,12 +2809,23 @@ static void center_art_prepare(void) {
     int w=0,h=0,stride=0;esp_err_t error=ESP_OK;JRESULT fallback=JDR_OK;
     bool ok=decode_jpeg_frame_hardware(g_jpeg_input,length,&w,&h,&stride,&error);
     if(!ok){ok=decode_jpeg_frame_tjpgd(g_jpeg_input,length,&w,&h,&fallback);stride=w;}
-    if(ok&&w==640&&h==480) {
+    if(ok&&pet_image_background_size(w,h)) {
       center_background=heap_caps_malloc(640*480*2,MALLOC_CAP_SPIRAM|MALLOC_CAP_8BIT);
-      if(center_background)for(int y=0;y<480;y++)memcpy(center_background+y*640,g_jpeg_output+y*stride,1280);
+      if(center_background){
+#if CONFIG_IDF_TARGET_ESP32S3 && PET_S3_LANDSCAPE_LEFT
+        if(w==320)pet_s3_expand_2x(g_jpeg_output,stride,center_background,320,240);
+        else
+#endif
+        for(int y=0;y<480;y++)memcpy(center_background+y*640,g_jpeg_output+y*stride,1280);
+      }
     }
   }
-  size_t expected=CENTER_ART_COUNT*64*48*2;
+#if CONFIG_IDF_TARGET_ESP32S3 && PET_S3_LANDSCAPE_LEFT
+  const int thumb_scale=2;
+#else
+  const int thumb_scale=1;
+#endif
+  size_t expected=CENTER_ART_COUNT*(64/thumb_scale)*(48/thumb_scale)*2;
   center_thumbnails=heap_caps_malloc(expected,MALLOC_CAP_SPIRAM|MALLOC_CAP_8BIT);
   tinfl_decompressor *inflater=calloc(1,sizeof(*inflater));
   if(center_thumbnails&&inflater) {
@@ -2830,11 +2841,16 @@ static void center_art_prepare(void) {
 static bool center_draw_thumbnail(const char *id,int x,int y) {
   if(!center_thumbnails)return false;
   for(size_t i=0;i<CENTER_ART_COUNT;i++)if(!strcmp(id,center_art_catalog[i].id)&&center_art_catalog[i].art) {
-    const uint16_t *pixels=center_thumbnails+i*64*48;
+#if CONFIG_IDF_TARGET_ESP32S3 && PET_S3_LANDSCAPE_LEFT
+    const int scale=2;
+#else
+    const int scale=1;
+#endif
+    const uint16_t *pixels=center_thumbnails+i*(64/scale)*(48/scale);
     for(int row=0;row<48;row++)for(int col=0;col<64;col++) {
       int dx=col<7?7-col:col>56?col-56:0;
       int dy=row<7?7-row:row>40?row-40:0;
-      if(dx*dx+dy*dy<=49)g_framebuffer[(y+row)*640+x+col]=pixels[row*64+col];
+      if(dx*dx+dy*dy<=49)g_framebuffer[(y+row)*640+x+col]=pixels[(row/scale)*(64/scale)+col/scale];
     }
     return true;
   }
@@ -4264,7 +4280,7 @@ static void draw_media_queue(int x,int y,uint16_t color) {
 
 static EXT_RAM_BSS_ATTR pet_p4_miniapp_sprite_pack_t g_surface_images;
 #include "pet_p4_app_icons.h"
-static EXT_RAM_BSS_ATTR uint8_t g_surface_indices[98304];
+static EXT_RAM_BSS_ATTR uint8_t g_surface_indices[PET_IMAGE_INDEX_CAPACITY];
 // Runtime-only cache: flash still stores the same compact P4I1 images. A static
 // full-screen background must not be resampled/alpha-blended 307200 times/frame.
 static EXT_RAM_BSS_ATTR uint16_t g_surface_background[640*480];
@@ -4289,6 +4305,9 @@ static void draw_surface_image(const pet_surface_node_t *n) {
     bool ok=decode_jpeg_frame_hardware(g_jpeg_input,im->data_length-12,&w,&h,&stride,&err);
     if(!ok){ok=decode_jpeg_frame_tjpgd(g_jpeg_input,im->data_length-12,&w,&h,&fallback);stride=w;}
     if(ok&&w==640&&h==480)for(int y=0;y<480;y++)memcpy(g_framebuffer+y*640,g_jpeg_output+y*stride,1280);
+#if CONFIG_IDF_TARGET_ESP32S3 && PET_S3_LANDSCAPE_LEFT
+    else if(ok&&w==320&&h==240)pet_s3_expand_2x(g_jpeg_output,stride,g_framebuffer,320,240);
+#endif
     return;
   }
   const uint8_t *palette=g_surface_images.pixels+im->data_offset+12;
@@ -4358,16 +4377,28 @@ static void draw_app_panel(const pet_surface_node_t *n) {
 static void draw_app_icon(int icon,int x,int y,int size,uint16_t color){
   if(icon<0||icon>=PET_APP_ICON_COUNT)return;
   float scale=size/48.0f;
-  for(int py=0;py<size;py++)for(int px=0;px<size;px++){
-    float best=1e6f;
-    for(int s=0;s<pet_app_icons[icon].count;s++){
-      const uint8_t *v=pet_app_icon_segments[pet_app_icons[icon].start+s];
-      float ax=v[0]*scale,ay=v[1]*scale,dx=(v[2]-v[0])*scale,dy=(v[3]-v[1])*scale;
-      float den=dx*dx+dy*dy,t=den?((px+.5f-ax)*dx+(py+.5f-ay)*dy)/den:0;t=fminf(1,fmaxf(0,t));
-      float ex=px+.5f-ax-t*dx,ey=py+.5f-ay-t*dy,dist=ex*ex+ey*ey;if(dist<best)best=dist;
+#if CONFIG_IDF_TARGET_ESP32S3 && PET_S3_LANDSCAPE_LEFT
+  const int step=2;
+#else
+  const int step=1;
+#endif
+  /* Average original vector coverage over each native pixel, then retain the
+   * same logical icon box. Thin diagonals must survive half-size presentation. */
+  for(int py=0;py<size;py+=step)for(int px=0;px<size;px+=step){
+    float coverage=0;
+    for(int oy=0;oy<step&&py+oy<size;oy++)for(int ox=0;ox<step&&px+ox<size;ox++){
+      float best=1e6f;
+      for(int s=0;s<pet_app_icons[icon].count;s++){
+        const uint8_t *v=pet_app_icon_segments[pet_app_icons[icon].start+s];
+        float ax=v[0]*scale,ay=v[1]*scale,dx=(v[2]-v[0])*scale,dy=(v[3]-v[1])*scale;
+        float den=dx*dx+dy*dy,t=den?((px+ox+.5f-ax)*dx+(py+oy+.5f-ay)*dy)/den:0;t=fminf(1,fmaxf(0,t));
+        float ex=px+ox+.5f-ax-t*dx,ey=py+oy+.5f-ay-t*dy,dist=ex*ex+ey*ey;if(dist<best)best=dist;
+      }
+      coverage+=fminf(1,fmaxf(0,size*.9f/24+.5f-sqrtf(best)));
     }
-    float alpha=fminf(1,fmaxf(0,size*.9f/24+.5f-sqrtf(best)));
-    if(alpha>0)blend_px(x+px,y+py,((color>>11)&31)*255/31,((color>>5)&63)*255/63,(color&31)*255/31,(int)(alpha*255));
+    int alpha=(int)(coverage*255/(step*step));
+    if(alpha>0)for(int dy=0;dy<step&&py+dy<size;dy++)for(int dx=0;dx<step&&px+dx<size;dx++)
+      blend_px(x+px+dx,y+py+dy,((color>>11)&31)*255/31,((color>>5)&63)*255/63,(color&31)*255/31,alpha);
   }
 }
 static const pet_surface_t *g_app_text_surface;
@@ -4873,14 +4904,20 @@ static uint8_t *instrument_decode(const uint8_t *input,size_t size,unsigned widt
 static bool instrument_prepare(void){
   if(wooden_failed)return false;
   if(wooden_body&&wooden_mallet)return true;
+#if CONFIG_IDF_TARGET_ESP32S3 && PET_S3_LANDSCAPE_LEFT
+  wooden_body=instrument_decode(wooden_body_z,wooden_body_z_end-wooden_body_z,160,122);
+  wooden_mallet=instrument_decode(wooden_mallet_z,wooden_mallet_z_end-wooden_mallet_z,80,82);
+#else
   wooden_body=instrument_decode(wooden_body_z,wooden_body_z_end-wooden_body_z,320,244);
   wooden_mallet=instrument_decode(wooden_mallet_z,wooden_mallet_z_end-wooden_mallet_z,160,163);
+#endif
   if(!wooden_body||!wooden_mallet){instrument_release();wooden_failed=true;ESP_LOGW(TAG,"Instrument artwork unavailable");return false;}
   return true;
 }
-static void instrument_layer(const uint8_t *data,int x,int y,int height) {
+static void instrument_layer(const uint8_t *data,int x,int y,int height,int design_w,int design_h) {
   int w=data[0]|data[1]<<8,h=data[2]|data[3]<<8;
-  int width=w*height/h;
+  /* Native pixel rounding must not move the original logical control/art box. */
+  int width=design_w*height/design_h;
   for(int dy=0;dy<height;dy++)for(int dx=0;dx<width;dx++) {
     int px=x+dx,py=y+dy;if(px<0||px>=640||py<0||py>=480)continue;
     const uint8_t *p=data+4+((dy*h/height)*w+dx*w/width)*3;
@@ -5051,8 +5088,8 @@ static void render_instrument_page(unsigned long long now_ms, const char *title)
   }
   fill_ellipse(308,410,175,15,rgb565(218,195,161));
   int height=(int)(297*m.fish_scale);
-  instrument_layer(wooden_body,110,425-height,height);
-  instrument_layer(wooden_mallet,340,85+(int)m.mallet_y,214);
+  instrument_layer(wooden_body,110,425-height,height,320,244);
+  instrument_layer(wooden_mallet,340,85+(int)m.mallet_y,214,160,163);
   draw_text_center("按主操作敲一下 · 全局键退出",320,449,595,muted,1);
 }
 static void render_miniapp_page(

@@ -1,0 +1,26 @@
+[
+  {
+    "control": "SW1",
+    "event": "button.sw1.short_press",
+    "action": "tomato.start_pause",
+    "label": "暂停 / 继续"
+  },
+  {
+    "control": "SW2",
+    "event": "button.sw2.short_press",
+    "action": "tomato.skip_phase",
+    "label": "跳过阶段"
+  },
+  {
+    "action": "tomato.shorter",
+    "event": "joystick.down",
+    "label": "开始前减少 5 分钟",
+    "control": "前方摇杆"
+  },
+  {
+    "action": "tomato.longer",
+    "event": "joystick.up",
+    "label": "开始前增加 5 分钟",
+    "control": "前方摇杆"
+  }
+]

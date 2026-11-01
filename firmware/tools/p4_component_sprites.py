@@ -150,11 +150,11 @@ def decode_png_rgba(path: Path) -> tuple[int, int, bytes]:
     return width, height, bytes(rgba)
 
 
-def compile_component_sprites(package: Path, widget: dict) -> list[dict]:
+def compile_component_sprites(package: Path, widget: dict, cache_root: Path | None = None) -> list[dict]:
     if widget.get("surface",{}).get("images"):
         # The checked-in cache is produced by the PC's canonical encoder.
         # Firmware/factory builds remain dependency-free and reject stale art.
-        cache=Path(__file__).resolve().parents[1]/"assets/builtin-surfaces"/package.name
+        cache=(cache_root if cache_root is not None else Path(__file__).resolve().parents[1]/"assets/builtin-surfaces")/package.name
         manifest=json.loads((cache/"index.json").read_text())
         compiled=[]
         for image in widget["surface"]["images"]:

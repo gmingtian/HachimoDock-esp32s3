@@ -83,11 +83,23 @@ set_source_files_properties("pet_p4_renderer.c" PROPERTIES COMPILE_OPTIONS "-fst
 set_source_files_properties("pet_p4_surface.c" "pet_p4_miniapp.c" PROPERTIES COMPILE_OPTIONS "-Os")
 # Upstream surface interpreter is deliberately compact; retain its semantics under GCC15.
 set_property(SOURCE "pet_p4_surface.c" "pet_p4_media.c" APPEND PROPERTY COMPILE_OPTIONS "-Wno-misleading-indentation")
+set(PET_UI_ASSETS "${CMAKE_CURRENT_LIST_DIR}/../assets")
+if(IDF_TARGET STREQUAL "esp32s3" AND PET_S3_DISPLAY_PROFILE STREQUAL "landscape-left")
+  set(PET_UI_ASSETS "${CMAKE_CURRENT_LIST_DIR}/../assets/s3-landscape-ui")
+  set(PET_LAUNCHER_ASSETS "${PET_UI_ASSETS}/launcher")
+  execute_process(COMMAND "${PYTHON}" "${CMAKE_CURRENT_LIST_DIR}/../tools/prepare_s3_ui_assets.py" "--check"
+    RESULT_VARIABLE PET_NATIVE_UI_STATUS)
+  if(NOT PET_NATIVE_UI_STATUS EQUAL 0)
+    message(FATAL_ERROR "Native landscape UI assets are stale; run tools/prepare_s3_ui_assets.py")
+  endif()
+else()
+  set(PET_LAUNCHER_ASSETS "${PET_UI_ASSETS}/component-center")
+endif()
 foreach(layer body mallet)
-  target_add_binary_data(${COMPONENT_LIB} "${CMAKE_CURRENT_LIST_DIR}/../assets/instruments/wooden_fish_${layer}.deflate" BINARY)
+  target_add_binary_data(${COMPONENT_LIB} "${PET_UI_ASSETS}/instruments/wooden_fish_${layer}.deflate" BINARY)
 endforeach()
 foreach(art center_background.jpg center_thumbs.deflate)
-  target_add_binary_data(${COMPONENT_LIB} "${CMAKE_CURRENT_LIST_DIR}/../assets/component-center/${art}" BINARY)
+  target_add_binary_data(${COMPONENT_LIB} "${PET_LAUNCHER_ASSETS}/${art}" BINARY)
 endforeach()
 execute_process(
   COMMAND "${PYTHON}" "${CMAKE_CURRENT_LIST_DIR}/../tools/compress_instrument_assets.py" "--check"

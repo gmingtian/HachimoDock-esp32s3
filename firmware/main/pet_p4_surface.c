@@ -1,4 +1,5 @@
 #include "pet_p4_surface.h"
+#include "pet_p4_image.h"
 #include <string.h>
 #include <math.h>
 #include "pet_p4_app_icons.h"
@@ -80,9 +81,9 @@ bool pet_surface_parse(const cJSON *json,pet_surface_t *out){
       if(strstr(a,".."))return false;
       if(!number(im,"frame_width",8,out->image_jpeg[i]?640:512,&v))return false;out->image_w[i]=v;
       if(!number(im,"frame_height",8,out->image_jpeg[i]?480:240,&v))return false;out->image_h[i]=v;
-      if(out->image_jpeg[i]&&(i!=0||out->image_w[i]!=640||out->image_h[i]!=480))return false;
+      if(out->image_jpeg[i]&&(i!=0||!pet_image_background_size(out->image_w[i],out->image_h[i])))return false;
       if(!number(im,"frames",1,1,&v)||!number(im,"fps",1,1,&v))return false;
-      if(!out->image_jpeg[i])pixels+=out->image_w[i]*out->image_h[i];if(pixels>98304)return false;
+      if(!out->image_jpeg[i])pixels+=out->image_w[i]*out->image_h[i];if(pixels>PET_IMAGE_INDEX_CAPACITY)return false;
       strcpy(out->image_ids[i],id->valuestring);out->image_count++;
     }
   }

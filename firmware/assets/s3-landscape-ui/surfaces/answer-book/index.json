@@ -1,0 +1,12 @@
+{
+  "bg": {
+    "encoded": "a4c55b7b08f0a74244bee8070f4b139dfc97529fb9f240622966f69849cc06b8",
+    "source": "bf9f28a77755194fd463a366c7e90cb7129944d44f47e0eb4ea6322a0bef17bb",
+    "spec": "cb1cca8701e7cd0c33f0c07896ae616bf5fec00c698561c8f5cb449dd341125c"
+  },
+  "type0": {
+    "encoded": "fa44555afc99b8841b429963d697614adfc5ab0e2f9deedb8b8eaa583b083642",
+    "source": "bfb28bfc1a1679b297ac02b41155542d8305e9b8b37c709a4d16bda5e33ba201",
+    "spec": "330edcf6bd59d1b15c3532d2ba62896e35d447293201dfaf32d4936e13932eff"
+  }
+}

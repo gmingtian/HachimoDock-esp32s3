@@ -43,6 +43,10 @@ def package(factory, app, output, upgrade_output=None, display_profile="square")
                  '仅刷应用包不会替换已有形象；本完整包写入 0x0 会替换配置和资源。\n'
                  '旧客户端仍按 240×180 转码，再次同步会替换预置高清形象。\n'
                  '待机极暗背景归黑，UI 布局保留；素材 15fps 不代表实机保证帧率。\n')
+        text += ('完整包另包含全部 25 个内置组件的横屏图片适配：原生背景、'
+                 '按实际尺寸重采样的图标/装饰/缩略图、精确 A8 字体图集和木鱼图层。\n'
+                 '保留原版布局和操作区域。仅更新应用不会替换设备已存组件图片；'
+                 '旧客户端重新安装组件可能换回原图片资源。\n')
     files = {'hachimodock-s3-factory.bin': full,
              '使用说明.txt': text.encode('utf-8-sig'),
              'licenses/LICENSE': (ROOT / 'LICENSE').read_bytes(),

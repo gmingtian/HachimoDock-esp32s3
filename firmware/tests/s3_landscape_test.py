@@ -35,6 +35,12 @@ int main(void) {
  assert(out[0]==0x1234 && out[size+1]==0xabcd);
 #if PET_S3_LANDSCAPE_LEFT
  for(int y=0;y<240;y++)for(int x=0;x<320;x++)assert(out[1+y*320+x]==src[y*2*640+x*2]);
+ uint16_t *native=malloc(320*240*2);
+ for(int i=0;i<320*240;i++)native[i]=(uint16_t)(i*31+7);
+ pet_s3_expand_2x(native,320,src,320,240);
+ assert(pet_s3_scale_rgb565(src,640,480,640,out+1,320,240));
+ for(int i=0;i<320*240;i++)assert(out[1+i]==native[i]);
+ free(native);
 #else
  assert(out[1]==0 && out[size]==0);
 #endif

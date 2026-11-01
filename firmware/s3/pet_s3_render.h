@@ -20,6 +20,17 @@
 
 typedef struct { int x, y, width, height; } pet_s3_rect_t;
 
+/* Restore the shared logical canvas from native artwork without filtering a
+ * second time. Final 1/2 presentation then reproduces every native pixel. */
+static inline void pet_s3_expand_2x(const uint16_t *src,int stride,uint16_t *dst,int width,int height) {
+  for(int y=0;y<height;y++){
+    uint16_t *row=dst+(size_t)y*2*width*2;
+    const uint16_t *in=src+(size_t)y*stride;
+    for(int x=0;x<width;x++)row[x*2]=row[x*2+1]=in[x];
+    memcpy(row+width*2,row,(size_t)width*2*sizeof(*row));
+  }
+}
+
 /* Integer aspect fit: every source edge is visible; never crop or rotate. */
 static inline bool pet_s3_fit_rect(int sw, int sh, int dw, int dh, pet_s3_rect_t *r) {
   if (!r || sw <= 0 || sh <= 0 || dw <= 0 || dh <= 0) return false;

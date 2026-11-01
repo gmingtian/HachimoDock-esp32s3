@@ -517,7 +517,11 @@ def build_builtin_component_tree(
         buttons_bytes, _ = compact_p4_component_json(
             widget_id, "buttons.json", buttons_path, buttons_max
         )
-        sprites = compile_component_sprites(package_dir, widget)
+        if component_config.get("surfaceCacheDir"):
+            cache_root = (project_dir / component_config["surfaceCacheDir"]).resolve()
+            sprites = compile_component_sprites(package_dir, widget, cache_root)
+        else:
+            sprites = compile_component_sprites(package_dir, widget)
         dashboard = widget.get("dashboard")
         title = dashboard.get("title") if isinstance(dashboard, dict) else None
         if not isinstance(title, str) or not title.strip():

@@ -1333,3 +1333,10 @@ existing 10 fps packs remain accepted at their original timing. The 320-frame,
 therefore last at most about 21.3 seconds. These are accepted asset limits,
 not measured display performance. Updating the application does not replace
 existing animation partitions; re-sync the appearance to install new assets.
+
+## Optional S3 landscape panel
+
+The `landscape-left` build keeps the 640×480 logical/wire canvas and reports
+320×240 physical dimensions. Control messages, asset limits, partitions and
+three-key gestures are unchanged. Its application version has the `-l320`
+suffix; square desktop-bundled firmware remains separate.

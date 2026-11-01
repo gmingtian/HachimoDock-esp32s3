@@ -49,7 +49,9 @@ def assemble_image(segments, output):
     temporary.write_bytes(result)
     temporary.replace(output)
 
-def build(build_dir, output, spiffsgen):
+def build(build_dir, output, spiffsgen, display_profile="square"):
+    if display_profile not in ("square", "landscape-left"):
+        raise ValueError("Unsupported S3 display profile")
     project = TOOLS.parent
     build_dir = Path(build_dir).resolve()
     config = s3_factory_config(json.loads((project / "factory-config.json").read_text()))
@@ -73,7 +75,8 @@ def build(build_dir, output, spiffsgen):
     assemble_image(segments, output)
     summary = {"target": "esp32s3", "projectName": "pet_manager_s3_runtime",
         "flashBytes": FLASH_BYTES, "psramBytes": 8 * 1024 * 1024,
-        "physicalDisplay": [240, 240], "appearancePackId": manifest["packId"],
+        "physicalDisplay": [320, 240] if display_profile == "landscape-left" else [240, 240],
+        "displayProfile": display_profile, "appearancePackId": manifest["packId"],
         "appearanceBytes": appearance["payloadBytes"],
         "componentCount": components["count"],
         "componentBytes": components["payloadBytes"],
@@ -89,5 +92,6 @@ if __name__ == "__main__":
     parser.add_argument("--build-dir", required=True)
     parser.add_argument("--output", required=True)
     parser.add_argument("--spiffsgen", required=True)
+    parser.add_argument("--display-profile", choices=("square", "landscape-left"), default="square")
     args = parser.parse_args()
-    print(json.dumps(build(args.build_dir, args.output, args.spiffsgen), indent=2))
+    print(json.dumps(build(args.build_dir, args.output, args.spiffsgen, args.display_profile), indent=2))

@@ -12,7 +12,7 @@ They support 15fps assets, re-encode all 16 default animation families, preserve
 Re-sync the appearance after updating firmware to replace existing animations.
 15fps describes the assets: one roughly ten-second sample on the 240×240 S3
 idle home screen measured about **3.15 submitted FPS**, not stable 15 FPS.
-The 240×320 display and joystick are not yet adapted. Matching installers for
+An optional [240×320 ST7789 landscape profile](docs/ESP32-S3-Landscape.md) uses a 320×240 output with the FPC on the left and the original UI at half scale. The square profile remains the default; joystick adaptation is still pending. Matching installers for
 all desktop platforms have not yet been released.
 
 

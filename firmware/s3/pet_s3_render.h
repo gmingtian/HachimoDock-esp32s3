@@ -5,8 +5,9 @@
 #include <stdint.h>
 #include <string.h>
 
-#define PET_S3_PANEL_WIDTH 240
-#define PET_S3_PANEL_HEIGHT 240
+#include "pet_s3_display.h"
+#define PET_S3_PANEL_WIDTH PET_S3_LCD_WIDTH
+#define PET_S3_PANEL_HEIGHT PET_S3_LCD_HEIGHT
 #define PET_S3_ASSET_MAX_WIDTH 240
 #define PET_S3_ASSET_MAX_HEIGHT 180
 #define PET_S3_ASSET_MAX_FPS 15

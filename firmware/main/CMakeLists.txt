@@ -149,3 +149,7 @@ endif()
 if(IDF_TARGET STREQUAL "esp32s3")
   set_source_files_properties(${PET_S3_SRCS} PROPERTIES COMPILE_OPTIONS "-Wno-misleading-indentation")
 endif()
+
+if(IDF_TARGET STREQUAL "esp32s3" AND PET_S3_DISPLAY_PROFILE STREQUAL "landscape-left")
+  target_compile_definitions(${COMPONENT_LIB} PRIVATE PET_S3_LANDSCAPE_LEFT=1)
+endif()

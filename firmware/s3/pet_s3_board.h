@@ -6,8 +6,7 @@
 #define PET_S3_LCD_DC 40
 #define PET_S3_LCD_CS 41
 #define PET_S3_LCD_BL 42
-#define PET_S3_LCD_WIDTH 240
-#define PET_S3_LCD_HEIGHT 240
+#include "pet_s3_display.h"
 #define PET_S3_MIC_WS 4
 #define PET_S3_MIC_BCLK 5
 #define PET_S3_MIC_DIN 6

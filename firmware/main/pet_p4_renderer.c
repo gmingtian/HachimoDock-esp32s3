@@ -5340,7 +5340,7 @@ esp_err_t pet_p4_renderer_render(
   }
   const char *page = view && view->page ? view->page : "main";
 #if CONFIG_IDF_TARGET_ESP32S3
-  const bool native_home=strcmp(page,"main")==0;
+  const bool native_home=PET_S3_NATIVE_HOME && strcmp(page,"main")==0;
 #else
   const bool native_home=false;
 #endif

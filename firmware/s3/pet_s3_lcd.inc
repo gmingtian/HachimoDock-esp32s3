@@ -1,4 +1,4 @@
-/* Native 240x240 ST7789 backend; callers retain ownership after a synchronous draw. */
+/* Profile-sized ST7789 backend; callers retain ownership after a synchronous draw. */
 #include "pet_p4_lcd.h"
 #include "pet_s3_board.h"
 #include <stdio.h>
@@ -57,8 +57,8 @@ esp_err_t pet_p4_lcd_init(void) {
   ESP_RETURN_ON_ERROR(esp_lcd_panel_reset(g_panel),TAG,"reset");
   ESP_RETURN_ON_ERROR(esp_lcd_panel_init(g_panel),TAG,"init");
   ESP_RETURN_ON_ERROR(esp_lcd_panel_invert_color(g_panel,true),TAG,"inversion");
-  ESP_RETURN_ON_ERROR(esp_lcd_panel_swap_xy(g_panel,false),TAG,"orientation");
-  ESP_RETURN_ON_ERROR(esp_lcd_panel_mirror(g_panel,false,false),TAG,"mirror");
+  ESP_RETURN_ON_ERROR(esp_lcd_panel_swap_xy(g_panel,PET_S3_LCD_SWAP_XY),TAG,"orientation");
+  ESP_RETURN_ON_ERROR(esp_lcd_panel_mirror(g_panel,PET_S3_LCD_MIRROR_X,PET_S3_LCD_MIRROR_Y),TAG,"mirror");
   return esp_lcd_panel_disp_on_off(g_panel,true);
 }
 esp_err_t pet_p4_lcd_reveal(void) {

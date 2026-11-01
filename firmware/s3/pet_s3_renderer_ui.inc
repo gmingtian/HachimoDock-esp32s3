@@ -31,10 +31,10 @@ static const char *s3_native_text_line(const char *text, int x, int y, int max_w
     if (bitmap) for (int gy=0; gy<glyph.box_h; ++gy) {
       for (int gx=0; gx<glyph.box_w; ++gx) {
         int px=x+glyph.ofs_x+gx,py=top+gy;
-        if (px<0||px>=240||py<0||py>=240)continue;
+        if (px<0||px>=PET_S3_PANEL_WIDTH||py<0||py>=PET_S3_PANEL_HEIGHT)continue;
         uint8_t alpha=glyph_alpha_at(bitmap,&glyph,gx,gy);
         if (alpha) {
-          uint16_t *pixel=g_native_framebuffer+py*240+px;
+          uint16_t *pixel=g_native_framebuffer+py*PET_S3_PANEL_WIDTH+px;
           *pixel=blend_rgb565(*pixel,((color>>11)&31)*255/31,((color>>5)&63)*255/63,(color&31)*255/31,alpha);
         }
       }
@@ -143,27 +143,27 @@ static void s3_native_home(const pet_p4_runtime_state_t *state,const pet_p4_view
 }
 static void s3_native_list_row(unsigned row, const char *text, bool selected) {
   const int y=35+(int)row*25;
-  if (selected) s3_native_rect(5,y,230,24,rgb565(115,65,38));
-  s3_native_text(text,10,y+2,218,selected?rgb565(255,244,218):rgb565(218,216,204));
+  if (selected) s3_native_rect(5,y,PET_S3_PANEL_WIDTH-10,24,rgb565(115,65,38));
+  s3_native_text(text,10,y+2,PET_S3_PANEL_WIDTH-22,selected?rgb565(255,244,218):rgb565(218,216,204));
 }
 static void s3_native_navigation(const char *page) {
   pet_s3_menu_view_t menu={0};
   bool has_menu=pet_s3_menu_snapshot(&menu);
   const uint16_t ink=rgb565(255,241,204),muted=rgb565(172,176,164);
   if (has_menu && menu.visible) {
-    s3_native_rect(0,0,240,240,rgb565(14,20,17));
-    s3_native_text(menu.title[0]?menu.title:"操作菜单",10,8,220,ink);
+    s3_native_rect(0,0,PET_S3_PANEL_WIDTH,PET_S3_PANEL_HEIGHT,rgb565(14,20,17));
+    s3_native_text(menu.title[0]?menu.title:"操作菜单",10,8,PET_S3_PANEL_WIDTH-20,ink);
     unsigned visible=menu.count>menu.first?menu.count-menu.first:0;
     if (visible>PET_S3_MENU_VISIBLE_ROWS)visible=PET_S3_MENU_VISIBLE_ROWS;
     for(unsigned i=0;i<visible;++i)s3_native_list_row(i,menu.rows[i],i+menu.first==menu.selected);
     s3_native_text("上一项 / 下一项 / 确认",10,218,220,muted);
     return;
   }
-  if (!strcmp(page,"components")) {
+  if (PET_S3_NATIVE_HOME && !strcmp(page,"components")) {
     size_t count=pet_p4_miniapp_catalog_count(),selected=pet_p4_miniapp_catalog_selected();
     if(selected>=count)selected=0;
     size_t first=selected/7*7;
-    s3_native_rect(0,0,240,240,rgb565(14,20,17));
+    s3_native_rect(0,0,PET_S3_PANEL_WIDTH,PET_S3_PANEL_HEIGHT,rgb565(14,20,17));
     char title[48];snprintf(title,sizeof(title),"组件中心 %u/%u",count?(unsigned)selected+1:0,(unsigned)count);
     s3_native_text(title,10,8,220,ink);
     for(size_t i=0;i<7&&first+i<count;++i) {
@@ -174,7 +174,9 @@ static void s3_native_navigation(const char *page) {
     if(!count)s3_native_text("还没有组件",10,65,220,ink);
     s3_native_text("上一项 / 下一项 / 确认",10,218,220,muted);
   } else if (has_menu && menu.pointer_visible) {
-    int x=menu.pointer_x*240/640,y=30+menu.pointer_y*180/480;
+    pet_s3_rect_t area;
+    if(!pet_s3_fit_rect(640,480,PET_S3_PANEL_WIDTH,PET_S3_PANEL_HEIGHT,&area))return;
+    int x=area.x+menu.pointer_x*area.width/640,y=area.y+menu.pointer_y*area.height/480;
     uint16_t color=menu.pointer_down?rgb565(255,110,70):rgb565(255,241,204);
     s3_native_rect(x-5,y,11,1,color);s3_native_rect(x,y-5,1,11,color);
   }

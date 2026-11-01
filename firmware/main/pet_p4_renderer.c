@@ -2748,8 +2748,8 @@ static void render_component_center_page(void) {
   const size_t start = selected / per_page * per_page;
   const size_t pages = (count + per_page - 1) / per_page;
 
-#if CONFIG_IDF_TARGET_ESP32S3
-  /* Native navigation is drawn after presentation; no P4 artwork cache needed. */
+#if CONFIG_IDF_TARGET_ESP32S3 && PET_S3_NATIVE_HOME
+  /* Only the square profile replaces this page with native navigation. */
   fill_rect(0,0,PET_P4_UI_WIDTH,PET_P4_UI_HEIGHT,background);
   return;
 #endif

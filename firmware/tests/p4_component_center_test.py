@@ -81,7 +81,7 @@ int main(int argc,char **argv){
 '''
 
 
-def run_renderer(preview=False):
+def run_renderer(preview=False, landscape=False):
     source = (ROOT / "main/pet_p4_renderer.c").read_text()
     renderer = "static void draw_component_icon" + source.split(
         "static void draw_component_icon", 1)[1].split("static void draw_connection_banner", 1)[0]
@@ -92,6 +92,8 @@ def run_renderer(preview=False):
     with tempfile.TemporaryDirectory() as tmp:
         code, binary = Path(tmp)/"cards.c", Path(tmp)/"cards"
         headers = '#include "pet_p4_center_layout.h"\n#include <stdbool.h>\n#include "../assets/component-center/catalog.h"\n'
+        if landscape:
+            headers += '#define CONFIG_IDF_TARGET_ESP32S3 1\n#define PET_S3_LANDSCAPE_LEFT 1\n#include "../s3/pet_s3_display.h"\n'
         code.write_text(headers + HARNESS + renderer + MAIN)
         subprocess.run(["cc", "-std=c11", "-Wall", "-Wextra", "-Werror", "-I", str(ROOT / "main"), str(code), "-o", str(binary)], check=True)
         return subprocess.check_output([str(binary)] + (["preview"] if preview else []), text=True)
@@ -99,6 +101,10 @@ def run_renderer(preview=False):
 
 def test_card_renderer_bounds_empty_single_partial_full_pages():
     run_renderer()
+
+
+def test_landscape_s3_renders_actual_component_cards():
+    run_renderer(landscape=True)
 
 
 def test_center_hit_targets_and_partial_page_navigation(tmp_path):

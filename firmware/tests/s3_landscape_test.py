@@ -16,7 +16,7 @@ def test_display_geometry_and_frame_edges(tmp_path, landscape):
 int main(void) {
 #if PET_S3_LANDSCAPE_LEFT
  assert(PET_S3_LCD_WIDTH==320 && PET_S3_LCD_HEIGHT==240);
- assert(PET_S3_LCD_SWAP_XY && !PET_S3_LCD_MIRROR_X && PET_S3_LCD_MIRROR_Y);
+ assert(PET_S3_LCD_SWAP_XY && PET_S3_LCD_MIRROR_X && !PET_S3_LCD_MIRROR_Y);
  assert(!PET_S3_NATIVE_HOME);
 #else
  assert(PET_S3_LCD_WIDTH==240 && PET_S3_LCD_HEIGHT==240);

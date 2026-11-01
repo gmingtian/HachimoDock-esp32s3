@@ -55,21 +55,21 @@ def minimal_sps(width=240, height=180):
     return b'\x67'+bytes(escaped)
 
 
-def rewrite_sps(stream):
+def rewrite_sps(stream, width=240, height=180):
     # Match the runtime's tinyh264 profile. Untrusted runtime streams are also
     # checked against this exact bounded SPS before a decoder is opened.
     parts=re.split(b'(\x00\x00\x00?\x01)',stream)
     found=False
     for i in range(2,len(parts),2):
         if parts[i] and parts[i][0]&31==7:
-            parts[i]=minimal_sps();found=True
+            parts[i]=minimal_sps(width,height);found=True
     if not found:raise ValueError('H264 has no SPS')
     return b''.join(parts)
 
 
 def validate_bounds(manifest, payload_bytes, slot_bytes=SLOT_BYTES):
-    if not 0 < manifest['width'] <= 240 or not 0 < manifest['height'] <= 180:
-        raise ValueError('S3 appearance must fit 240x180')
+    if not 0 < manifest['width'] <= 320 or not 0 < manifest['height'] <= 240:
+        raise ValueError('S3 appearance must fit 320x240')
     if not 0 < manifest['fps'] <= 15:
         raise ValueError('S3 appearance must be <=15 fps')
     for family in manifest['families']:
@@ -110,9 +110,13 @@ def run(ffmpeg, args):
     subprocess.run([ffmpeg,'-hide_banner','-loglevel','error','-nostdin','-y',*map(str,args)],check=True)
 
 
-def prepare(source, output, ffmpeg, fps=15, slot_bytes=SLOT_BYTES, app_data_dir=None):
+def prepare(source, output, ffmpeg, fps=15, slot_bytes=SLOT_BYTES, app_data_dir=None,
+            width=240, height=180, crf=30):
     source=Path(source).resolve();output=Path(output).resolve()
     if not 1 <= fps <= 15:raise ValueError('fps must be 1..15')
+    if not (0 < width <= 320 and 0 < height <= 240) or width % 2 or height % 2:
+        raise ValueError('dimensions must be even and fit 320x240')
+    if not 0 <= crf <= 51:raise ValueError('CRF must be 0..51')
     if source.is_file():
         source_manifest=json.loads(source.read_text());root=source.parent
     elif (source/'p4/manifest.json').exists():
@@ -129,7 +133,7 @@ def prepare(source, output, ffmpeg, fps=15, slot_bytes=SLOT_BYTES, app_data_dir=
     with tempfile.TemporaryDirectory(prefix='s3-assets-',dir=output.parent) as tmp:
         tmp=Path(tmp);(tmp/'p4/families').mkdir(parents=True)
         manifest={'format':'p4-h264-v1','packId':'','codec':'h264','container':'annex-b',
-                  'target':'esp32s3','width':240,'height':180,'fps':fps,'families':[]}
+                  'target':'esp32s3','width':width,'height':height,'fps':fps,'families':[]}
         files={}
         for index,family in enumerate(families):
             name=family.get('family')
@@ -138,14 +142,15 @@ def prepare(source, output, ffmpeg, fps=15, slot_bytes=SLOT_BYTES, app_data_dir=
             if not filename:raise ValueError('family requires sourceFile, video, source or path')
             src=safe_source(root,filename)
             dst=tmp/f'video-{index}.h264'
-            # 240x180 visible pixels, 240x192 coded macroblocks; single reference,
-            # constrained baseline and one slice match software decoder bounds.
+            # Single reference, constrained baseline and one slice match the
+            # bounded software decoder. Landscape is native 320x240; the old
+            # square profile retains its 240x180 assets.
             input_args=['-r',str(family.get('fps',source_manifest.get('fps',10)))] if src.suffix.lower()=='.h264' else []
-            run(ffmpeg,[*input_args,'-i',src,'-an','-vf',f'fps={fps},scale=240:180:force_original_aspect_ratio=decrease:force_divisible_by=2,pad=240:180:(ow-iw)/2:(oh-ih)/2,setsar=1',
+            run(ffmpeg,[*input_args,'-i',src,'-an','-vf',f'fps={fps},scale={width}:{height}:flags=lanczos:force_original_aspect_ratio=decrease:force_divisible_by=2,pad={width}:{height}:(ow-iw)/2:(oh-ih)/2,setsar=1',
                         '-frames:v',str(30*fps+1),'-c:v','libx264','-profile:v','baseline','-level:v','2.0','-pix_fmt','yuv420p',
-                        '-preset','medium','-tune','zerolatency','-crf','30','-refs','1','-bf','0','-x264-params','cabac=0:bframes=0:ref=1:weightp=0:scenecut=0:keyint=300:min-keyint=300:repeat-headers=1:aud=1:threads=1:sliced-threads=0',
+                        '-preset','medium','-tune','zerolatency','-crf',str(crf),'-refs','1','-bf','0','-x264-params','cabac=0:bframes=0:ref=1:weightp=0:scenecut=0:keyint=300:min-keyint=300:repeat-headers=1:aud=1:threads=1:sliced-threads=0',
                         '-f','h264',dst])
-            data=rewrite_sps(dst.read_bytes());dst.write_bytes(data);frames=frame_count(data)
+            data=rewrite_sps(dst.read_bytes(),width,height);dst.write_bytes(data);frames=frame_count(data)
             if frames > 30*fps:raise ValueError('S3 appearance video must not exceed 30 seconds; shorten the source explicitly')
             logical='p4/families/sha256-'+hashlib.sha256(data).hexdigest()[:24]+'.h264'
             target=tmp/logical;dst.replace(target);files[logical]=target
@@ -154,6 +159,10 @@ def prepare(source, output, ffmpeg, fps=15, slot_bytes=SLOT_BYTES, app_data_dir=
             # Preserve appearance cues; normalized mono PCM matches shared audio.
             audio=family.get('audioPath') or family.get('audioFile')
             if not audio and (root/(name+'.wav')).exists():audio=name+'.wav'
+            # Default system cues already live in firmware. Do not duplicate
+            # them in a pack; explicit custom appearance audio remains intact.
+            if source_manifest.get('systemCues') and family.get('audioSource') != 'custom':
+                audio=None
             if audio:
                 audio_src=safe_source(root,audio);audio_tmp=tmp/f'audio-{index}.wav'
                 run(ffmpeg,['-i',audio_src,'-vn','-ac','1','-ar','16000','-c:a','pcm_s16le','-f','wav',audio_tmp])
@@ -182,10 +191,14 @@ def main():
     parser.add_argument('--ffmpeg',default=os.environ.get('FFMPEG') or shutil.which('ffmpeg'))
     parser.add_argument('--app-data-dir',type=Path,help='Root for custom appearance videoPath/audioPath files')
     parser.add_argument('--fps',type=int,default=15)
+    parser.add_argument('--width',type=int,default=240)
+    parser.add_argument('--height',type=int,default=180)
+    parser.add_argument('--crf',type=int,default=30)
     parser.add_argument('--slot-bytes',type=int,default=SLOT_BYTES)
     args=parser.parse_args()
     if not args.ffmpeg:parser.error('FFmpeg with libx264 is required; set --ffmpeg or FFMPEG')
-    result=prepare(args.source,args.output,args.ffmpeg,args.fps,args.slot_bytes,args.app_data_dir)
+    result=prepare(args.source,args.output,args.ffmpeg,args.fps,args.slot_bytes,args.app_data_dir,
+                   args.width,args.height,args.crf)
     print(json.dumps({'target':result['target'],'packId':result['packId'],'families':len(result['families']),'output':str(args.output)}))
 
 

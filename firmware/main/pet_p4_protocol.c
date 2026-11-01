@@ -2011,8 +2011,8 @@ void pet_p4_send_hello(const pet_p4_runtime_state_t *state, pet_p4_send_line_fn 
 
 #if CONFIG_IDF_TARGET_ESP32S3
   cJSON_AddNumberToObject(appearance, "maxPackageBytes", 3 * 1024 * 1024);
-  cJSON_AddNumberToObject(appearance, "width", 240);
-  cJSON_AddNumberToObject(appearance, "height", 180);
+  cJSON_AddNumberToObject(appearance, "width", PET_S3_ASSET_MAX_WIDTH);
+  cJSON_AddNumberToObject(appearance, "height", PET_S3_ASSET_MAX_HEIGHT);
   cJSON_AddNumberToObject(appearance, "maxFps", PET_S3_ASSET_MAX_FPS);
   cJSON_AddBoolToObject(capabilities, "virtualPointer", true);
   cJSON_AddNumberToObject(controls, "sw1", 39);

@@ -55,10 +55,12 @@ def build(build_dir, output, spiffsgen, display_profile="square"):
     project = TOOLS.parent
     build_dir = Path(build_dir).resolve()
     config = s3_factory_config(json.loads((project / "factory-config.json").read_text()))
-    manifest = json.loads((project / "assets/s3-default/p4/manifest.json").read_text())
+    ready_root = "assets/s3-landscape-default" if display_profile == "landscape-left" else "assets/s3-default"
+    manifest = json.loads((project / ready_root / "p4/manifest.json").read_text())
     config["partitionFile"] = "partitions.s3.csv"
-    config["appearance"].update(width=240, height=180, fps=manifest["fps"],
-        readyRoot="assets/s3-default", readyProfile=f"s3-240x180-{manifest['fps']}fps",
+    width, height = manifest["width"], manifest["height"]
+    config["appearance"].update(width=width, height=height, fps=manifest["fps"],
+        readyRoot=ready_root, readyProfile=f"s3-{width}x{height}-{manifest['fps']}fps",
         packId=manifest["packId"])
     appearance = factory.build_default_appearance_tree(project, build_dir, config)
     components = factory.build_builtin_component_tree(project, config, appearance["tree"])
@@ -77,6 +79,7 @@ def build(build_dir, output, spiffsgen, display_profile="square"):
         "flashBytes": FLASH_BYTES, "psramBytes": 8 * 1024 * 1024,
         "physicalDisplay": [320, 240] if display_profile == "landscape-left" else [240, 240],
         "displayProfile": display_profile, "appearancePackId": manifest["packId"],
+        "appearanceResolution": [width, height],
         "appearanceBytes": appearance["payloadBytes"],
         "componentCount": components["count"],
         "componentBytes": components["payloadBytes"],

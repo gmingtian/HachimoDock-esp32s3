@@ -6,7 +6,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def test_aspect_fit_rgb565_and_resource_bounds(tmp_path):
+@pytest.mark.parametrize('landscape', [0, 1])
+def test_aspect_fit_rgb565_and_resource_bounds(tmp_path, landscape):
     harness = tmp_path / 'scale.c'
     harness.write_text(r'''
 #include <assert.h>
@@ -38,15 +39,19 @@ int main(void) {
   assert(!pet_s3_asset_bounds(240,180,16,100));
   assert(!pet_s3_asset_bounds(240,180,10,384*1024+1));
   assert(!pet_s3_asset_bounds(240,180,10,0));
+  assert(pet_s3_asset_bounds(320,240,15,100)==PET_S3_LANDSCAPE_LEFT);
+  assert(!pet_s3_asset_bounds(322,240,15,100));
+  assert(!pet_s3_asset_bounds(320,242,15,100));
   return 0;
 }
 ''')
     exe = tmp_path / 'scale'
-    subprocess.run(['cc', '-std=c11', '-Wall', '-Werror', '-fsanitize=undefined', '-I', str(ROOT/'s3'), str(harness), '-o', str(exe)], check=True)
+    subprocess.run(['cc', '-std=c11', '-Wall', '-Werror', '-fsanitize=undefined', f'-DPET_S3_LANDSCAPE_LEFT={landscape}', '-I', str(ROOT/'s3'), str(harness), '-o', str(exe)], check=True)
     subprocess.run([str(exe)], check=True)
 
 
-def test_s3_catalog_rejects_p4_resolution_fps_and_oversize(tmp_path):
+@pytest.mark.parametrize('landscape', [0, 1])
+def test_s3_catalog_rejects_p4_resolution_fps_and_oversize(tmp_path, landscape):
     (tmp_path/'esp_heap_caps.h').write_text('''#include <stdlib.h>
 #define MALLOC_CAP_SPIRAM 0
 #define MALLOC_CAP_8BIT 0
@@ -65,6 +70,8 @@ int main(void) {
   char s[512];
   snprintf(s,sizeof(s),format,240,180,10,393216);assert(pet_p4_asset_catalog_parse(c,s));
   snprintf(s,sizeof(s),format,640,480,10,100);assert(!pet_p4_asset_catalog_parse(c,s));
+  snprintf(s,sizeof(s),format,320,240,15,100);assert(pet_p4_asset_catalog_parse(c,s)==PET_S3_LANDSCAPE_LEFT);
+  snprintf(s,sizeof(s),format,322,240,15,100);assert(!pet_p4_asset_catalog_parse(c,s));
   snprintf(s,sizeof(s),format,240,180,15,100);assert(pet_p4_asset_catalog_parse(c,s));
   snprintf(s,sizeof(s),format,240,180,16,100);assert(!pet_p4_asset_catalog_parse(c,s));
   snprintf(s,sizeof(s),format,240,180,10,393217);assert(!pet_p4_asset_catalog_parse(c,s));
@@ -75,7 +82,7 @@ int main(void) {
 }
 ''')
     exe=tmp_path/'assets'
-    subprocess.run(['cc','-std=c11','-fsanitize=undefined','-DCONFIG_IDF_TARGET_ESP32S3=1','-I',str(tmp_path),'-I',str(ROOT/'main'),str(harness),str(ROOT/'main/pet_p4_assets.c'),'-o',str(exe)],check=True)
+    subprocess.run(['cc','-std=c11','-fsanitize=undefined','-DCONFIG_IDF_TARGET_ESP32S3=1',f'-DPET_S3_LANDSCAPE_LEFT={landscape}','-include',str(ROOT/'s3/pet_s3_display.h'),'-I',str(tmp_path),'-I',str(ROOT/'main'),str(harness),str(ROOT/'main/pet_p4_assets.c'),'-o',str(exe)],check=True)
     subprocess.run([str(exe)],check=True)
 
 
@@ -135,6 +142,47 @@ int main(void) {
     exe=tmp_path/'sps'
     subprocess.run(['cc','-std=c11','-Wall','-Werror','-I',str(ROOT/'s3'),str(harness),'-o',str(exe)],check=True)
     subprocess.run([str(exe)],check=True)
+
+
+def test_landscape_converter_uses_native_resolution_from_high_resolution_source(tmp_path):
+    import importlib.util
+    import json
+    import os
+    import shutil
+    ffmpeg = os.environ.get('FFMPEG') or shutil.which('ffmpeg')
+    if not ffmpeg:
+        pytest.skip('FFmpeg required')
+    spec = importlib.util.spec_from_file_location('s3_native_assets', ROOT/'tools/prepare_s3_assets.py')
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    source = tmp_path/'source'
+    source.mkdir()
+    subprocess.run([ffmpeg, '-hide_banner', '-loglevel', 'error', '-f', 'lavfi',
+                    '-i', 'testsrc2=s=640x480:r=15', '-frames:v', '15',
+                    '-c:v', 'libx264', str(source/'source.mp4')], check=True)
+    (source/'manifest.json').write_text(json.dumps({'families': [
+        {'family': 'idle', 'sourceFile': 'source.mp4'}]}))
+    output = tmp_path/'output'
+    manifest = mod.prepare(source, output, ffmpeg, width=320, height=240)
+    assert (manifest['width'], manifest['height'], manifest['fps']) == (320, 240, 15)
+    entry = manifest['families'][0]
+    assert entry['frames'] == 15
+    data = (output/entry['path']).read_bytes()
+    assert mod.minimal_sps(320, 240) in data
+    assert mod.minimal_sps(240, 180) not in data
+    mod.validate_bounds(manifest, len(data))
+    subprocess.run([ffmpeg, '-hide_banner', '-loglevel', 'error', '-i', str(output/entry['path']),
+                    '-f', 'null', '-'], check=True)
+    # The real runtime must accept the matching SPS before allocating a decoder.
+    harness = tmp_path/'sps320.c'
+    harness.write_text('#include <assert.h>\n#include "pet_s3_render.h"\nint main(void){\n'
+                       'const uint8_t sps[]={' + ','.join(map(str, mod.minimal_sps(320,240))) + '};\n'
+                       'assert(pet_s3_h264_sps_matches(sps,sizeof(sps),320,240));\n'
+                       'assert(!pet_s3_h264_sps_matches(sps,sizeof(sps),240,180));return 0;}\n')
+    exe = tmp_path/'sps320'
+    subprocess.run(['cc', '-std=c11', '-Wall', '-Werror', '-DPET_S3_LANDSCAPE_LEFT=1',
+                    '-I', str(ROOT/'s3'), str(harness), '-o', str(exe)], check=True)
+    subprocess.run([str(exe)], check=True)
 
 
 def test_converter_real_ffmpeg_preserves_annex_b_timing_and_pack_identity(tmp_path):
@@ -220,3 +268,13 @@ def test_converter_accepts_partial_desktop_manifest_and_preserves_custom_audio(t
     assert len(result['families'])==1
     assert result['families'][0]['family']=='done'
     assert result['families'][0]['audioSource']=='custom'
+    # System cue packs use firmware sounds, not inferred default WAV assets.
+    manifest['systemCues'] = True
+    (source/'manifest.json').write_text(json.dumps(manifest))
+    custom = mod.prepare(source,tmp_path/'custom-cues',ffmpeg,app_data_dir=data)
+    assert custom['families'][0]['audioSource']=='custom'
+    manifest['families'][0]['audioSource'] = 'default'
+    (source/'manifest.json').write_text(json.dumps(manifest))
+    system = mod.prepare(source,tmp_path/'system-cues',ffmpeg,app_data_dir=data)
+    assert system['systemCues'] is True
+    assert 'audioPath' not in system['families'][0]

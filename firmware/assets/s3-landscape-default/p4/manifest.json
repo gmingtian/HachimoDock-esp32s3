@@ -1,0 +1,157 @@
+{
+  "format": "p4-h264-v1",
+  "packId": "4c4ab96bb7952e7be2ca2b8d7f0d5194e920d42f717a2439d9cacaede4287ab0",
+  "codec": "h264",
+  "container": "annex-b",
+  "target": "esp32s3",
+  "width": 320,
+  "height": 240,
+  "fps": 15,
+  "families": [
+    {
+      "family": "done",
+      "path": "p4/families/sha256-69c2382b0d7efc78e2654c9d.h264",
+      "frames": 151,
+      "streamBytes": 125630,
+      "fps": 15,
+      "frameDurationMs": 67,
+      "durationMs": 10067
+    },
+    {
+      "family": "error",
+      "path": "p4/families/sha256-ab2121c6bec7073f6ad55c78.h264",
+      "frames": 227,
+      "streamBytes": 180398,
+      "fps": 15,
+      "frameDurationMs": 67,
+      "durationMs": 15134
+    },
+    {
+      "family": "idle.begging",
+      "path": "p4/families/sha256-cc8ff5f695b39890f1a2293b.h264",
+      "frames": 182,
+      "streamBytes": 151401,
+      "fps": 15,
+      "frameDurationMs": 67,
+      "durationMs": 12134
+    },
+    {
+      "family": "idle.daydreaming",
+      "path": "p4/families/sha256-cc7a7e7d6e4d47b4959b070b.h264",
+      "frames": 227,
+      "streamBytes": 193490,
+      "fps": 15,
+      "frameDurationMs": 67,
+      "durationMs": 15134
+    },
+    {
+      "family": "idle.eating",
+      "path": "p4/families/sha256-a83fda656d305c43d0c43e9f.h264",
+      "frames": 227,
+      "streamBytes": 190393,
+      "fps": 15,
+      "frameDurationMs": 67,
+      "durationMs": 15134
+    },
+    {
+      "family": "idle.playing",
+      "path": "p4/families/sha256-cf5b2f039cf80d50dce04869.h264",
+      "frames": 227,
+      "streamBytes": 226467,
+      "fps": 15,
+      "frameDurationMs": 67,
+      "durationMs": 15134
+    },
+    {
+      "family": "idle.reading",
+      "path": "p4/families/sha256-af8e530f4679091df8da9868.h264",
+      "frames": 212,
+      "streamBytes": 159028,
+      "fps": 15,
+      "frameDurationMs": 67,
+      "durationMs": 14134
+    },
+    {
+      "family": "idle.traveling",
+      "path": "p4/families/sha256-3b874de0a62dbcfed4093a60.h264",
+      "frames": 227,
+      "streamBytes": 193943,
+      "fps": 15,
+      "frameDurationMs": 67,
+      "durationMs": 15134
+    },
+    {
+      "family": "idle.wandering",
+      "path": "p4/families/sha256-6dd08910eb3225781857a722.h264",
+      "frames": 227,
+      "streamBytes": 174109,
+      "fps": 15,
+      "frameDurationMs": 67,
+      "durationMs": 15134
+    },
+    {
+      "family": "touch.lick",
+      "path": "p4/families/sha256-9b3dc84a405113a64650e4b8.h264",
+      "frames": 227,
+      "streamBytes": 207506,
+      "fps": 15,
+      "frameDurationMs": 67,
+      "durationMs": 15134
+    },
+    {
+      "family": "touch.what",
+      "path": "p4/families/sha256-71677c076f61b5e5e386a9fe.h264",
+      "frames": 227,
+      "streamBytes": 178958,
+      "fps": 15,
+      "frameDurationMs": 67,
+      "durationMs": 15134
+    },
+    {
+      "family": "waiting_user",
+      "path": "p4/families/sha256-8c11112a7b3862f1abe00705.h264",
+      "frames": 227,
+      "streamBytes": 164847,
+      "fps": 15,
+      "frameDurationMs": 67,
+      "durationMs": 15134
+    },
+    {
+      "family": "welcome",
+      "path": "p4/families/sha256-65a43265ce9ff75757c4d3e4.h264",
+      "frames": 227,
+      "streamBytes": 195039,
+      "fps": 15,
+      "frameDurationMs": 67,
+      "durationMs": 15134
+    },
+    {
+      "family": "working.browsing",
+      "path": "p4/families/sha256-1b78d5aae4a72cf1b242a869.h264",
+      "frames": 227,
+      "streamBytes": 193869,
+      "fps": 15,
+      "frameDurationMs": 67,
+      "durationMs": 15134
+    },
+    {
+      "family": "working.thinking",
+      "path": "p4/families/sha256-1cce4ac2b011c61650afe477.h264",
+      "frames": 197,
+      "streamBytes": 146084,
+      "fps": 15,
+      "frameDurationMs": 67,
+      "durationMs": 13134
+    },
+    {
+      "family": "working.typing",
+      "path": "p4/families/sha256-7bfec29b466d3a4b5ba16b70.h264",
+      "frames": 182,
+      "streamBytes": 162580,
+      "fps": 15,
+      "frameDurationMs": 67,
+      "durationMs": 12134
+    }
+  ],
+  "systemCues": true
+}

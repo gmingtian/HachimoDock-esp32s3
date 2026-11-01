@@ -32,12 +32,17 @@ def package(factory, app, output, upgrade_output=None, display_profile="square")
     base_version = version.removesuffix('-l320')
     if base_version.endswith(('-r1', '-r3', '-r4', '-r6')):
         text += "\nWi-Fi\n先通过 USB 连接客户端 0.1.168 或更新版本，在设备连接中配置 2.4GHz Wi-Fi，\n然后绑定此电脑，选择使用 Wi-Fi。两端需处于可互访局域网。\n设备记住显式选择；已有连接不被抢占，无线断线清理后尝试同板 USB。\n配网与清除操作使用 USB；首次完整刷机和 ROM 恢复仍使用 USB。\nS3 预置 25 个三键兼容组件，游戏保留贪吃蛇、双键接球和像素飞鸟。\nhttps://github.com/gmingtian/HachimoDock-esp32s3/blob/main/docs/WIFI.md\n"
-    if base_version.endswith('-r6'):
+    if base_version.endswith('-r6') and display_profile == 'square':
         text += '\n动画素材\n配合客户端 0.1.169 或更新版本，新转换的动画为 240×180、15fps。\n兼容旧 10fps 素材；已有设备升级应用后，需要重新同步形象才能使用 15fps 素材。\n每段上限 320 帧（15fps 时约 21.3 秒）、384KiB；形象槽仍为 3MiB。\n素材帧率不代表实机保证播放帧率。本版本仍使用现有 240×240 屏幕接线。\n'
     if display_profile == "landscape-left":
         text = text.replace("240×240 ST7789", "240×320 ST7789（320×240 横屏，正视屏幕时排线在左侧）")
         text = text.replace("本版本仍使用现有 240×240 屏幕接线。", "本版本使用 320×240 左排线横屏配置，GPIO 接线保持不变。")
         text += "\n横屏版本保留原版 640×480 UI 布局，等比例缩小至 320×240；三键操作菜单仍可使用。\n"
+        text += ('\n完整包预置 16 组 320×240 / 15fps 动画，由原始高清视频直接缩小编码，'
+                 '使用 Lanczos 和 CRF 27；兼容已有 240×180 形象。\n'
+                 '仅刷应用包不会替换已有形象；本完整包写入 0x0 会替换配置和资源。\n'
+                 '旧客户端仍按 240×180 转码，再次同步会替换预置高清形象。\n'
+                 '待机极暗背景归黑，UI 布局保留；素材 15fps 不代表实机保证帧率。\n')
     files = {'hachimodock-s3-factory.bin': full,
              '使用说明.txt': text.encode('utf-8-sig'),
              'licenses/LICENSE': (ROOT / 'LICENSE').read_bytes(),

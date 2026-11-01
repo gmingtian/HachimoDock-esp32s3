@@ -2173,7 +2173,8 @@ static void scale_h264_frame_cpu(
   int src_w,
   int src_h,
   int src_stride,
-  int storage_h
+  int storage_h,
+  bool clean_black
 ) {
   int dst_x;
   int dst_y;
@@ -2187,6 +2188,52 @@ static void scale_h264_frame_cpu(
   size_t storage_luma_bytes = (size_t) src_stride * (size_t) storage_h;
   const uint8_t *plane_u = plane_y + storage_luma_bytes;
   const uint8_t *plane_v = plane_u + storage_luma_bytes / 4U;
+#if CONFIG_IDF_TARGET_ESP32S3
+  /* Convert each sampled source pixel once. The bounded S3 picture is enlarged
+   * to 640x480 here before UI composition, so most destination pixels share
+   * both a source pixel and a source row. Preserve the exact old sampling and
+   * BT.709 arithmetic; do not trade color/detail for throughput. */
+  uint16_t source_x[PET_P4_UI_WIDTH];
+  for (int x = 0; x < dst_w; ++x) source_x[x] = x * src_w / dst_w;
+  clear_framebuffer_outside_rect(dst_x, dst_y, dst_w, dst_h);
+  int previous_sy = -1;
+  uint16_t *previous_row = NULL;
+  for (int y = 0; y < dst_h; ++y) {
+    int sy = y * src_h / dst_h;
+    uint16_t *target = g_framebuffer + (dst_y + y) * PET_P4_UI_WIDTH + dst_x;
+    if (sy == previous_sy) {
+      memcpy(target, previous_row, (size_t) dst_w * sizeof(*target));
+      continue;
+    }
+    const uint8_t *row_y = plane_y + sy * src_stride;
+    const uint8_t *row_u = plane_u + (sy / 2) * (src_stride / 2);
+    const uint8_t *row_v = plane_v + (sy / 2) * (src_stride / 2);
+    int previous_sx = -1;
+    uint16_t color = 0;
+    for (int x = 0; x < dst_w; ++x) {
+      int sx = source_x[x];
+      if (sx != previous_sx) {
+        int luma = (int) row_y[sx] - 16;
+        int u = (int) row_u[sx / 2] - 128;
+        int v = (int) row_v[sx / 2] - 128;
+        if (luma < 0) luma = 0;
+        int red = (298 * luma + 459 * v + 128) >> 8;
+        int green = (298 * luma - 55 * u - 136 * v + 128) >> 8;
+        int blue = (298 * luma + 541 * u + 128) >> 8;
+        color = rgb565(clamp_u8(red), clamp_u8(green), clamp_u8(blue));
+        /* Limited-range video compression leaves faint blocks around black
+         * idle artwork. Only neutral near-black output (<=12/255 per channel)
+         * is crushed, before UI overlays; all other colors stay bit-exact. */
+        if (clean_black && red <= 12 && green <= 12 && blue <= 12) color = 0;
+        previous_sx = sx;
+      }
+      target[x] = color;
+    }
+    previous_sy = sy;
+    previous_row = target;
+  }
+#else
+  (void) clean_black;
   memset(g_framebuffer, 0, PET_P4_UI_WIDTH * PET_P4_UI_HEIGHT * sizeof(uint16_t));
   for (int y = 0; y < dst_h; y += 1) {
     int sy = y * src_h / dst_h;
@@ -2203,6 +2250,7 @@ static void scale_h264_frame_cpu(
       target[x] = rgb565(clamp_u8(red), clamp_u8(green), clamp_u8(blue));
     }
   }
+#endif
 }
 
 static bool render_h264_asset_frame(
@@ -2292,13 +2340,16 @@ static bool render_h264_asset_frame(
     }
   }
   if (!converted) {
+    int64_t convert_started_us = esp_timer_get_time();
     scale_h264_frame_cpu(
       g_h264_output,
       asset->width,
       asset->height,
       i420_stride,
-      i420_storage_h
+      i420_storage_h,
+      !strcmp(asset->family, "idle") || !strncmp(asset->family, "idle.", 5)
     );
+    g_last_h264_convert_us += elapsed_us_clamped(convert_started_us, esp_timer_get_time());
   }
   if (!g_logged_h264_decoder) {
     ESP_LOGI(

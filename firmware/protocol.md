@@ -1,5 +1,14 @@
 # ESP-P4 USB Protocol
 
+## ESP32-S3 landscape appearance size
+
+The optional `landscape-left` profile advertises `capabilities.appearance.width=320`
+and `height=240`, matching its new bundled 320×240/15fps H264 pack. Its catalog and
+canonical SPS guards accept legacy 240×180 packs too, while retaining the 384KiB
+per-stream and 3MiB package limits. Square continues to advertise and accept up to
+240×180. Programs must use the advertised dimensions when producing native-size
+packs; existing clients that still encode 240×180 remain compatible.
+
 ## ESP32-S3 r4 boot and USB recovery
 
 S3 `0.7.103-s3-r4` preserves the r3 wire contract, partition layout and three-key

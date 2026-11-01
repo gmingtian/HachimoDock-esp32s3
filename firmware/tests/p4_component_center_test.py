@@ -49,6 +49,10 @@ static void draw_line(int x,int y,int x1,int y1,uint16_t c){
 }
 static int text_y_in_box(const char *t,int s,int y,int h){(void)t;return y+(h-16*s)/2;}
 static void text(const char *t,int x,int y,int max,uint16_t c,int s,const char *anchor){
+#if PET_S3_LANDSCAPE_LEFT
+ /* The 640x480 canvas is halved: every launcher label must retain >=16px em. */
+ assert(s>=2 || !strcmp(t,"已打开"));
+#endif
  assert(y>=0&&y+16*s<=480&&max>0&&s>0);assert(x>=0&&x<=640);
  if(preview)printf("[\"text\",%d,%d,%d,%d,%u,\"%s\",\"%s\"]\n",x,y,max,s,c,anchor,t);
 }
@@ -105,6 +109,13 @@ def test_card_renderer_bounds_empty_single_partial_full_pages():
 
 def test_landscape_s3_renders_actual_component_cards():
     run_renderer(landscape=True)
+
+
+def test_readable_landscape_preserves_all_card_icon_and_background_geometry():
+    def shapes(landscape):
+        return [json.loads(line) for line in run_renderer(True, landscape=landscape).splitlines()
+                if json.loads(line)[0] != "text"]
+    assert shapes(True) == shapes(False)
 
 
 def test_center_hit_targets_and_partial_page_navigation(tmp_path):

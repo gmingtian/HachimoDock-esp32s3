@@ -2753,21 +2753,31 @@ static void render_component_center_page(void) {
   fill_rect(0,0,PET_P4_UI_WIDTH,PET_P4_UI_HEIGHT,background);
   return;
 #endif
+#if CONFIG_IDF_TARGET_ESP32S3 && PET_S3_LANDSCAPE_LEFT
+  /* Two logical pixels per font pixel survive half-scale output without losing
+   * strokes. Keep the original card/icon/background geometry. */
+  const int detail_scale=2;
+  const bool readable_landscape=true;
+#else
+  const int detail_scale=1;
+  const bool readable_landscape=false;
+#endif
   center_art_prepare();
   if(center_background)memcpy(g_framebuffer,center_background,640*480*2);
   else fill_rect(0, 0, PET_P4_UI_WIDTH, PET_P4_UI_HEIGHT, background);
   draw_text_line("组件中心", 26, 14, 300, ink, 2, true);
-  draw_text_line("轻点打开 · 左右滑动翻页",26,54,440,muted,1,true);
+  draw_text_line(readable_landscape?"上下选择 · 确认打开":"轻点打开 · 左右滑动翻页",
+    26,readable_landscape?48:54,440,readable_landscape?ink:muted,detail_scale,true);
   char count_text[24];
-  snprintf(count_text, sizeof(count_text), "已安装 %u 个", (unsigned int) count);
+  snprintf(count_text, sizeof(count_text), readable_landscape?"%u 个":"已安装 %u 个", (unsigned int) count);
   fill_round_rect(474,22,142,30,15,panel);
-  draw_text_center(count_text,545,text_y_in_box(count_text,1,22,30),130,muted,1);
+  draw_text_center(count_text,545,text_y_in_box(count_text,detail_scale,22,30),130,readable_landscape?ink:muted,detail_scale);
 
   if (count == 0) {
     fill_round_rect(24, 86, 592, 306, 20, panel);
     draw_component_icon("", 298, 142, orange, selected_panel);
     draw_text_center("还没有组件", 320, 210, 536, ink, 2);
-    draw_text_center("在 PC 组件中心添加后，即可在这里打开", 320, 265, 536, muted, 1);
+    draw_text_center("在 PC 组件中心添加后，即可在这里打开", 320, 265, 536, readable_landscape?ink:muted, detail_scale);
   } else {
     size_t end = count < start + per_page ? count : start + per_page;
     for (size_t index = start; index < end; index += 1) {
@@ -2793,12 +2803,13 @@ static void render_component_center_page(void) {
       } else {
         char number[12];
         snprintf(number, sizeof(number), "%02u", (unsigned int)index+1);
-        draw_text_right(number, x+268, y+28, 48, card_muted, 1);
+        draw_text_right(number, x+268, y+28, 48, readable_landscape?card_ink:card_muted, detail_scale);
       }
       draw_text_line(
         item.title[0] ? item.title : item.widget_id, x+18, y+72, 252, card_ink, 2, true
       );
-      draw_text_line(component_card_caption(item.widget_id), x+18, y+116, 226, card_muted, 1, true);
+      draw_text_line(component_card_caption(item.widget_id), x+18, y+(readable_landscape?110:116), 226,
+        readable_landscape?card_ink:card_muted, detail_scale, true);
       if (focused) {
         draw_line(x+260, y+117, x+265, y+122, card_ink);
         draw_line(x+265, y+122, x+260, y+127, card_ink);
@@ -2813,7 +2824,9 @@ static void render_component_center_page(void) {
     }
   }
   fill_round_rect(24,435,592,34,14,panel);
-  draw_text_center("摇杆选择    确认键打开    全局键返回", 320, 444, 580, muted, 1);
+  const char *hint=readable_landscape?"上下选择  确认打开  长按上键返回":"摇杆选择    确认键打开    全局键返回";
+  draw_text_center(hint,320,readable_landscape?text_y_in_box(hint,detail_scale,435,34):444,
+    580,readable_landscape?ink:muted,detail_scale);
 }
 
 static void draw_connection_banner(

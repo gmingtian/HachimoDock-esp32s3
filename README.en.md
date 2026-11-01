@@ -6,7 +6,11 @@ An ESP32-S3, three-button adaptation of [YizhengWw/HachimoDock](https://github.c
 
 [简体中文](README.md) · [S3 downloads](https://github.com/gmingtian/HachimoDock-esp32s3/releases) · [Wiring and firmware](docs/ESP32-S3-Linux.md) · [Linux build](pc/docs/linux-native.md) · [Installation](docs/INSTALLATION.md) · [Upstream feature comparison](docs/FEATURE-COMPARISON.md) · [Compatibility](docs/COMPATIBILITY.md)
 
-Current source versions are firmware **0.7.103-s3-r6** and desktop **0.1.169**.
+Current source versions are landscape firmware **0.7.103-s3-r6-l320** and desktop **0.1.170**.
+The S3 client now uniformly prepares 320×240/15fps appearances and installs native
+artwork for all 25 bundled components. It no longer selects a square-screen profile;
+the older square firmware sources remain for later removal. Application-only firmware
+updates preserve existing artwork until appearances/components are synced again.
 They support 15fps assets, re-encode all 16 default animation families, preserve
 10fps compatibility and fix rounding when deriving an omitted duration.
 Re-sync the appearance after updating firmware to replace existing animations.
@@ -43,7 +47,7 @@ Hardware radio/latency/stability checks are still pending; previous releases hav
 - Chinese native menus and session bubbles, paginated text, three-button navigation and software pointer actions.
 - Shared pet animations, Agent session synchronization, 25 three-key-compatible factory components and configurable speech paths.
 - Desktop build support for Linux x86_64, Windows x64 and Apple-silicon macOS; installers are distributed through this fork's Releases.
-- Bounded S3 asset conversion to 240×180 at up to 15fps, chip-specific firmware validation and transactional resource updates.
+- Bounded S3 asset conversion to 320×240 at up to 15fps, chip-specific firmware validation and transactional resource updates.
 
 Current published S3 firmware: **0.7.103-s3-r1**. [S3 firmware and desktop clients](https://github.com/gmingtian/HachimoDock-esp32s3/releases) are available. Initial flashing requires the complete factory image at address `0x0`, not the application image. Preserve the old firmware for recovery.
 

@@ -1,5 +1,19 @@
 # 原生运行时依赖 / Native runtime dependencies
 
+客户端 0.1.170 统一为 S3 生成 320×240 / 15fps / CRF27 形象，不再选择方屏
+配置。标准 `firmware/esp32-s3/firmware.bin` 是横屏固件；P4 的芯片分流仍保留。
+安装包另含独立的 `s3-landscape-ui`，用于保持全部 25 个内置组件的原生图片。
+普通组件包仍先通过原校验；仅源文件与内置清单完全一致时替换设备图片，
+不会按相同组件 ID 覆盖用户修改的内容。
+
+原生构建的资源检查覆盖应用版本、固定固件摘要、组件资源清单和真实
+320×240 转换/解码。Windows 包自带转换器和独立 FFmpeg/x264，无需用户
+安装 Python。Linux 开发包仍依赖主机 Python3 和支持 libx264 的 FFmpeg。
+
+已有固件的一键升级版本比较暂按核心版本号执行；同核心版本的修订包
+需要从设备页手动选择固件镜像。应用升级只改程序，新的组件图片通过
+重新安装/修复组件发送，默认宠物也可重新同步；不会要求整片擦除配置。
+
 Node.js 使用对应系统/架构的官方可重定位发行包，通过 `PET_MANAGER_NODE_BIN` 指定可执行文件。不要使用依赖 Homebrew 动态库的 Node 构建打包分发。
 
 FFmpeg 为独立可执行文件。可从 HachimiDock **v0.1.167** 正常公开版安装包取得配套文件（在干净环境解包，先核对 Release 的 SHA-256）。macOS DMG 中位于 `HachimiDock.app/Contents/Resources/tools/`；Windows 安装目录位于 `tools/`。源码压缩包也作为该 Release 独立附件提供。不需要安装或启动客户端来构建源码。

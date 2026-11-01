@@ -52,6 +52,7 @@ jobs:
           key: s3-home-${{ runner.os }}-${{ matrix.target }}-${{ hashFiles('pc/src-tauri/Cargo.lock') }}-${{ github.sha }}
           restore-keys: |
             s3-home-${{ runner.os }}-${{ matrix.target }}-${{ hashFiles('pc/src-tauri/Cargo.lock') }}-
+            s3-home-${{ runner.os }}-${{ matrix.target }}-
       - name: Install native build dependencies
         run: |
           rustup toolchain install 1.95.0 --profile minimal
@@ -128,6 +129,9 @@ jobs:
         run: |
           if [ '${{ matrix.target }}' = windows ]; then
             export CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_RUNNER='python ../scripts/run-windows-tests.py'
+            export FFMPEG="$GITHUB_WORKSPACE/pc/src-tauri/generated-runtime/s3/s3-ffmpeg.exe"
+          else
+            export FFMPEG="$GITHUB_WORKSPACE/pc/src-tauri/generated-runtime/s3/s3-ffmpeg"
           fi
           cargo test --locked --release --target ${{ matrix.target == 'windows' && 'x86_64-pc-windows-msvc' || 'aarch64-apple-darwin' }} --lib s3_ -- --nocapture
           cargo test --locked --release --target ${{ matrix.target == 'windows' && 'x86_64-pc-windows-msvc' || 'aarch64-apple-darwin' }} --lib wifi_ -- --nocapture

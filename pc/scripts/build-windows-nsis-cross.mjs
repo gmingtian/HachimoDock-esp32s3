@@ -109,10 +109,15 @@ function nsiPath(path) {
 }
 
 assertPeExecutable(appExeSource, "HachimiDock Windows 主程序");
+const staticCheck = spawnSync('python3', [join(scriptDir, 'verify-preview-resources.py'), '--static-only'], {stdio:'inherit'});
+if (staticCheck.error || staticCheck.status !== 0) throw new Error('Desktop S3 static resource verification failed');
 const windowsNode = join(tauriRoot, "generated-runtime", "node.exe");
 assertPeExecutable(windowsNode, "Windows Node runtime");
 const windowsFfmpeg = join(tauriRoot, "generated-runtime", "ffmpeg.exe");
 assertPeExecutable(windowsFfmpeg, "Windows LGPL FFmpeg runtime");
+for (const executable of ['prepare-s3-assets.exe', 's3-ffmpeg.exe']) {
+  assertPeExecutable(join(tauriRoot, 'generated-runtime', 's3', executable), `Windows S3 ${executable}`);
+}
 const bundledFirmwareSource = join(
   tauriRoot,
   "firmware",
@@ -140,6 +145,12 @@ const v3Source = join(dirname(bundledFirmwareSource), "firmware-v3.bin");
 const v3Destination = join(dirname(bundledFirmwareDestination), "firmware-v3.bin");
 copyFileSync(v3Source, v3Destination);
 assertExactFileCopy(v3Source, v3Destination, "Windows 内置 P4 v3 固件");
+const s3Source = join(tauriRoot, 'firmware', 'esp32-s3', 'firmware.bin');
+const s3Destination = join(stageRoot, 'firmware', 'esp32-s3', 'firmware.bin');
+copyTree(s3Source, s3Destination);
+assertExactFileCopy(s3Source, s3Destination, 'Windows bundled S3 firmware');
+copyTree(join(repositoryRoot, 'firmware', 'assets', 's3-landscape-ui'), join(stageRoot, 's3-landscape-ui'));
+copyTree(join(tauriRoot, 'generated-runtime', 's3'), join(stageRoot, 'tools', 's3-runtime'));
 copyTree(join(refRoot, "dist", "terrier-clips"), join(stageRoot, "terrier-clips"));
 copyTree(
   join(refRoot, "builtin-clawpkgs"),
@@ -193,6 +204,7 @@ mkdirSync(join(stageRoot, "bridge", "runtime"), { recursive: true });
 copyFileSync(windowsNode, join(stageRoot, "bridge", "runtime", "node.exe"));
 mkdirSync(join(stageRoot, "tools"), { recursive: true });
 mkdirSync(join(stageRoot, "licenses"), { recursive: true });
+copyFileSync(join(tauriRoot, 'generated-runtime', 'node.LICENSE'), join(stageRoot, 'licenses', 'Node-LICENSE.txt'));
 copyFileSync(join(repositoryRoot, "THIRD_PARTY_NOTICES.md"), join(stageRoot, "THIRD_PARTY_NOTICES.md"));
 copyFileSync(join(repositoryRoot, "licenses", "Xiaomi-Miloco-LICENSE.md"), join(stageRoot, "licenses", "Xiaomi-Miloco-LICENSE.md"));
 copyFileSync(join(repositoryRoot, "licenses", "Espressif-ESP-SR-LICENSE.txt"), join(stageRoot, "licenses", "Espressif-ESP-SR-LICENSE.txt"));

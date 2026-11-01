@@ -415,6 +415,9 @@ function ensureBridgeDependencies() {
 }
 
 const target = requestedTarget(process.argv.slice(2), process.platform);
+const staticCheck = spawnSync(process.platform === 'win32' ? 'python' : 'python3',
+  [join(scriptDir, 'verify-preview-resources.py'), '--static-only'], {stdio:'inherit'});
+if (staticCheck.error || staticCheck.status !== 0) throw new Error('Desktop S3 static resource verification failed');
 const builtinsCheck = spawnSync(process.execPath, [join(scriptDir, 'sync-local-delights-builtins.mjs'), '--check'], {stdio:'inherit'});
 if (builtinsCheck.status !== 0) throw new Error('Built-in local-delights resources are stale');
 // Python validation may leave bytecode containing absolute build-machine paths.

@@ -116,6 +116,7 @@ mod wifi_discovery;
 mod wifi_commands;
 mod connection_policy;
 mod s3_components;
+mod s3_native_ui;
 mod voice_chat_settings;
 mod volcengine_asr;
 
@@ -6695,12 +6696,12 @@ async fn usb_update_bundled_firmware(
     let target = tauri::async_runtime::spawn_blocking(move || {
         chip_manager.firmware_chip_target(&chip_board_id)
     }).await.map_err(|error| error.to_string())??;
-    let firmware_path = bundled_p4_firmware_path(&app_handle, usb_serial::bundled_resource_for_chip(target))?;
-    let firmware_info = usb_serial::inspect_firmware_image(&firmware_path)?;
     let status = manager.status();
     if !status.connected || status.board_device_id != expected_board_device_id {
         return Err("connected USB board changed before bundled firmware update".to_string());
     }
+    let firmware_path = bundled_p4_firmware_path(&app_handle, usb_serial::bundled_resource_for_chip(target))?;
+    let firmware_info = usb_serial::inspect_firmware_image(&firmware_path)?;
     if !matches!(status.runtime.as_str(), "esp-p4" | "esp-s3") {
         return Err("bundled firmware update is only supported by ESP32-P4 / ESP32-S3".to_string());
     }
@@ -10215,6 +10216,12 @@ pub fn run() {
                 return Ok(());
             }
             desktop_window::fit(app.handle(),true);
+            let native_ui = app.path().resource_dir()?.join("s3-landscape-ui");
+            #[cfg(debug_assertions)]
+            let native_ui = if native_ui.is_dir() { native_ui } else {
+                PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../firmware/assets/s3-landscape-ui")
+            };
+            usb_for_auto.set_native_ui_root(native_ui);
             let bundled=app.path().resource_dir()?.join("builtin-clawpkgs");
             #[cfg(debug_assertions)]
             let bundled=if bundled.is_dir(){bundled}else{PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../builtin-clawpkgs")};

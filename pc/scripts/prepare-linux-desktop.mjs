@@ -5,6 +5,8 @@ import {fileURLToPath} from 'node:url';
 import {spawnSync} from 'node:child_process';
 if(process.platform!=='linux') throw new Error('Linux desktop preparation requires Linux');
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'..');
+const staticCheck=spawnSync('python3',[join(root,'scripts/verify-preview-resources.py'),'--static-only'],{stdio:'inherit'});
+if(staticCheck.error||staticCheck.status!==0)throw new Error('Desktop S3 static resource verification failed');
 const stage=join(root,'src-tauri/generated-runtime');
 mkdirSync(stage,{recursive:true});
 const node=process.env.PET_MANAGER_NODE_BIN||process.execPath;

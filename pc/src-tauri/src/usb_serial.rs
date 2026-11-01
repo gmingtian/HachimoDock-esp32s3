@@ -127,6 +127,10 @@ use widget_transaction::{
     WIDGET_DELETE_ACK_TIMEOUT,
 };
 
+pub(crate) fn prepare_native_widget_file(id: &str, bytes: &[u8]) -> Result<Vec<u8>, String> {
+    prepare_p4_widget_file(id, "runtime/widget.json", bytes)
+}
+
 use native_usb_protocol::{
     encode_native_usb_frame, next_native_usb_nonce, parse_native_usb_pong,
     select_native_usb_candidate, try_pop_native_usb_frame, NativeUsbCandidateIdentity,
@@ -1288,6 +1292,7 @@ pub struct UsbSerialManager {
     connection: Arc<Mutex<Option<UsbConnection>>>,
     status_snapshot: Arc<Mutex<UsbConnectionStatus>>,
     desktop_device_id: Arc<Mutex<String>>,
+    native_ui_root: Arc<Mutex<Option<PathBuf>>>,
     connect_guard: Arc<Mutex<()>>,
     asset_transfer_guard: Arc<Mutex<()>>,
     media_requests_pending: Arc<AtomicUsize>,
@@ -1371,6 +1376,7 @@ impl UsbSerialManager {
             connection: Arc::new(Mutex::new(None)),
             status_snapshot: Arc::new(Mutex::new(disconnected_usb_status())),
             desktop_device_id: Arc::new(Mutex::new(String::new())),
+            native_ui_root: Arc::new(Mutex::new(None)),
             connect_guard: Arc::new(Mutex::new(())),
             asset_transfer_guard: Arc::new(Mutex::new(())),
             media_requests_pending: Arc::new(AtomicUsize::new(0)),
@@ -1390,6 +1396,10 @@ impl UsbSerialManager {
         if let Ok(mut did) = self.desktop_device_id.lock() {
             *did = id.to_string();
         }
+    }
+
+    pub fn set_native_ui_root(&self, root: PathBuf) {
+        if let Ok(mut current) = self.native_ui_root.lock() { *current = Some(root); }
     }
 
     pub fn begin_appearance_sync(&self) -> Result<(), String> {
@@ -4159,7 +4169,21 @@ impl UsbSerialManager {
             .find(|(relative_path, _)| relative_path == "runtime/widget.json")
             .map(|(_, bytes)| bytes.as_slice())
             .ok_or_else(|| "component package is missing runtime/widget.json".to_string())?;
-        let compiled_sprites = prepare_p4_widget_sprite_files(widget_dir, widget_source)?;
+        let native_component = if crate::s3_native_ui::uses_native_ui(&status.runtime) {
+            let root = self.native_ui_root.lock().map_err(|e| e.to_string())?.clone()
+                .ok_or("横屏组件资源未配置，请重新安装新版客户端")?;
+            crate::s3_native_ui::prepare_native_component(&root, widget_id, widget_dir)?
+        } else { None };
+        let compiled_sprites = if let Some(native) = native_component {
+            for (path, bytes) in &mut entries {
+                if path == "runtime/widget.json" { *bytes = native.widget_bytes.clone(); }
+            }
+            native.sprites
+        } else {
+            prepare_p4_widget_sprite_files(widget_dir, widget_source)?
+        };
+        let widget_source = entries.iter().find(|(path,_)|path=="runtime/widget.json")
+            .map(|(_,bytes)|bytes.as_slice()).ok_or("组件缺少运行配置")?;
         let widget_definition: serde_json::Value = serde_json::from_slice(widget_source).map_err(|e| e.to_string())?;
         if widget_definition["scene"]["engine"] == "p4-touch-slice-v1" {
             let capabilities=self.status().capabilities;
@@ -4677,7 +4701,11 @@ impl UsbSerialManager {
         }
         let _ = app_data_dir;
         let assets = if board_status.runtime == "esp-s3" {
-            load_s3_appearance_pack(appearance_dir)?.0
+            let (assets, prepared) = load_s3_appearance_pack(appearance_dir)?;
+            if !prepared.profile.starts_with("s3-320x240-") {
+                return Err("形象尺寸与当前设备屏幕不匹配，请重新准备并同步形象".into());
+            }
+            assets
         } else {
             load_prepared_p4_appearance_pack(appearance_dir)?
         };
@@ -5390,8 +5418,9 @@ fn load_p4_pack_from_profile_root(
     let manifest: serde_json::Value = serde_json::from_slice(&manifest_bytes)
         .map_err(|error| format!("parse P4 ready manifest failed: {error}"))?;
     let s3 = manifest.get("target").and_then(|v| v.as_str()) == Some("esp32s3");
-    let width = if s3 { 240 } else { P4_APPEARANCE_WIDTH };
-    let height = if s3 { 180 } else { P4_APPEARANCE_HEIGHT };
+    let native_s3 = s3 && manifest["width"] == 320 && manifest["height"] == 240;
+    let width = if native_s3 { 320 } else if s3 { 240 } else { P4_APPEARANCE_WIDTH };
+    let height = if native_s3 { 240 } else if s3 { 180 } else { P4_APPEARANCE_HEIGHT };
     let max_frames = if s3 { 320 } else { P4_APPEARANCE_MAX_FRAMES };
     let fps = if s3 { 15 } else { P4_APPEARANCE_FPS };
     if manifest.get("format").and_then(|value| value.as_str()) != Some("p4-h264-v1")
@@ -5543,7 +5572,7 @@ fn load_p4_pack_from_profile_root(
     let mut summary = prepared_p4_summary(&assets, pack_id)?;
     if s3 {
         if summary.byte_count + 4096 + 3 * u64::from(summary.file_count) > 3 * 1024 * 1024 { return Err("S3 appearance exceeds 3 MiB slot including metadata".into()); }
-        summary.profile = format!("s3-240x180-{}fps", manifest["fps"].as_u64().unwrap());
+        summary.profile = format!("s3-{width}x{height}-{}fps", manifest["fps"].as_u64().unwrap());
     }
     Ok((assets, summary))
 }
@@ -5652,6 +5681,9 @@ pub fn prepare_s3_appearance(appearance_dir: &Path, app_data_dir: &Path, convert
         .arg("--app-data-dir").arg(app_data_dir)
         .arg("--output").arg(stage.path())
         .arg("--fps").arg("15")
+        .arg("--width").arg("320")
+        .arg("--height").arg("240")
+        .arg("--crf").arg("27")
         .arg("--ffmpeg").arg(ffmpeg).output().map_err(|e| {
             let runtime = if converter.extension().is_some_and(|extension| extension == "py") {
                 "Python3 S3 asset converter"
@@ -5662,6 +5694,10 @@ pub fn prepare_s3_appearance(appearance_dir: &Path, app_data_dir: &Path, convert
         })?;
     if !result.status.success() { return Err(format!("S3 asset conversion failed: {}", String::from_utf8_lossy(&result.stderr))); }
     let (_, summary) = load_p4_pack_from_profile_root(stage.path())?;
+    let expected_profile = "s3-320x240-15fps";
+    if summary.profile != expected_profile {
+        return Err(format!("S3 converter returned {} instead of {expected_profile}; existing pack preserved", summary.profile));
+    }
     let final_root = appearance_dir.join(S3_READY_DIR);
     let backup = appearance_dir.join(format!(".s3-backup-{}", uuid::Uuid::new_v4()));
     if final_root.exists() { std::fs::rename(&final_root, &backup).map_err(|e| e.to_string())?; }
@@ -7559,6 +7595,44 @@ mod tests {
         assert!(prepared.byte_count + 4096 + 3 * u64::from(prepared.file_count) <= 3 * 1024 * 1024);
         assert_eq!(prepared.file_count as usize, assets.len());
         assert!(assets.iter().filter(|a| a.kind == "p4-h264").count() >= 1);
+    }
+
+    #[test]
+    fn s3_native320_pack_uses_its_actual_sps_and_profile() {
+        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../firmware/assets/s3-landscape-default");
+        let (assets, prepared) = load_p4_pack_from_profile_root(&root).unwrap();
+        assert_eq!(prepared.profile, "s3-320x240-15fps");
+        assert_eq!(assets.iter().filter(|a| a.kind == "p4-h264").count(), 16);
+        assert!(prepared.byte_count + 4096 + 3 * u64::from(prepared.file_count) <= 3 * 1024 * 1024);
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn s3_native_conversion_uses_real_source_and_keeps_old_cache_on_failure() {
+        use std::os::unix::fs::PermissionsExt;
+        let Some(ffmpeg) = std::env::var_os("FFMPEG") else { return; };
+        let temp = tempfile::tempdir().unwrap();
+        let appearance = temp.path().join("custom-appearances/native");
+        std::fs::create_dir_all(&appearance).unwrap();
+        let video = appearance.join("source.mp4");
+        let encoded = std::process::Command::new(&ffmpeg)
+            .args(["-hide_banner","-loglevel","error","-f","lavfi","-i","testsrc2=s=640x480:r=15","-frames:v","3","-c:v","libx264"])
+            .arg(&video).output().unwrap();
+        assert!(encoded.status.success(),"{}",String::from_utf8_lossy(&encoded.stderr));
+        std::fs::write(appearance.join("manifest.json"),br#"{"families":[{"family":"idle","sourceFile":"custom-appearances/native/source.mp4"}]}"#).unwrap();
+        let converter = temp.path().join("prepare-s3-assets");
+        std::fs::copy(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../firmware/tools/prepare_s3_assets.py"),&converter).unwrap();
+        std::fs::set_permissions(&converter,std::fs::Permissions::from_mode(0o755)).unwrap();
+        std::os::unix::fs::symlink(&ffmpeg,temp.path().join("s3-ffmpeg")).unwrap();
+        let summary = prepare_s3_appearance(&appearance,temp.path(),&converter).unwrap();
+        assert_eq!(summary.profile,"s3-320x240-15fps");
+        let cached = appearance.join("s3-ready/p4/manifest.json");
+        let before = std::fs::read(&cached).unwrap();
+        let manifest: serde_json::Value = serde_json::from_slice(&before).unwrap();
+        assert_eq!(manifest["families"][0]["frames"],3);
+        std::fs::write(&converter,b"#!/bin/sh\nexit 1\n").unwrap();
+        assert!(prepare_s3_appearance(&appearance,temp.path(),&converter).is_err());
+        assert_eq!(std::fs::read(cached).unwrap(),before);
     }
 
     #[test]

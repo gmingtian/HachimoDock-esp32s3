@@ -57,6 +57,47 @@ class PreviewPreparationTests(unittest.TestCase):
         self.assertEqual(selected['ffmpeg.exe'], 'app/tools/ffmpeg.exe')
 
 class PreviewVerificationTests(unittest.TestCase):
+    def test_native_ui_inventory_checks_packaged_content_and_rejects_tampering(self):
+        verify = load('verify-preview-resources')
+        source = SCRIPTS.parents[1] / 'firmware/assets/s3-landscape-ui'
+        result = verify.validate_native_ui(source)
+        self.assertEqual((result['components'], result['cachedImages']), (25, 64))
+        with tempfile.TemporaryDirectory() as tmp:
+            destination = Path(tmp) / 's3-landscape-ui'
+            shutil.copytree(source, destination)
+            asset = destination / 'surfaces/answer-book/bg.p4i'
+            asset.write_bytes(asset.read_bytes() + b'changed')
+            with self.assertRaisesRegex(ValueError, 'SHA-256'):
+                verify.validate_native_ui(destination)
+            asset.unlink()
+            with self.assertRaisesRegex(ValueError, 'missing/unsafe'):
+                verify.validate_native_ui(destination)
+
+    def test_desktop_static_preflight_rejects_version_and_resource_map_drift(self):
+        verify = load('verify-preview-resources')
+        root = SCRIPTS.parents[1]
+        with tempfile.TemporaryDirectory() as tmp:
+            source = Path(tmp)
+            for logical in ('pc/package.json', 'pc/package-lock.json', 'pc/src-tauri/Cargo.toml',
+                            'pc/src-tauri/Cargo.lock', 'pc/src-tauri/tauri.conf.json',
+                            'pc/src-tauri/tauri.windows.conf.json', 'pc/src-tauri/tauri.macos.conf.json',
+                            'pc/src-tauri/tauri.linux.conf.json'):
+                destination = source / logical
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(root / logical, destination)
+            self.assertEqual(verify.validate_desktop_metadata(source), '0.1.170')
+            config_path = source / 'pc/src-tauri/tauri.conf.json'
+            config = json.loads(config_path.read_text())
+            config['version'] = '0.0.0'
+            config_path.write_text(json.dumps(config))
+            with self.assertRaisesRegex(ValueError, 'version mismatch'):
+                verify.validate_desktop_metadata(source)
+            config['version'] = '0.1.170'
+            del config['bundle']['resources']['../../firmware/assets/s3-landscape-ui']
+            config_path.write_text(json.dumps(config))
+            with self.assertRaisesRegex(ValueError, 'resource map'):
+                verify.validate_desktop_metadata(source)
+
     def test_missing_firmware_is_rejected(self):
         verify = load('verify-preview-resources')
         with tempfile.TemporaryDirectory() as tmp:
@@ -69,14 +110,14 @@ class PreviewVerificationTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'S3|chip'):
             verify.validate_firmware(firmware)
 
-    def test_checked_in_firmware_is_real_pinned_s3_r6(self):
+    def test_checked_in_firmware_is_real_pinned_s3_320_application(self):
         verify = load('verify-preview-resources')
         firmware = SCRIPTS.parents[1] / 'pc/src-tauri/firmware/esp32-s3/firmware.bin'
         result = verify.validate_firmware(firmware)
         self.assertEqual(result['chipId'], 9)
         self.assertEqual(result['projectName'], 'pet_manager_s3_runtime')
-        self.assertEqual(result['version'], '0.7.103-s3-r6')
-        self.assertEqual(result['sha256'], '38af56e2c53c5a64d1cace4fac2754a279fad26e3870a843c93c83e2f19819eb')
+        self.assertEqual(result['version'], '0.7.103-s3-r6-l320')
+        self.assertEqual(result['sha256'], '3c566489c96b5efae072d8383c87eb46333b9d28cdb53322813e9dc33a5e279d')
 
     def test_corrupt_s3_helper_source_is_rejected(self):
         verify = load('verify-preview-resources')
@@ -105,7 +146,7 @@ class PreviewVerificationTests(unittest.TestCase):
                 verify.validate_executable(path, 'windows')
 
     @unittest.skipUnless(os.environ.get('FFMPEG') or shutil.which('ffmpeg'), 'FFMPEG executable required for real conversion')
-    def test_real_conversion_has_canonical_sps_and_detects_manifest_tampering(self):
+    def test_legacy_tool_240_conversion_has_canonical_sps_and_detects_manifest_tampering(self):
         verify = load('verify-preview-resources')
         ffmpeg = os.environ.get('FFMPEG') or shutil.which('ffmpeg')
         root = SCRIPTS.parents[1]
@@ -121,7 +162,7 @@ class PreviewVerificationTests(unittest.TestCase):
                             '--source', str(source), '--output', str(output),
                             '--ffmpeg', ffmpeg], check=True, capture_output=True)
             manifest = json.loads((output / 'p4/manifest.json').read_text())
-            smoke = verify.validate_pack(manifest, output)
+            smoke = verify.validate_pack(manifest, output, width=240, height=180)
             self.assertEqual(manifest['fps'], 15)
             self.assertEqual(smoke['streams'][0]['frames'], 15)
             stream = output / smoke['streams'][0]['path']
@@ -132,10 +173,10 @@ class PreviewVerificationTests(unittest.TestCase):
             self.assertEqual(decoded.stat().st_size, 15 * 240 * 180 * 3 // 2)
             manifest['packId'] = '0' * 64
             with self.assertRaisesRegex(ValueError, 'packId'):
-                verify.validate_pack(manifest, output)
+                verify.validate_pack(manifest, output, width=240, height=180)
             stream.write_bytes(stream.read_bytes() + b'changed')
             with self.assertRaisesRegex(ValueError, 'SHA-256'):
-                verify.validate_pack(manifest, output)
+                verify.validate_pack(manifest, output, width=240, height=180)
 
     def test_rejects_fixture_manifest_target_substitution(self):
         verify = load('verify-preview-resources')
@@ -143,10 +184,38 @@ class PreviewVerificationTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'target'):
                 verify.validate_pack({'target':'esp32p4'}, Path(tmp))
 
+    @unittest.skipUnless(os.environ.get('FFMPEG') or shutil.which('ffmpeg'), 'FFMPEG executable required for real conversion')
+    def test_native_conversion_decodes_320x240_and_rejects_wrong_dimensions(self):
+        verify = load('verify-preview-resources')
+        ffmpeg = os.environ.get('FFMPEG') or shutil.which('ffmpeg')
+        root = SCRIPTS.parents[1]
+        with tempfile.TemporaryDirectory() as tmp:
+            temp = Path(tmp)
+            source = temp / 'input'; source.mkdir()
+            subprocess.run([ffmpeg, '-v', 'error', '-nostdin', '-y', '-i',
+                            str(root / 'pc/public/terrier-clips/welcome.mp4'),
+                            '-t', '1', '-an', '-c:v', 'libx264',
+                            str(source / 'fixture.mp4')], check=True)
+            output = temp / 'output'
+            subprocess.run([sys.executable, str(root / 'firmware/tools/prepare_s3_assets.py'),
+                            '--source', str(source), '--output', str(output),
+                            '--ffmpeg', ffmpeg, '--width', '320', '--height', '240',
+                            '--crf', '18'], check=True, capture_output=True)
+            manifest = json.loads((output / 'p4/manifest.json').read_text())
+            smoke = verify.validate_pack(manifest, output)
+            stream = output / smoke['streams'][0]['path']
+            decoded = temp / 'decoded.yuv'
+            subprocess.run([ffmpeg, '-v', 'error', '-xerror', '-nostdin', '-y',
+                            '-i', str(stream), '-pix_fmt', 'yuv420p', '-f', 'rawvideo',
+                            str(decoded)], check=True)
+            self.assertEqual(decoded.stat().st_size, 15 * 320 * 240 * 3 // 2)
+            with self.assertRaisesRegex(ValueError, 'width mismatch'):
+                verify.validate_pack(manifest, output, width=240, height=180)
+
     def test_rejects_fixture_manifest_path_escape(self):
         verify = load('verify-preview-resources')
         manifest = {'target':'esp32s3', 'format':'p4-h264-v1', 'codec':'h264',
-                    'container':'annex-b', 'width':240, 'height':180, 'fps':10,
+                    'container':'annex-b', 'width':320, 'height':240, 'fps':10,
                     'families':[{'path':'../../outside.h264', 'frames':1, 'streamBytes':10, 'fps':10}]}
         with tempfile.TemporaryDirectory() as tmp:
             with self.assertRaisesRegex(ValueError, 'path'):

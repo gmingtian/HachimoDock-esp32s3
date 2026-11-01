@@ -108,9 +108,13 @@ def main():
     shutil.copy2(ROOT/'docs/COMPATIBILITY.md',output/'兼容性说明.md')
     for name in ('LICENSE','THIRD_PARTY_NOTICES.md'):
         shutil.copy2(ROOT/name,output/name)
+    resource_manifest = json.loads((output / ('Windows-resource-manifest.json' if args.target == 'windows' else 'macOS-resource-manifest.json')).read_text(encoding='utf-8'))
     identity={'sourceCommit':subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip(),
+              'appVersion':resource_manifest['appVersion'],
               'target':args.target,'releaseChannel':'prerelease','signing':'unsigned' if args.target=='windows' else 'ad-hoc-not-notarized',
-              'firmware':'0.7.103-s3-r6','nativeStartupSeconds':10,'physicalBoardTested':False,
+              'firmware':resource_manifest['firmware']['version'],
+              'nativeUi':resource_manifest['nativeUi'],
+              'nativeStartupSeconds':10,'physicalBoardTested':False,
               'artifact':artifact.name,'bytes':artifact.stat().st_size,
               'sha256':hashlib.sha256(artifact.read_bytes()).hexdigest()}
     (output/(args.target+'-build.json')).write_text(json.dumps(identity,indent=2)+'\n',encoding='utf-8')

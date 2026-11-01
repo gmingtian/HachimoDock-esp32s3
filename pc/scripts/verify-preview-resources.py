@@ -18,7 +18,9 @@ import sys
 import tempfile
 
 ROOT = Path(__file__).resolve().parents[2]
-FIRMWARE_SHA = '38af56e2c53c5a64d1cace4fac2754a279fad26e3870a843c93c83e2f19819eb'
+FIRMWARE_VERSION = '0.7.103-s3-r6-l320'
+FIRMWARE_SHA = '3c566489c96b5efae072d8383c87eb46333b9d28cdb53322813e9dc33a5e279d'
+NATIVE_UI_INVENTORY_SHA = '0b7d0a687b0b172b09147eec1855298edc4f3223297c40e6e6145371a8483aa3'
 
 
 def sha256(path):
@@ -40,7 +42,7 @@ def validate_firmware(path):
         raise ValueError('S3 firmware app descriptor is missing')
     version = data[48:80].split(b'\0', 1)[0].decode('utf-8')
     project = data[80:112].split(b'\0', 1)[0].decode('utf-8')
-    if project != 'pet_manager_s3_runtime' or version != '0.7.103-s3-r6':
+    if project != 'pet_manager_s3_runtime' or version != FIRMWARE_VERSION:
         raise ValueError(f'S3 firmware identity mismatch: {project} {version}')
     actual = sha256(path)
     if actual != FIRMWARE_SHA:
@@ -91,10 +93,103 @@ def safe_pack_file(root, logical):
     return path
 
 
-def validate_pack(manifest, root):
+def validate_native_ui(root):
+    """Check the shipped native resources independently of repository sources."""
+    root = Path(root)
+    inventory_path = safe_pack_file(root, 'inventory.json')
+    if sha256(inventory_path) != NATIVE_UI_INVENTORY_SHA:
+        raise ValueError('Native UI inventory SHA-256 mismatch')
+    inventory = json.loads(inventory_path.read_text(encoding='utf-8'))
+    components = inventory.get('components', [])
+    if (inventory.get('format') != 's3-native-ui-v1' or inventory.get('display') != [320, 240]
+            or inventory.get('logicalCanvas') != [640, 480] or len(components) != 25
+            or len(set(components)) != 25):
+        raise ValueError('Native UI inventory profile mismatch')
+    files = {'inventory.json': inventory_path}
+    cached_images = 0
+    for logical, expected in inventory['files'].items():
+        path = safe_pack_file(root, logical)
+        if sha256(path) != expected:
+            raise ValueError(f'Native UI file SHA-256 mismatch: {logical}')
+        if path.suffix in ('.p4i', '.p4j'):
+            data = path.read_bytes()
+            magic = data[:4]
+            if (len(data) < 12 or len(data) > 100000 or magic not in (b'P4I1', b'P4I2', b'P4J1')
+                    or struct.unpack_from('<I', data, 8)[0] != len(data)):
+                raise ValueError(f'Native UI cached image header mismatch: {logical}')
+            width, height = data[4:6] if magic == b'P4I1' else struct.unpack_from('<HH', data, 4)
+            if not 0 < width <= 320 or not 0 < height <= 240:
+                raise ValueError(f'Native UI cached image dimensions mismatch: {logical}')
+            cached_images += 1
+        files[logical] = path
+    actual = set()
+    for path in root.rglob('*'):
+        if path.is_symlink():
+            raise ValueError(f'Native UI resource symlink is not portable: {path}')
+        if path.is_file():
+            actual.add(path.relative_to(root).as_posix())
+    if actual != set(files) or cached_images != 64:
+        raise ValueError('Native UI inventory does not cover every resource or cached image')
+    for component in components:
+        for suffix in ('component.json', 'buttons.json', 'runtime/widget.json'):
+            logical = f'packages/{component}/{suffix}'
+            if logical not in files:
+                raise ValueError(f'Native UI component metadata missing: {logical}')
+            json.loads(files[logical].read_text(encoding='utf-8'))
+        has_surfaces = any(name.startswith(f'surfaces/{component}/') for name in files)
+        if has_surfaces and f'surfaces/{component}/index.json' not in files:
+            raise ValueError(f'Native UI surface cache index missing: {component}')
+    return {'components': len(components), 'cachedImages': cached_images,
+            'inventorySha256': NATIVE_UI_INVENTORY_SHA,
+            'files': {logical: {'sha256': sha256(path), 'bytes': path.stat().st_size}
+                      for logical, path in sorted(files.items())}}
+
+
+def validate_desktop_metadata(root=ROOT):
+    root = Path(root)
+    pc = root / 'pc'
+    tauri = pc / 'src-tauri'
+    package = json.loads((pc / 'package.json').read_text(encoding='utf-8'))
+    lock = json.loads((pc / 'package-lock.json').read_text(encoding='utf-8'))
+    config = json.loads((tauri / 'tauri.conf.json').read_text(encoding='utf-8'))
+    version = package['version']
+    cargo = (tauri / 'Cargo.toml').read_text(encoding='utf-8')
+    cargo_lock = (tauri / 'Cargo.lock').read_text(encoding='utf-8')
+    cargo_version = re.search(r'(?m)^version = "([^"]+)"$', cargo)
+    lock_version = re.search(r'\[\[package\]\]\nname = "pet-manager-tauri"\nversion = "([^"]+)"', cargo_lock)
+    versions = [config.get('version'), lock.get('version'), lock.get('packages', {}).get('', {}).get('version'),
+                cargo_version.group(1) if cargo_version else None,
+                lock_version.group(1) if lock_version else None]
+    if not re.fullmatch(r'\d+\.\d+\.\d+', version) or any(value != version for value in versions):
+        raise ValueError('Desktop package/Cargo/Tauri version mismatch')
+    for target in ('windows', 'macos', 'linux'):
+        overlay = json.loads((tauri / f'tauri.{target}.conf.json').read_text(encoding='utf-8'))
+        resources = {**config['bundle']['resources'], **overlay['bundle']['resources']}
+        for source, destination in (
+                ('firmware/esp32-s3/firmware.bin', 'firmware/esp32-s3/firmware.bin'),
+                ('../../firmware/assets/s3-landscape-ui', 's3-landscape-ui')):
+            if resources.get(source) != destination:
+                raise ValueError(f'Desktop {target} resource map missing: {destination}')
+        if target == 'linux' and resources.get('../../firmware/tools/prepare_s3_assets.py') != 'tools/prepare_s3_assets.py':
+            raise ValueError('Desktop Linux resource map missing converter fallback')
+    return version
+
+
+def validate_static_resources():
+    version = validate_desktop_metadata()
+    firmware = validate_firmware(ROOT / 'pc/src-tauri/firmware/esp32-s3/firmware.bin')
+    native_ui = validate_native_ui(ROOT / 'firmware/assets/s3-landscape-ui')
+    native_ui.pop('files')
+    return {'appVersion':version, 'firmware':firmware, 'nativeUi':native_ui}
+
+
+def validate_pack(manifest, root, width=320, height=240):
+    canonical_sps = {(240, 180): '6742c01eda0f1979d0', (320, 240): '6742c01eda0507c4'}
+    if (width, height) not in canonical_sps:
+        raise ValueError('Unsupported fixture dimensions')
     if manifest.get('target') != 'esp32s3':
         raise ValueError('fixture manifest target must be esp32s3')
-    for key, expected in (('format','p4-h264-v1'), ('codec','h264'), ('container','annex-b'), ('width',240), ('height',180)):
+    for key, expected in (('format','p4-h264-v1'), ('codec','h264'), ('container','annex-b'), ('width',width), ('height',height)):
         if manifest.get(key) != expected:
             raise ValueError(f'fixture manifest {key} mismatch')
     fps = manifest.get('fps', 0)
@@ -114,9 +209,9 @@ def validate_pack(manifest, root):
             raise ValueError('fixture stream byte bounds mismatch')
         nals = [nal for nal in re.split(b'\x00\x00\x00?\x01', data) if nal]
         frames = [nal for nal in nals if nal[0] & 31 in (1,5)]
-        # Canonical SPS for 240x180 constrained-baseline tinyh264 profile,
+        # Canonical SPS for each constrained-baseline tinyh264 profile,
         # independently fixed here rather than accepting converter self-report.
-        expected_sps = bytes.fromhex('6742c01eda0f1979d0')
+        expected_sps = bytes.fromhex(canonical_sps[width, height])
         sps = [nal for nal in nals if nal[0] & 31 == 7]
         if not sps or any(nal != expected_sps for nal in sps):
             raise ValueError('fixture stream canonical SPS mismatch')
@@ -143,7 +238,8 @@ def validate_pack(manifest, root):
         digest.update(struct.pack('<Q', len(data))); digest.update(data)
     if manifest.get('packId') != digest.hexdigest():
         raise ValueError('fixture packId SHA-256 mismatch')
-    return {'target':'esp32s3', 'packId':digest.hexdigest(), 'streams':streams}
+    return {'target':'esp32s3', 'width':width, 'height':height,
+            'packId':digest.hexdigest(), 'streams':streams}
 
 
 def load_preparer():
@@ -261,10 +357,13 @@ def validate_node_notice(node, notice):
 
 
 def verify(target, tools, runtime, firmware, fixture, resource_root=None):
+    app_version = validate_desktop_metadata()
     suffix = '.exe' if target == 'windows' else ''
     converter = tools / ('prepare-s3-assets' + suffix)
     helper = tools / ('s3-ffmpeg' + suffix)
     firmware_info = validate_firmware(firmware)
+    native_ui_root = resource_root / 's3-landscape-ui' if resource_root else ROOT / 'firmware/assets/s3-landscape-ui'
+    native_ui = validate_native_ui(native_ui_root)
     validate_lgpl(runtime, target, installed=resource_root is not None)
     node = (resource_root / 'bridge/runtime' if resource_root else runtime) / ('node' + suffix)
     for binary in (converter, helper, node):
@@ -274,7 +373,7 @@ def verify(target, tools, runtime, firmware, fixture, resource_root=None):
     node_notice = resource_root / 'licenses/Node-LICENSE.txt' if resource_root else runtime / 'node.LICENSE'
     node_metadata = validate_node_notice(node, node_notice)
     help_text = run([converter, '--help']).stdout
-    if '--source' not in help_text or '--ffmpeg' not in help_text:
+    if any(flag not in help_text for flag in ('--source', '--ffmpeg', '--width', '--height', '--crf')):
         raise ValueError('standalone converter --help contract mismatch')
     version = run([helper, '-hide_banner', '-version']).stdout
     encoders = run([helper, '-hide_banner', '-encoders']).stdout
@@ -291,7 +390,8 @@ def verify(target, tools, runtime, firmware, fixture, resource_root=None):
              '-i', fixture, '-t', '1', '-an', '-c:v', 'libx264',
              '-pix_fmt', 'yuv420p', source / 'fixture.mp4'])
         output = temp / 'output'
-        run([converter, '--source', source, '--output', output, '--ffmpeg', helper])
+        run([converter, '--source', source, '--output', output, '--ffmpeg', helper,
+             '--width', 320, '--height', 240, '--crf', 18])
         manifest = json.loads((output / 'p4/manifest.json').read_text(encoding='utf-8'))
         smoke = validate_pack(manifest, output)
         for stream in smoke['streams']:
@@ -299,7 +399,7 @@ def verify(target, tools, runtime, firmware, fixture, resource_root=None):
             run([helper, '-hide_banner', '-loglevel', 'error', '-xerror',
                  '-nostdin', '-y', '-i', output / stream['path'], '-an',
                  '-pix_fmt', 'yuv420p', '-f', 'rawvideo', decoded])
-            if decoded.stat().st_size != stream['frames'] * 240 * 180 * 3 // 2:
+            if decoded.stat().st_size != stream['frames'] * 320 * 240 * 3 // 2:
                 raise ValueError('SPS-rewritten fixture decoded frame size/count mismatch')
             stream['decodedFrames'] = stream['frames']
     files = {}
@@ -327,21 +427,30 @@ def verify(target, tools, runtime, firmware, fixture, resource_root=None):
     files['bridge/runtime/' + node.name] = {'sha256':sha256(node), 'bytes':node.stat().st_size}
     files['licenses/Node-LICENSE.txt'] = {'sha256':sha256(node_notice), 'bytes':node_notice.stat().st_size}
     files['firmware/esp32-s3/firmware.bin'] = {'sha256':firmware_info['sha256'], 'bytes':firmware_info['bytes']}
-    return {'schemaVersion':1, 'target':target + ('-x64' if target == 'windows' else '-arm64'),
+    files.update({'s3-landscape-ui/' + logical: info for logical, info in native_ui.pop('files').items()})
+    return {'schemaVersion':2, 'appVersion':app_version, 'target':target + ('-x64' if target == 'windows' else '-arm64'),
             'upstreamRuntimeVersion':'0.1.167', 'firmware':firmware_info,
+            'nativeUi':native_ui,
             'nodeRuntime':node_metadata, 'converterRuntimeLicenses':converter_licenses,
-            'converterSmoke':smoke, 'files':dict(sorted(files.items()))}
+            'converterSmoke':smoke,
+            'files':dict(sorted(files.items()))}
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--target', required=True, choices=('windows', 'macos'))
+    parser.add_argument('--target', choices=('windows', 'macos'))
+    parser.add_argument('--static-only', action='store_true', help='Check versions, resource maps, S3 firmware and native UI without executing target binaries')
     parser.add_argument('--tools-dir', type=Path)
     parser.add_argument('--runtime-dir', type=Path, default=ROOT / 'pc/src-tauri/generated-runtime')
     parser.add_argument('--resource-root', type=Path, help='Extracted installed application resource root')
     parser.add_argument('--fixture', type=Path, default=ROOT / 'pc/public/terrier-clips/welcome.mp4')
     parser.add_argument('--manifest', type=Path, help='Manifest destination (outside installed resource tree)')
     args = parser.parse_args()
+    if args.static_only:
+        print(json.dumps(validate_static_resources(), indent=2))
+        return
+    if not args.target:
+        parser.error('--target is required unless --static-only is selected')
     host = {'win32':'windows', 'darwin':'macos'}.get(sys.platform)
     if host != args.target:
         parser.error('executable smoke verification must run on the native target host')

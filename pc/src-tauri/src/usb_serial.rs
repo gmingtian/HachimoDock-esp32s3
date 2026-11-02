@@ -7615,8 +7615,14 @@ mod tests {
         let appearance = temp.path().join("custom-appearances/native");
         std::fs::create_dir_all(&appearance).unwrap();
         let video = appearance.join("source.mp4");
+        // The packaged helper excludes avdevice/lavfi. Exercise the same real
+        // video input used by the standalone converter smoke test instead.
+        let fixture = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../public/terrier-clips/welcome.mp4");
         let encoded = std::process::Command::new(&ffmpeg)
-            .args(["-hide_banner","-loglevel","error","-f","lavfi","-i","testsrc2=s=640x480:r=15","-frames:v","3","-c:v","libx264"])
+            .args(["-hide_banner","-loglevel","error","-nostdin","-i"])
+            .arg(&fixture)
+            .args(["-r","15","-frames:v","3","-an","-c:v","libx264","-pix_fmt","yuv420p"])
             .arg(&video).output().unwrap();
         assert!(encoded.status.success(),"{}",String::from_utf8_lossy(&encoded.stderr));
         std::fs::write(appearance.join("manifest.json"),br#"{"families":[{"family":"idle","sourceFile":"custom-appearances/native/source.mp4"}]}"#).unwrap();

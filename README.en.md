@@ -1,6 +1,6 @@
 # HachimoDock-esp32s3
 
-An ESP32-S3, three-button adaptation of [YizhengWw/HachimoDock](https://github.com/YizhengWw/HachimoDock), retaining the existing N16R8 board, 240×240 ST7789 display, I2S microphone, MAX98357A speaker and GPIO wiring.
+An ESP32-S3, three-button adaptation of [YizhengWw/HachimoDock](https://github.com/YizhengWw/HachimoDock), retaining the N16R8 board and GPIO wiring with a 320×240 landscape ST7789 display, I2S microphone and MAX98357A speaker.
 
 **Attribution:** The original HachimoDock project is created by **Yizheng Wang ([@YizhengWw](https://github.com/YizhengWw))**. This modified repository is maintained by [gmingtian](https://github.com/gmingtian) for ESP32-S3 and Linux compatibility. It is not an official upstream release or endorsement. Original copyrights, the [project license](LICENSE) and [third-party notices](THIRD_PARTY_NOTICES.md) are retained.
 
@@ -16,8 +16,9 @@ They support 15fps assets, re-encode all 16 default animation families, preserve
 Re-sync the appearance after updating firmware to replace existing animations.
 15fps describes the assets: one roughly ten-second sample on the 240×240 S3
 idle home screen measured about **3.15 submitted FPS**, not stable 15 FPS.
-An optional [240×320 ST7789 landscape profile](docs/ESP32-S3-Landscape.md) uses a 320×240 output with the FPC on the left and the original UI at half scale. The square profile remains the default; joystick adaptation is still pending. Matching installers for
-all desktop platforms have not yet been released.
+The [240×320 ST7789 landscape profile](docs/ESP32-S3-Landscape.md) uses a 320×240 output with the FPC on the left and the original UI at half scale. This release selects landscape uniformly; the older square sources remain for later removal. Joystick adaptation is still pending.
+Download the matching Windows x64, macOS Apple Silicon and Linux x86_64 clients
+from [Desktop 0.1.170](https://github.com/gmingtian/HachimoDock-esp32s3/releases/tag/v0.1.170).
 
 
 S3 r1 / desktop 0.1.168 adds paired TLS Wi-Fi alongside USB. Provision and pair
@@ -43,7 +44,7 @@ Hardware radio/latency/stability checks are still pending; previous releases hav
 
 ## Adaptation scope
 
-- ESP32-S3 N16R8: 16MiB Flash, 8MiB PSRAM, 240×240 SPI display and buttons on GPIO39 / 38 / 0.
+- ESP32-S3 N16R8: 16MiB Flash, 8MiB PSRAM, 320×240 landscape SPI display and buttons on GPIO39 / 38 / 0.
 - Chinese native menus and session bubbles, paginated text, three-button navigation and software pointer actions.
 - Shared pet animations, Agent session synchronization, 25 three-key-compatible factory components and configurable speech paths.
 - Desktop build support for Linux x86_64, Windows x64 and Apple-silicon macOS; installers are distributed through this fork's Releases.

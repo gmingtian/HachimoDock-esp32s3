@@ -2,6 +2,9 @@
 
 HachimoDock-esp32s3 提供 Windows、macOS 和 Linux 客户端，配套 ESP32-S3 N16R8 三键固件。
 
+当前下载版本为客户端 **0.1.170**、固件 **0.7.103-s3-r6-l320**，三端统一
+面向 320×240 横屏。旧方屏源码暂留，不作为本次客户端的显示目标。
+
 ## 下载安装
 
 从[本仓库 Releases](https://github.com/gmingtian/HachimoDock-esp32s3/releases) 下载对应系统的文件。安装包和系统要求如下；具体文件以各版本附件为准。
@@ -11,8 +14,8 @@ HachimoDock-esp32s3 提供 Windows、macOS 和 Linux 客户端，配套 ESP32-S3
 | Windows | `HachimoDock-esp32s3_Windows-x64.exe` | x64 Windows；安装程序会准备 WebView2，首次安装可能需要联网 |
 | macOS | `HachimoDock-esp32s3_macOS-arm64.dmg` | Apple 芯片，macOS 12 或更高版本 |
 | Linux | `HachimoDock-esp32s3_Linux-x86_64.tar.gz` | x86_64、glibc ≥ 2.39，GTK3、WebKitGTK 4.1、ALSA、udev、OpenSSL 3 |
-| 首次刷机 | `HachimoDock-esp32s3_Firmware-r1.zip` | ESP32-S3 N16R8，240×240 ST7789 与指定 IO 接线 |
-| 应用升级（可选） | `HachimoDock-esp32s3_App-r1.bin` | 通过配套客户端升级已有 S3 应用 |
+| 首次刷机 | `HachimoDock-esp32s3_Firmware-320x240.zip` | ESP32-S3 N16R8，240×320 ST7789 横屏，正视排线在左侧，原 IO 接线 |
+| 应用升级（可选） | `HachimoDock-esp32s3_App-320x240.bin` | 通过配套客户端手动选择镜像升级已有 S3 应用 |
 
 Windows：运行安装程序，按向导完成安装。当前安装包未做商业代码签名。
 
@@ -25,7 +28,7 @@ Windows / macOS 包含 Node、媒体运行工具、S3 素材转换器以及对�
 ## 连接设备
 
 1. 使用支持数据传输的 USB 线连接设备与电脑。
-2. 启动客户端，在设备页选择 ESP32-S3 对应串口；连接信息应显示 S3、16MiB Flash、8MiB PSRAM 和 240×240 屏幕。
+2. 启动客户端，在设备页选择 ESP32-S3 对应串口；连接信息应显示 S3、16MiB Flash、8MiB PSRAM 和 320×240 物理屏幕。逻辑界面坐标仍为 640×480。
 3. 在 Agent 页面配置并选择要跟随的会话。设备会显示工作、等待、完成、错误等状态和多会话气泡。
 4. 在 API 设置中填写所需的语音、对话或形象生成服务凭据。macOS 的 Agent 输入框控制及麦克风使用需按提示授予相应系统权限。
 
@@ -43,20 +46,26 @@ Windows / macOS 包含 Node、媒体运行工具、S3 素材转换器以及对�
 
 ## 固件安装与恢复
 
-首次从小智改刷时，先保存原小智固件，再将固件 ZIP 内的 `hachimodock-s3-factory.bin` 从地址 `0x0` 写入。完整刷机会替换原固件及配置。应用分区镜像以 `HachimoDock-esp32s3_App-r1.bin` 单独提供，不能替代完整出厂镜像；官方 P4 镜像不适用于 S3。
+首次从小智改刷时，先保存原小智固件，再将固件 ZIP 内的 `hachimodock-s3-factory.bin` 从地址 `0x0` 写入。完整刷机会替换原固件、配置与资源。应用分区镜像以 `HachimoDock-esp32s3_App-320x240.bin` 单独提供，不能替代完整出厂镜像；官方 P4 镜像不适用于 S3。
+
+仅更新应用程序不会替换设备已有图片。使用新版客户端重新同步形象、安装或
+修复内置组件，可发送 320×240 动画和原生组件资源。默认形象含 16 组动画，
+组件含全部 25 个三键项目。已有同核心版本修订固件请手动选择应用镜像；
+串口直接刷应用前须确认活动 OTA 分区，应用镜像不能写入 `0x0`。
 
 固件 ZIP 根目录只包含 `hachimodock-s3-factory.bin`、`使用说明.txt`、`SHA256SUMS` 和 `licenses/`，日志、测试记录和开发元数据保留在源码与构建记录中。
 
 接线、分区与固件构建见 [ESP32-S3 适配说明](https://github.com/gmingtian/HachimoDock-esp32s3/blob/main/docs/ESP32-S3-Linux.md)。平台差异与硬件状态见 [兼容性说明](https://github.com/gmingtian/HachimoDock-esp32s3/blob/main/docs/COMPATIBILITY.md)。
 
-## Wi-Fi（S3 r1）
+## Wi-Fi
 
-客户端 0.1.168 在设备页面提供“设备连接”：先通过 USB 配置 2.4GHz 网络并
+客户端在设备页面提供“设备连接”：先通过 USB 配置 2.4GHz 网络并
 绑定此电脑，再选择“使用 Wi-Fi”。无线可使用现有 S3 运行时功能；首次刷机和
 ROM 恢复继续使用 USB。详细配网、优先级和恢复步骤见 [Wi-Fi 使用说明](WIFI.md)。
 
-## 当前 r1 的已知问题
+## 历史 r1 问题与验证范围
 
-此 r1 是发布编号重置，包含原 r4 的启动和 USB 修复。设备连上路由器后，
+历史 r1 是发布编号重置，包含原 r4 的启动和 USB 修复。设备连上路由器后，
 电脑仍需通过 USB 绑定再切换 Wi-Fi。部分 Windows 使用中，绑定被“资源或
-固件正在传输”拦截，原因尚待定位；不承诺无线绑定或重启后无线恢复已通过实机验收。
+固件正在传输”拦截。新版保留配网、绑定和双通道机制；跨端自动检查不等于
+已在所有硬件上验收无线绑定、重启恢复或持续帧率，具体以本版构建记录和实机结果为准。

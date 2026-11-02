@@ -1,0 +1,972 @@
+{
+  "revision": "A4",
+  "result": "PASS",
+  "boardSha256": "3ea5f653f6bf27bdb09c90290e1f22ae493803e0c346911ff89b9b5f40b8624e",
+  "codeSha256": {
+    "pet_s3_board.h": "18c580d0dbca074ef80d06a2fccc1c33ce375b39d6d97d4285cf3e447814c4d7",
+    "pet_s3_audio_codec.h": "7eefa6f7187408a8e3bfbfbb9a17a5e975f7c248951cf46b101ae8a9cc2be856",
+    "pet_s3_input_task.inc": "27f227b38fcb13d75799a80bac22f7b32e33b4cdb50779362e6f010c8d52ce38",
+    "pet_s3_lcd.inc": "23f5b0f5fe1682d155dbfec9a4bb759a5214f1f6d2536ca1b81b360ccbc13e06"
+  },
+  "designSha256": "c99cb1041a49082fe1eb45d4825c697bb40f3f2109292dac8e39d847eaaa322e",
+  "allNativePadPositionsVerified": true,
+  "filledGroundLayers": [
+    "F.Cu",
+    "B.Cu"
+  ],
+  "nativeAntennaKeepoutVerified": true,
+  "existingFirmwareSignalsVerified": [
+    {
+      "codeDefine": "PET_S3_LCD_CLK",
+      "gpio": 21,
+      "devkitPin": "39",
+      "terminal": "J1.3",
+      "nativePadNetVerified": true
+    },
+    {
+      "codeDefine": "PET_S3_LCD_MOSI",
+      "gpio": 47,
+      "devkitPin": "38",
+      "terminal": "J1.4",
+      "nativePadNetVerified": true
+    },
+    {
+      "codeDefine": "PET_S3_LCD_RST",
+      "gpio": 45,
+      "devkitPin": "36",
+      "terminal": "J1.5",
+      "nativePadNetVerified": true
+    },
+    {
+      "codeDefine": "PET_S3_LCD_DC",
+      "gpio": 40,
+      "devkitPin": "29",
+      "terminal": "J1.6",
+      "nativePadNetVerified": true
+    },
+    {
+      "codeDefine": "PET_S3_LCD_CS",
+      "gpio": 41,
+      "devkitPin": "28",
+      "terminal": "J1.7",
+      "nativePadNetVerified": true
+    },
+    {
+      "codeDefine": "PET_S3_LCD_BL",
+      "gpio": 42,
+      "devkitPin": "27",
+      "terminal": "J1.8",
+      "nativePadNetVerified": true
+    },
+    {
+      "codeDefine": "PET_S3_MIC_WS",
+      "gpio": 4,
+      "devkitPin": "4",
+      "terminal": "U3.5",
+      "nativePadNetVerified": true
+    },
+    {
+      "codeDefine": "PET_S3_MIC_BCLK",
+      "gpio": 5,
+      "devkitPin": "5",
+      "terminal": "U3.6",
+      "nativePadNetVerified": true
+    },
+    {
+      "codeDefine": "PET_S3_MIC_DIN",
+      "gpio": 6,
+      "devkitPin": "6",
+      "terminal": "U3.3",
+      "nativePadNetVerified": true
+    },
+    {
+      "codeDefine": "PET_S3_SPEAKER_DOUT",
+      "gpio": 7,
+      "devkitPin": "7",
+      "terminal": "U2.5",
+      "nativePadNetVerified": true
+    },
+    {
+      "codeDefine": "PET_S3_SPEAKER_BCLK",
+      "gpio": 15,
+      "devkitPin": "8",
+      "terminal": "U2.6",
+      "nativePadNetVerified": true
+    },
+    {
+      "codeDefine": "PET_S3_SPEAKER_WS",
+      "gpio": 16,
+      "devkitPin": "9",
+      "terminal": "U2.7",
+      "nativePadNetVerified": true
+    },
+    {
+      "codeDefine": "PET_S3_PREVIOUS_GPIO",
+      "gpio": 39,
+      "devkitPin": "30",
+      "terminal": "SW1.1",
+      "nativePadNetVerified": true
+    },
+    {
+      "codeDefine": "PET_S3_NEXT_GPIO",
+      "gpio": 38,
+      "devkitPin": "31",
+      "terminal": "SW2.1",
+      "nativePadNetVerified": true
+    },
+    {
+      "codeDefine": "PET_S3_CONFIRM_GPIO",
+      "gpio": 0,
+      "devkitPin": "35",
+      "terminal": "SW3.1",
+      "nativePadNetVerified": true
+    }
+  ],
+  "powerPadMappingsVerified": {
+    "+3V3": [
+      [
+        "U1",
+        "2"
+      ],
+      [
+        "U1",
+        "21"
+      ],
+      [
+        "U2",
+        "1"
+      ],
+      [
+        "U2",
+        "3"
+      ],
+      [
+        "U3",
+        "2"
+      ],
+      [
+        "J1",
+        "2"
+      ],
+      [
+        "JS1",
+        "A1"
+      ],
+      [
+        "JS1",
+        "B3"
+      ],
+      [
+        "JP1",
+        "1"
+      ]
+    ],
+    "+5V": [
+      [
+        "U1",
+        "42"
+      ]
+    ],
+    "GND": [
+      [
+        "U1",
+        "1"
+      ],
+      [
+        "U1",
+        "22"
+      ],
+      [
+        "U2",
+        "2"
+      ],
+      [
+        "U3",
+        "1"
+      ],
+      [
+        "U3",
+        "4"
+      ],
+      [
+        "J1",
+        "1"
+      ],
+      [
+        "SW1",
+        "2"
+      ],
+      [
+        "SW2",
+        "2"
+      ],
+      [
+        "SW3",
+        "2"
+      ],
+      [
+        "JS1",
+        "A3"
+      ],
+      [
+        "JS1",
+        "B1"
+      ],
+      [
+        "JP1",
+        "3"
+      ],
+      [
+        "JS1",
+        "A"
+      ],
+      [
+        "JS1",
+        "C"
+      ],
+      [
+        "JS1",
+        "0"
+      ],
+      [
+        "JS1",
+        "0"
+      ],
+      [
+        "JS1",
+        "0"
+      ],
+      [
+        "JS1",
+        "0"
+      ]
+    ]
+  },
+  "micChannel": "left; LR grounded",
+  "keys": "active-low with firmware internal pull-ups",
+  "joystick": "GPIO1/2/8 reserved only; current S3 code does not initialize joystick",
+  "amplifierSupply": "3V3; confirmed by user; SD tied to 3V3; GAIN through JP1",
+  "gainSelector": {
+    "nativePinOrderVerified": true,
+    "pins": {
+      "1": "+3V3",
+      "2": "AMP_GAIN",
+      "3": "GND"
+    },
+    "singleShuntModesDb": {
+      "1-2": 6,
+      "open": 9,
+      "2-3": 12
+    },
+    "moduleGainStrappingVerified": false
+  },
+  "socketHoles": "U1/U2/U3 finished-hole design diameter 1.2mm",
+  "manufacturingReady": false,
+  "microphoneMounting": "Label side outward, pre-soldered long pins down; user photo checked",
+  "screenConnectorOrder": [
+    "GND",
+    "VCC",
+    "SCL",
+    "SDA",
+    "RES",
+    "DC",
+    "CS",
+    "BLK"
+  ],
+  "unverified": [
+    "actual socket/module heights",
+    "Unvision screen outline and BL current",
+    "USB connector face and enclosure alignment",
+    "sustained load/thermal and Wi-Fi tests on fabricated PCB"
+  ],
+  "nativeElectricalPads": [
+    {
+      "ref": "U2",
+      "pin": "1",
+      "net": "+3V3",
+      "x": 4.5,
+      "y": 48.0,
+      "drill": 1.2
+    },
+    {
+      "ref": "U2",
+      "pin": "2",
+      "net": "GND",
+      "x": 4.5,
+      "y": 45.46,
+      "drill": 1.2
+    },
+    {
+      "ref": "U2",
+      "pin": "3",
+      "net": "+3V3",
+      "x": 4.5,
+      "y": 42.92,
+      "drill": 1.2
+    },
+    {
+      "ref": "U2",
+      "pin": "4",
+      "net": "AMP_GAIN",
+      "x": 4.5,
+      "y": 40.38,
+      "drill": 1.2
+    },
+    {
+      "ref": "U2",
+      "pin": "5",
+      "net": "GPIO7",
+      "x": 4.5,
+      "y": 37.84,
+      "drill": 1.2
+    },
+    {
+      "ref": "U2",
+      "pin": "6",
+      "net": "GPIO15",
+      "x": 4.5,
+      "y": 35.3,
+      "drill": 1.2
+    },
+    {
+      "ref": "U2",
+      "pin": "7",
+      "net": "GPIO16",
+      "x": 4.5,
+      "y": 32.76,
+      "drill": 1.2
+    },
+    {
+      "ref": "SW2",
+      "pin": "1",
+      "net": "GPIO38",
+      "x": 22.660292,
+      "y": 56.881177,
+      "drill": 1.599997
+    },
+    {
+      "ref": "SW2",
+      "pin": "2",
+      "net": "GND",
+      "x": 29.010292,
+      "y": 54.341177,
+      "drill": 1.599997
+    },
+    {
+      "ref": "JP1",
+      "pin": "1",
+      "net": "+3V3",
+      "x": 28.0,
+      "y": 39.0,
+      "drill": 1.0
+    },
+    {
+      "ref": "JP1",
+      "pin": "2",
+      "net": "AMP_GAIN",
+      "x": 28.0,
+      "y": 41.54,
+      "drill": 1.0
+    },
+    {
+      "ref": "JP1",
+      "pin": "3",
+      "net": "GND",
+      "x": 28.0,
+      "y": 44.08,
+      "drill": 1.0
+    },
+    {
+      "ref": "U1",
+      "pin": "1",
+      "net": "GND",
+      "x": 57.73,
+      "y": 2.294,
+      "drill": 1.2
+    },
+    {
+      "ref": "U1",
+      "pin": "2",
+      "net": "+3V3",
+      "x": 55.19,
+      "y": 2.294,
+      "drill": 1.2
+    },
+    {
+      "ref": "U1",
+      "pin": "3",
+      "net": "",
+      "x": 52.65,
+      "y": 2.294,
+      "drill": 1.2
+    },
+    {
+      "ref": "U1",
+      "pin": "4",
+      "net": "GPIO4",
+      "x": 50.11,
+      "y": 2.294,
+      "drill": 1.2
+    },
+    {
+      "ref": "U1",
+      "pin": "5",
+      "net": "GPIO5",
+      "x": 47.57,
+      "y": 2.294,
+      "drill": 1.2
+    },
+    {
+      "ref": "U1",
+      "pin": "6",
+      "net": "GPIO6",
+      "x": 45.03,
+      "y": 2.294,
+      "drill": 1.2
+    },
+    {
+      "ref": "U1",
+      "pin": "7",
+      "net": "GPIO7",
+      "x": 42.49,
+      "y": 2.294,
+      "drill": 1.2
+    },
+    {
+      "ref": "U1",
+      "pin": "8",
+      "net": "GPIO15",
+      "x": 39.95,
+      "y": 2.294,
+      "drill": 1.2
+    },
+    {
+      "ref": "U1",
+      "pin": "9",
+      "net": "GPIO16",
+      "x": 37.41,
+      "y": 2.294,
+      "drill": 1.2
+    },
+    {
+      "ref": "U1",
+      "pin": "10",
+      "net": "",
+      "x": 34.87,
+      "y": 2.294,
+      "drill": 1.2
+    },
+    {
+      "ref": "U1",
+      "pin": "11",
+      "net": "",
+      "x": 32.33,
+      "y": 2.294,
+      "drill": 1.2
+    },
+    {
+      "ref": "U1",
+      "pin": "12",
+      "net": "GPIO8",
+      "x": 29.79,
+      "y": 2.294,
+      "drill": 1.2
+    },
+    {
+      "ref": "U1",
+      "pin": "13",
+      "net": "",
+      "x": 27.25,
+      "y": 2.294,
+      "drill": 1.2
+    },
+    {
+      "ref": "U1",
+      "pin": "14",
+      "net": "",
+      "x": 24.71,
+      "y": 2.294,
+      "drill": 1.2
+    },
+    {
+      "ref": "U1",
+      "pin": "15",
+      "net": "",
+      "x": 22.17,
+      "y": 2.294,
+      "drill": 1.2
+    },
+    {
+      "ref": "U1",
+      "pin": "16",
+      "net": "",
+      "x": 19.63,
+      "y": 2.294,
+      "drill": 1.2
+    },
+    {
+      "ref": "U1",
+      "pin": "17",
+      "net": "",
+      "x": 17.09,
+      "y": 2.294,
+      "drill": 1.2
+    },
+    {
+      "ref": "U1",
+      "pin": "18",
+      "net": "",
+      "x": 14.55,
+      "y": 2.294,
+      "drill": 1.2
+    },
+    {
+      "ref": "U1",
+      "pin": "19",
+      "net": "",
+      "x": 12.01,
+      "y": 2.294,
+      "drill": 1.2
+    },
+    {
+      "ref": "U1",
+      "pin": "20",
+      "net": "",
+      "x": 9.47,
+      "y": 2.294,
+      "drill": 1.2
+    },
+    {
+      "ref": "U1",
+      "pin": "21",
+      "net": "+3V3",
+      "x": 6.93,
+      "y": 2.294,
+      "drill": 1.2
+    },
+    {
+      "ref": "U1",
+      "pin": "22",
+      "net": "GND",
+      "x": 57.73,
+      "y": 27.694,
+      "drill": 1.2
+    },
+    {
+      "ref": "U1",
+      "pin": "23",
+      "net": "GPIO1",
+      "x": 55.19,
+      "y": 27.694,
+      "drill": 1.2
+    },
+    {
+      "ref": "U1",
+      "pin": "24",
+      "net": "GPIO2",
+      "x": 52.65,
+      "y": 27.694,
+      "drill": 1.2
+    },
+    {
+      "ref": "U1",
+      "pin": "25",
+      "net": "",
+      "x": 50.11,
+      "y": 27.694,
+      "drill": 1.2
+    },
+    {
+      "ref": "U1",
+      "pin": "26",
+      "net": "",
+      "x": 47.57,
+      "y": 27.694,
+      "drill": 1.2
+    },
+    {
+      "ref": "U1",
+      "pin": "27",
+      "net": "GPIO42",
+      "x": 45.03,
+      "y": 27.694,
+      "drill": 1.2
+    },
+    {
+      "ref": "U1",
+      "pin": "28",
+      "net": "GPIO41",
+      "x": 42.49,
+      "y": 27.694,
+      "drill": 1.2
+    },
+    {
+      "ref": "U1",
+      "pin": "29",
+      "net": "GPIO40",
+      "x": 39.95,
+      "y": 27.694,
+      "drill": 1.2
+    },
+    {
+      "ref": "U1",
+      "pin": "30",
+      "net": "GPIO39",
+      "x": 37.41,
+      "y": 27.694,
+      "drill": 1.2
+    },
+    {
+      "ref": "U1",
+      "pin": "31",
+      "net": "GPIO38",
+      "x": 34.87,
+      "y": 27.694,
+      "drill": 1.2
+    },
+    {
+      "ref": "U1",
+      "pin": "32",
+      "net": "",
+      "x": 32.33,
+      "y": 27.694,
+      "drill": 1.2
+    },
+    {
+      "ref": "U1",
+      "pin": "33",
+      "net": "",
+      "x": 29.79,
+      "y": 27.694,
+      "drill": 1.2
+    },
+    {
+      "ref": "U1",
+      "pin": "34",
+      "net": "",
+      "x": 27.25,
+      "y": 27.694,
+      "drill": 1.2
+    },
+    {
+      "ref": "U1",
+      "pin": "35",
+      "net": "GPIO0",
+      "x": 24.71,
+      "y": 27.694,
+      "drill": 1.2
+    },
+    {
+      "ref": "U1",
+      "pin": "36",
+      "net": "GPIO45",
+      "x": 22.17,
+      "y": 27.694,
+      "drill": 1.2
+    },
+    {
+      "ref": "U1",
+      "pin": "37",
+      "net": "",
+      "x": 19.63,
+      "y": 27.694,
+      "drill": 1.2
+    },
+    {
+      "ref": "U1",
+      "pin": "38",
+      "net": "GPIO47",
+      "x": 17.09,
+      "y": 27.694,
+      "drill": 1.2
+    },
+    {
+      "ref": "U1",
+      "pin": "39",
+      "net": "GPIO21",
+      "x": 14.55,
+      "y": 27.694,
+      "drill": 1.2
+    },
+    {
+      "ref": "U1",
+      "pin": "40",
+      "net": "",
+      "x": 12.01,
+      "y": 27.694,
+      "drill": 1.2
+    },
+    {
+      "ref": "U1",
+      "pin": "41",
+      "net": "",
+      "x": 9.47,
+      "y": 27.694,
+      "drill": 1.2
+    },
+    {
+      "ref": "U1",
+      "pin": "42",
+      "net": "+5V",
+      "x": 6.93,
+      "y": 27.694,
+      "drill": 1.2
+    },
+    {
+      "ref": "U3",
+      "pin": "1",
+      "net": "GND",
+      "x": 42.19,
+      "y": 44.64,
+      "drill": 1.2
+    },
+    {
+      "ref": "U3",
+      "pin": "2",
+      "net": "+3V3",
+      "x": 42.19,
+      "y": 42.1,
+      "drill": 1.2
+    },
+    {
+      "ref": "U3",
+      "pin": "3",
+      "net": "GPIO6",
+      "x": 42.19,
+      "y": 39.56,
+      "drill": 1.2
+    },
+    {
+      "ref": "U3",
+      "pin": "4",
+      "net": "GND",
+      "x": 49.81,
+      "y": 44.64,
+      "drill": 1.2
+    },
+    {
+      "ref": "U3",
+      "pin": "5",
+      "net": "GPIO4",
+      "x": 49.81,
+      "y": 42.1,
+      "drill": 1.2
+    },
+    {
+      "ref": "U3",
+      "pin": "6",
+      "net": "GPIO5",
+      "x": 49.81,
+      "y": 39.56,
+      "drill": 1.2
+    },
+    {
+      "ref": "SW1",
+      "pin": "1",
+      "net": "GPIO39",
+      "x": 3.648393,
+      "y": 56.881177,
+      "drill": 1.599997
+    },
+    {
+      "ref": "SW1",
+      "pin": "2",
+      "net": "GND",
+      "x": 9.998393,
+      "y": 54.341177,
+      "drill": 1.599997
+    },
+    {
+      "ref": "JS1",
+      "pin": "0",
+      "net": "GND",
+      "x": 59.374898,
+      "y": 54.148688,
+      "drill": 1.199998
+    },
+    {
+      "ref": "JS1",
+      "pin": "0",
+      "net": "GND",
+      "x": 59.374898,
+      "y": 64.748616,
+      "drill": 1.199998
+    },
+    {
+      "ref": "JS1",
+      "pin": "0",
+      "net": "GND",
+      "x": 71.875,
+      "y": 54.148688,
+      "drill": 1.199998
+    },
+    {
+      "ref": "JS1",
+      "pin": "0",
+      "net": "GND",
+      "x": 71.875,
+      "y": 64.748616,
+      "drill": 1.199998
+    },
+    {
+      "ref": "JS1",
+      "pin": "A",
+      "net": "GND",
+      "x": 68.875006,
+      "y": 51.998832,
+      "drill": 0.9144
+    },
+    {
+      "ref": "JS1",
+      "pin": "A1",
+      "net": "+3V3",
+      "x": 57.374902,
+      "y": 56.948784,
+      "drill": 0.999998
+    },
+    {
+      "ref": "JS1",
+      "pin": "A2",
+      "net": "GPIO2",
+      "x": 57.374902,
+      "y": 59.448652,
+      "drill": 0.999998
+    },
+    {
+      "ref": "JS1",
+      "pin": "A3",
+      "net": "GND",
+      "x": 57.374902,
+      "y": 61.948774,
+      "drill": 0.999998
+    },
+    {
+      "ref": "JS1",
+      "pin": "B",
+      "net": "GPIO8",
+      "x": 68.875006,
+      "y": 47.498714,
+      "drill": 0.9144
+    },
+    {
+      "ref": "JS1",
+      "pin": "B1",
+      "net": "GND",
+      "x": 63.124954,
+      "y": 67.698572,
+      "drill": 0.999998
+    },
+    {
+      "ref": "JS1",
+      "pin": "B2",
+      "net": "GPIO1",
+      "x": 65.625076,
+      "y": 67.698572,
+      "drill": 0.999998
+    },
+    {
+      "ref": "JS1",
+      "pin": "B3",
+      "net": "+3V3",
+      "x": 68.124944,
+      "y": 67.698572,
+      "drill": 0.999998
+    },
+    {
+      "ref": "JS1",
+      "pin": "C",
+      "net": "GND",
+      "x": 62.375146,
+      "y": 51.998832,
+      "drill": 0.9144
+    },
+    {
+      "ref": "JS1",
+      "pin": "D",
+      "net": "GPIO8",
+      "x": 62.375146,
+      "y": 47.498714,
+      "drill": 0.9144
+    },
+    {
+      "ref": "J1",
+      "pin": "1",
+      "net": "GND",
+      "x": 27.0,
+      "y": 31.0,
+      "drill": 1.0
+    },
+    {
+      "ref": "J1",
+      "pin": "2",
+      "net": "+3V3",
+      "x": 29.54,
+      "y": 31.0,
+      "drill": 1.0
+    },
+    {
+      "ref": "J1",
+      "pin": "3",
+      "net": "GPIO21",
+      "x": 32.08,
+      "y": 31.0,
+      "drill": 1.0
+    },
+    {
+      "ref": "J1",
+      "pin": "4",
+      "net": "GPIO47",
+      "x": 34.62,
+      "y": 31.0,
+      "drill": 1.0
+    },
+    {
+      "ref": "J1",
+      "pin": "5",
+      "net": "GPIO45",
+      "x": 37.16,
+      "y": 31.0,
+      "drill": 1.0
+    },
+    {
+      "ref": "J1",
+      "pin": "6",
+      "net": "GPIO40",
+      "x": 39.7,
+      "y": 31.0,
+      "drill": 1.0
+    },
+    {
+      "ref": "J1",
+      "pin": "7",
+      "net": "GPIO41",
+      "x": 42.24,
+      "y": 31.0,
+      "drill": 1.0
+    },
+    {
+      "ref": "J1",
+      "pin": "8",
+      "net": "GPIO42",
+      "x": 44.78,
+      "y": 31.0,
+      "drill": 1.0
+    },
+    {
+      "ref": "SW3",
+      "pin": "1",
+      "net": "GPIO0",
+      "x": 41.672193,
+      "y": 56.881177,
+      "drill": 1.599997
+    },
+    {
+      "ref": "SW3",
+      "pin": "2",
+      "net": "GND",
+      "x": 48.022193,
+      "y": 54.341177,
+      "drill": 1.599997
+    }
+  ]
+}

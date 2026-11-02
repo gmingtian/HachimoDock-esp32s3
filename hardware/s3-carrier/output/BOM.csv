@@ -1,0 +1,16 @@
+﻿reference,value,quantity,assembly
+U1,GOOUUU ESP32-S3 N16R8 42P,1,2x21P 2.54mm sockets; row spacing 25.4mm
+SW1 SW2 SW3,Cherry MX compatible mechanical switch,3,Original switch geometry
+JS1,YA13S original bare joystick,1,Not interchangeable with a PS2 breakout PCB
+U2,MAX98357A purple module,1,Check module pin order and supply budget
+U3,INMP441 round 14mm module,1,Check acoustic port and orientation
+U1 sockets,1x21P female socket 2.54mm,2,For GOOUUU 42P; 25.4mm between rows
+U2 socket,1x7P female socket 2.54mm,1,Module VIN=3V3; no speaker-terminal carrier pads
+U3 sockets,1x3P female socket 2.54mm,2,"Separate strips; 7.62mm between rows; label side up, long pins down"
+J1,1x8P header 2.54mm,1,LCD cable; BL directly on GPIO42; mated housing max 22x3mm
+JP1,1x3P male header 2.54mm,1,"Pin1=3V3, pin2=GAIN, pin3=GND; change only with power off"
+JP1 shunt,2-pin shunt cap 2.54mm,1,"One cap only; max 4x5.5mm; 1-2=6dB, open=9dB, 2-3=12dB"
+H1 H4,M2.5x6 mounting screw,2,Original case reference; confirm actual engagement; install before modules
+H1 H4 inserts,M2.5x4x3.5 heat-set insert,2,Original case reference; confirm actual enclosure dimensions
+H3,Enclosure locating/support post,0,PCB hole retained; no screw installed
+H2 H5,Retained mounting holes,0,"No fastener required; if H2 is used later, use a non-metallic fastener near antenna"

@@ -1,0 +1,56 @@
+{
+  "revision": "A4",
+  "sourceBoardSha256": "3ea5f653f6bf27bdb09c90290e1f22ae493803e0c346911ff89b9b5f40b8624e",
+  "status": "prototype-fabrication-export; physical assembly unverified",
+  "fabricationApproved": false,
+  "layers": 2,
+  "thicknessMm": 1.6,
+  "drillCounts": {
+    "PTH": 110,
+    "NPTH": 15
+  },
+  "gainSelector": {
+    "reference": "JP1",
+    "pitchMm": 2.54,
+    "pins": {
+      "1": "+3V3",
+      "2": "AMP_GAIN",
+      "3": "GND"
+    },
+    "modes": {
+      "1-2": 6,
+      "open": 9,
+      "2-3": 12
+    },
+    "headerBodyMaximumMm": [
+      2.54,
+      7.62
+    ],
+    "shuntBodyMaximumMm": [
+      4.0,
+      5.5
+    ],
+    "assemblyEnvelope": [
+      26.0,
+      37.3,
+      30.0,
+      45.8
+    ],
+    "singleShuntOnly": true,
+    "changeOnlyWhenUnpowered": true,
+    "moduleGainStrappingVerified": false,
+    "heightVerified": false
+  },
+  "zipSha256": "f37d6a4aacb843249476b656e248e3e576f963c258f840ecbc87fd694797cb69",
+  "files": {
+    "HachimoDock-S3-carrier-A4-B_Cu.gbl": "24e678427f3410967175ee8062d9e7862ddaacb9a3b14b9632de4e0043155f97",
+    "HachimoDock-S3-carrier-A4-B_Mask.gbs": "6095ade874b37fd97671067e4d6cf121a3860ab3ea4f912a71354887178b8166",
+    "HachimoDock-S3-carrier-A4-Edge_Cuts.gm1": "f9dee30c5ac41320ce4998f81e929d1d9ca0393e6d6c7b0fded5bb66efc7d46f",
+    "HachimoDock-S3-carrier-A4-F_Cu.gtl": "61e241a77b841566c2ccc332dfa98774691b501bff7a70402e89211ea8faefea",
+    "HachimoDock-S3-carrier-A4-F_Mask.gts": "161f1466f2572e3ca28d14942baf387cec11e876c92a8849129cb0d76be203c6",
+    "HachimoDock-S3-carrier-A4-NPTH.drl": "288d1b133f8d3a1e7966c88c2f961a77abf7824a47bb1aaa15f7dca92aa9067b",
+    "HachimoDock-S3-carrier-A4-PTH.drl": "bd7f2b9c9a2130682aa4d273397b5e776865f1cf6576b61b50b914c3bf56176f",
+    "HachimoDock-S3-carrier-A4-b_silkscreen.gbo": "29c63c8d04446d4a1d8cd11c45a4ba37d8d9ac66e5972bb0e41a769dd400dabe",
+    "HachimoDock-S3-carrier-A4-f_silkscreen.gto": "09a249f48a731c2bcf60ee45955b5dda83d595956e2f9fa713b54e677f2dac74"
+  }
+}

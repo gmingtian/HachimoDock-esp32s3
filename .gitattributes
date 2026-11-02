@@ -5,3 +5,8 @@
 *.mjpg binary
 *.wav binary
 *.bin binary
+# Engineering checksums cover exact bytes, including CSV line endings.
+/hardware/s3-carrier/** -text
+/hardware/s3-carrier/output/*.csv whitespace=cr-at-eol
+# These SVG previews are generated; review source geometry and rendered PNGs.
+/hardware/s3-carrier/output/*.svg -diff

@@ -1,0 +1,3 @@
+(fp_lib_table
+ (lib (name "S3_Carrier") (type "KiCad") (uri "${KIPRJMOD}/S3_Carrier.pretty") (options "") (descr "Embedded carrier footprints"))
+)

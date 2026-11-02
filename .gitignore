@@ -20,9 +20,15 @@ __pycache__/
 *.exe
 *.msi
 *.zip
+!/hardware/s3-carrier/output/HachimoDock-S3-carrier-A4-Gerber.zip
 *.tar.*
 test-results/
 artifacts/
+# Machine-local KiCad preferences and editor state
+/kicad/
+*.kicad_prl
+*.lck
+*-backups/
 .env
 .env.*
 !.env.example

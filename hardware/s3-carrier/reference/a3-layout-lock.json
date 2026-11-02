@@ -1,0 +1,1587 @@
+{
+  "outline": [
+    {
+      "start": [
+        0.0,
+        63.47474731999999
+      ],
+      "end": [
+        5.999998160000004,
+        69.47474801999999
+      ],
+      "angle": -90
+    },
+    {
+      "start": [
+        0.0,
+        63.47474731999999
+      ],
+      "end": [
+        0.0,
+        6.0000006999999975
+      ],
+      "angle": 0
+    },
+    {
+      "start": [
+        5.999998160000004,
+        0.0
+      ],
+      "end": [
+        0.0,
+        6.0000006999999975
+      ],
+      "angle": -90
+    },
+    {
+      "start": [
+        5.999998160000004,
+        0.0
+      ],
+      "end": [
+        64.48742754,
+        0.0
+      ],
+      "angle": 0
+    },
+    {
+      "start": [
+        69.47473786,
+        4.987310319999993
+      ],
+      "end": [
+        64.48742754,
+        0.0
+      ],
+      "angle": -90
+    },
+    {
+      "start": [
+        69.47473786,
+        4.987310319999993
+      ],
+      "end": [
+        69.47473786,
+        38.020391319999995
+      ],
+      "angle": 0
+    },
+    {
+      "start": [
+        69.47473786,
+        38.020391319999995
+      ],
+      "end": [
+        73.47473747999999,
+        43.677245639999995
+      ],
+      "angle": -70.5288
+    },
+    {
+      "start": [
+        73.47473747999999,
+        43.677245639999995
+      ],
+      "end": [
+        73.47473747999999,
+        63.47474731999999
+      ],
+      "angle": 0
+    },
+    {
+      "start": [
+        67.47473932000001,
+        69.47474801999999
+      ],
+      "end": [
+        73.47473747999999,
+        63.47474731999999
+      ],
+      "angle": -90
+    },
+    {
+      "start": [
+        67.47473932000001,
+        69.47474801999999
+      ],
+      "end": [
+        5.999998160000004,
+        69.47474801999999
+      ],
+      "angle": 0
+    }
+  ],
+  "mountingHoles": [
+    {
+      "ref": "H1",
+      "x": 11.040676420000004,
+      "y": 36.003133479999995,
+      "diameter": 2.999999080000002
+    },
+    {
+      "ref": "H2",
+      "x": 61.04967596999998,
+      "y": 12.009534019999998,
+      "diameter": 3.000001619999984
+    },
+    {
+      "ref": "H3",
+      "x": 36.043674419999974,
+      "y": 36.05953418,
+      "diameter": 2.999999080000002
+    },
+    {
+      "ref": "H4",
+      "x": 61.056274890000005,
+      "y": 36.0265345,
+      "diameter": 3.000001620000007
+    },
+    {
+      "ref": "H5",
+      "x": 11.049588009999999,
+      "y": 12.016973679999996,
+      "diameter": 3.000001620000007
+    }
+  ],
+  "components": [
+    {
+      "ref": "U1",
+      "title": "GOOUUU S3 N16R8 / 2x21 sockets",
+      "sourceFootprint": "e7f74316ee0e465e9b94fc43b531cec9",
+      "x": 57.72999999999998,
+      "y": 2.2939999999999983,
+      "pads": [
+        {
+          "number": "1",
+          "sourceId": "e1",
+          "x": 57.72999999999998,
+          "y": 2.2939999999999983,
+          "net": "GND",
+          "width": 1.79999894,
+          "height": 1.79999894,
+          "drill": 1.20000014,
+          "angle": 90,
+          "shape": "rect"
+        },
+        {
+          "number": "2",
+          "sourceId": "e2",
+          "x": 55.18999999999998,
+          "y": 2.2939999999999983,
+          "net": "+3V3",
+          "width": 1.79999894,
+          "height": 1.79999894,
+          "drill": 1.20000014,
+          "angle": 90,
+          "shape": "circle"
+        },
+        {
+          "number": "3",
+          "sourceId": "e3",
+          "x": 52.649999999999984,
+          "y": 2.2939999999999983,
+          "net": "",
+          "width": 1.79999894,
+          "height": 1.79999894,
+          "drill": 1.20000014,
+          "angle": 90,
+          "shape": "circle"
+        },
+        {
+          "number": "4",
+          "sourceId": "e4",
+          "x": 50.10999999999998,
+          "y": 2.2939999999999983,
+          "net": "GPIO4",
+          "width": 1.79999894,
+          "height": 1.79999894,
+          "drill": 1.20000014,
+          "angle": 90,
+          "shape": "circle"
+        },
+        {
+          "number": "5",
+          "sourceId": "e5",
+          "x": 47.56999999999998,
+          "y": 2.2939999999999983,
+          "net": "GPIO5",
+          "width": 1.79999894,
+          "height": 1.79999894,
+          "drill": 1.20000014,
+          "angle": 90,
+          "shape": "circle"
+        },
+        {
+          "number": "6",
+          "sourceId": "e6",
+          "x": 45.02999999999998,
+          "y": 2.2939999999999983,
+          "net": "GPIO6",
+          "width": 1.79999894,
+          "height": 1.79999894,
+          "drill": 1.20000014,
+          "angle": 90,
+          "shape": "circle"
+        },
+        {
+          "number": "7",
+          "sourceId": "e7",
+          "x": 42.48999999999998,
+          "y": 2.2939999999999983,
+          "net": "GPIO7",
+          "width": 1.79999894,
+          "height": 1.79999894,
+          "drill": 1.20000014,
+          "angle": 90,
+          "shape": "circle"
+        },
+        {
+          "number": "8",
+          "sourceId": "e8",
+          "x": 39.94999999999998,
+          "y": 2.2939999999999983,
+          "net": "GPIO15",
+          "width": 1.79999894,
+          "height": 1.79999894,
+          "drill": 1.20000014,
+          "angle": 90,
+          "shape": "circle"
+        },
+        {
+          "number": "9",
+          "sourceId": "e9",
+          "x": 37.40999999999998,
+          "y": 2.2939999999999983,
+          "net": "GPIO16",
+          "width": 1.79999894,
+          "height": 1.79999894,
+          "drill": 1.20000014,
+          "angle": 90,
+          "shape": "circle"
+        },
+        {
+          "number": "10",
+          "sourceId": "e10",
+          "x": 34.86999999999998,
+          "y": 2.2939999999999983,
+          "net": "",
+          "width": 1.79999894,
+          "height": 1.79999894,
+          "drill": 1.20000014,
+          "angle": 90,
+          "shape": "circle"
+        },
+        {
+          "number": "11",
+          "sourceId": "e11",
+          "x": 32.329999999999984,
+          "y": 2.2939999999999983,
+          "net": "",
+          "width": 1.79999894,
+          "height": 1.79999894,
+          "drill": 1.20000014,
+          "angle": 90,
+          "shape": "circle"
+        },
+        {
+          "number": "12",
+          "sourceId": "e12",
+          "x": 29.78999999999998,
+          "y": 2.2939999999999983,
+          "net": "GPIO8",
+          "width": 1.79999894,
+          "height": 1.79999894,
+          "drill": 1.20000014,
+          "angle": 90,
+          "shape": "circle"
+        },
+        {
+          "number": "13",
+          "sourceId": "e13",
+          "x": 27.249999999999982,
+          "y": 2.2939999999999983,
+          "net": "",
+          "width": 1.79999894,
+          "height": 1.79999894,
+          "drill": 1.20000014,
+          "angle": 90,
+          "shape": "circle"
+        },
+        {
+          "number": "14",
+          "sourceId": "e14",
+          "x": 24.709999999999983,
+          "y": 2.2939999999999983,
+          "net": "",
+          "width": 1.79999894,
+          "height": 1.79999894,
+          "drill": 1.20000014,
+          "angle": 90,
+          "shape": "circle"
+        },
+        {
+          "number": "15",
+          "sourceId": "e15",
+          "x": 22.169999999999984,
+          "y": 2.2939999999999983,
+          "net": "",
+          "width": 1.79999894,
+          "height": 1.79999894,
+          "drill": 1.20000014,
+          "angle": 90,
+          "shape": "circle"
+        },
+        {
+          "number": "16",
+          "sourceId": "e16",
+          "x": 19.62999999999998,
+          "y": 2.2939999999999983,
+          "net": "",
+          "width": 1.79999894,
+          "height": 1.79999894,
+          "drill": 1.20000014,
+          "angle": 90,
+          "shape": "circle"
+        },
+        {
+          "number": "17",
+          "sourceId": "e17",
+          "x": 17.089999999999982,
+          "y": 2.2939999999999983,
+          "net": "",
+          "width": 1.79999894,
+          "height": 1.79999894,
+          "drill": 1.20000014,
+          "angle": 90,
+          "shape": "circle"
+        },
+        {
+          "number": "18",
+          "sourceId": "e18",
+          "x": 14.549999999999983,
+          "y": 2.2939999999999983,
+          "net": "",
+          "width": 1.79999894,
+          "height": 1.79999894,
+          "drill": 1.20000014,
+          "angle": 90,
+          "shape": "circle"
+        },
+        {
+          "number": "19",
+          "sourceId": "e19",
+          "x": 12.009999999999984,
+          "y": 2.2939999999999983,
+          "net": "",
+          "width": 1.79999894,
+          "height": 1.79999894,
+          "drill": 1.20000014,
+          "angle": 90,
+          "shape": "circle"
+        },
+        {
+          "number": "20",
+          "sourceId": "e20",
+          "x": 9.469999999999983,
+          "y": 2.2939999999999983,
+          "net": "",
+          "width": 1.79999894,
+          "height": 1.79999894,
+          "drill": 1.20000014,
+          "angle": 90,
+          "shape": "circle"
+        },
+        {
+          "number": "21",
+          "sourceId": "e21",
+          "x": 6.929999999999984,
+          "y": 2.2939999999999983,
+          "net": "+3V3",
+          "width": 1.79999894,
+          "height": 1.79999894,
+          "drill": 1.20000014,
+          "angle": 90,
+          "shape": "circle"
+        },
+        {
+          "number": "22",
+          "sourceId": "e24",
+          "x": 57.72999999999998,
+          "y": 27.693999999999996,
+          "net": "GND",
+          "width": 1.79999894,
+          "height": 1.79999894,
+          "drill": 1.20000014,
+          "angle": 90,
+          "shape": "circle"
+        },
+        {
+          "number": "23",
+          "sourceId": "e25",
+          "x": 55.18999999999998,
+          "y": 27.693999999999996,
+          "net": "GPIO1",
+          "width": 1.79999894,
+          "height": 1.79999894,
+          "drill": 1.20000014,
+          "angle": 90,
+          "shape": "circle"
+        },
+        {
+          "number": "24",
+          "sourceId": "e26",
+          "x": 52.649999999999984,
+          "y": 27.693999999999996,
+          "net": "GPIO2",
+          "width": 1.79999894,
+          "height": 1.79999894,
+          "drill": 1.20000014,
+          "angle": 90,
+          "shape": "circle"
+        },
+        {
+          "number": "25",
+          "sourceId": "e27",
+          "x": 50.10999999999998,
+          "y": 27.693999999999996,
+          "net": "",
+          "width": 1.79999894,
+          "height": 1.79999894,
+          "drill": 1.20000014,
+          "angle": 90,
+          "shape": "circle"
+        },
+        {
+          "number": "26",
+          "sourceId": "e28",
+          "x": 47.56999999999998,
+          "y": 27.693999999999996,
+          "net": "",
+          "width": 1.79999894,
+          "height": 1.79999894,
+          "drill": 1.20000014,
+          "angle": 90,
+          "shape": "circle"
+        },
+        {
+          "number": "27",
+          "sourceId": "e29",
+          "x": 45.02999999999998,
+          "y": 27.693999999999996,
+          "net": "GPIO42",
+          "width": 1.79999894,
+          "height": 1.79999894,
+          "drill": 1.20000014,
+          "angle": 90,
+          "shape": "circle"
+        },
+        {
+          "number": "28",
+          "sourceId": "e30",
+          "x": 42.48999999999998,
+          "y": 27.693999999999996,
+          "net": "GPIO41",
+          "width": 1.79999894,
+          "height": 1.79999894,
+          "drill": 1.20000014,
+          "angle": 90,
+          "shape": "circle"
+        },
+        {
+          "number": "29",
+          "sourceId": "e31",
+          "x": 39.94999999999998,
+          "y": 27.693999999999996,
+          "net": "GPIO40",
+          "width": 1.79999894,
+          "height": 1.79999894,
+          "drill": 1.20000014,
+          "angle": 90,
+          "shape": "circle"
+        },
+        {
+          "number": "30",
+          "sourceId": "e32",
+          "x": 37.40999999999998,
+          "y": 27.693999999999996,
+          "net": "GPIO39",
+          "width": 1.79999894,
+          "height": 1.79999894,
+          "drill": 1.20000014,
+          "angle": 90,
+          "shape": "circle"
+        },
+        {
+          "number": "31",
+          "sourceId": "e33",
+          "x": 34.86999999999998,
+          "y": 27.693999999999996,
+          "net": "GPIO38",
+          "width": 1.79999894,
+          "height": 1.79999894,
+          "drill": 1.20000014,
+          "angle": 90,
+          "shape": "circle"
+        },
+        {
+          "number": "32",
+          "sourceId": "e34",
+          "x": 32.329999999999984,
+          "y": 27.693999999999996,
+          "net": "",
+          "width": 1.79999894,
+          "height": 1.79999894,
+          "drill": 1.20000014,
+          "angle": 90,
+          "shape": "circle"
+        },
+        {
+          "number": "33",
+          "sourceId": "e35",
+          "x": 29.78999999999998,
+          "y": 27.693999999999996,
+          "net": "",
+          "width": 1.79999894,
+          "height": 1.79999894,
+          "drill": 1.20000014,
+          "angle": 90,
+          "shape": "circle"
+        },
+        {
+          "number": "34",
+          "sourceId": "e36",
+          "x": 27.249999999999982,
+          "y": 27.693999999999996,
+          "net": "",
+          "width": 1.79999894,
+          "height": 1.79999894,
+          "drill": 1.20000014,
+          "angle": 90,
+          "shape": "circle"
+        },
+        {
+          "number": "35",
+          "sourceId": "e37",
+          "x": 24.709999999999983,
+          "y": 27.693999999999996,
+          "net": "GPIO0",
+          "width": 1.79999894,
+          "height": 1.79999894,
+          "drill": 1.20000014,
+          "angle": 90,
+          "shape": "circle"
+        },
+        {
+          "number": "36",
+          "sourceId": "e38",
+          "x": 22.169999999999984,
+          "y": 27.693999999999996,
+          "net": "GPIO45",
+          "width": 1.79999894,
+          "height": 1.79999894,
+          "drill": 1.20000014,
+          "angle": 90,
+          "shape": "circle"
+        },
+        {
+          "number": "37",
+          "sourceId": "e39",
+          "x": 19.62999999999998,
+          "y": 27.693999999999996,
+          "net": "",
+          "width": 1.79999894,
+          "height": 1.79999894,
+          "drill": 1.20000014,
+          "angle": 90,
+          "shape": "circle"
+        },
+        {
+          "number": "38",
+          "sourceId": "e40",
+          "x": 17.089999999999982,
+          "y": 27.693999999999996,
+          "net": "GPIO47",
+          "width": 1.79999894,
+          "height": 1.79999894,
+          "drill": 1.20000014,
+          "angle": 90,
+          "shape": "circle"
+        },
+        {
+          "number": "39",
+          "sourceId": "e41",
+          "x": 14.549999999999983,
+          "y": 27.693999999999996,
+          "net": "GPIO21",
+          "width": 1.79999894,
+          "height": 1.79999894,
+          "drill": 1.20000014,
+          "angle": 90,
+          "shape": "circle"
+        },
+        {
+          "number": "40",
+          "sourceId": "e42",
+          "x": 12.009999999999984,
+          "y": 27.693999999999996,
+          "net": "",
+          "width": 1.79999894,
+          "height": 1.79999894,
+          "drill": 1.20000014,
+          "angle": 90,
+          "shape": "circle"
+        },
+        {
+          "number": "41",
+          "sourceId": "e43",
+          "x": 9.469999999999983,
+          "y": 27.694000000000003,
+          "net": "",
+          "width": 1.79999894,
+          "height": 1.79999894,
+          "drill": 1.20000014,
+          "angle": 90,
+          "shape": "circle"
+        },
+        {
+          "number": "42",
+          "sourceId": "e44",
+          "x": 6.929999999999984,
+          "y": 27.694000000000003,
+          "net": "+5V",
+          "width": 1.79999894,
+          "height": 1.79999894,
+          "drill": 1.20000014,
+          "angle": 90,
+          "shape": "circle"
+        }
+      ],
+      "holes": [],
+      "envelope": [
+        -0.525,
+        0.897,
+        67.255,
+        28.897
+      ]
+    },
+    {
+      "ref": "SW1",
+      "title": "Original switch / GPIO39",
+      "sourceFootprint": "aabd9075e7ecb553",
+      "x": 9.958387499999999,
+      "y": 54.57117356,
+      "pads": [
+        {
+          "number": "1",
+          "sourceId": "f8001ebd9e7de9b3",
+          "x": 3.648392499999995,
+          "y": 56.88117656,
+          "net": "GPIO39",
+          "width": 2.3999951999999998,
+          "height": 2.3999951999999998,
+          "drill": 1.5999967999999998,
+          "angle": 0,
+          "shape": "circle"
+        },
+        {
+          "number": "2",
+          "sourceId": "b1d6056ac4ddb84f",
+          "x": 9.998392499999994,
+          "y": 54.34117656,
+          "net": "GND",
+          "width": 2.3999951999999998,
+          "height": 2.3999951999999998,
+          "drill": 1.5999967999999998,
+          "angle": 0,
+          "shape": "circle"
+        }
+      ],
+      "holes": [
+        {
+          "x": 1.9585305000000017,
+          "y": 59.42117656,
+          "diameter": 1.9999959999999999
+        },
+        {
+          "x": 12.958508499999994,
+          "y": 59.42117656,
+          "diameter": 1.9999959999999999
+        },
+        {
+          "x": 7.458392499999995,
+          "y": 59.42117656,
+          "diameter": 4.90000036
+        }
+      ],
+      "envelope": [
+        -0.041607500000004904,
+        51.92117656,
+        14.958392499999995,
+        66.92117655999999
+      ]
+    },
+    {
+      "ref": "SW2",
+      "title": "Original switch / GPIO38",
+      "sourceFootprint": "aabd9075e7ecb553",
+      "x": 28.970287499999998,
+      "y": 54.57117356,
+      "pads": [
+        {
+          "number": "1",
+          "sourceId": "f8001ebd9e7de9b3",
+          "x": 22.660292499999994,
+          "y": 56.88117656,
+          "net": "GPIO38",
+          "width": 2.3999951999999998,
+          "height": 2.3999951999999998,
+          "drill": 1.5999967999999998,
+          "angle": 0,
+          "shape": "circle"
+        },
+        {
+          "number": "2",
+          "sourceId": "b1d6056ac4ddb84f",
+          "x": 29.010292499999995,
+          "y": 54.34117656,
+          "net": "GND",
+          "width": 2.3999951999999998,
+          "height": 2.3999951999999998,
+          "drill": 1.5999967999999998,
+          "angle": 0,
+          "shape": "circle"
+        }
+      ],
+      "holes": [
+        {
+          "x": 20.970430500000003,
+          "y": 59.42117656,
+          "diameter": 1.9999959999999999
+        },
+        {
+          "x": 31.970408499999994,
+          "y": 59.42117656,
+          "diameter": 1.9999959999999999
+        },
+        {
+          "x": 26.470292499999996,
+          "y": 59.42117656,
+          "diameter": 4.90000036
+        }
+      ],
+      "envelope": [
+        18.970292499999996,
+        51.92117656,
+        33.9702925,
+        66.92117655999999
+      ]
+    },
+    {
+      "ref": "SW3",
+      "title": "Original switch / GPIO0",
+      "sourceFootprint": "aabd9075e7ecb553",
+      "x": 47.982187499999995,
+      "y": 54.57117356,
+      "pads": [
+        {
+          "number": "1",
+          "sourceId": "f8001ebd9e7de9b3",
+          "x": 41.672192499999994,
+          "y": 56.88117656,
+          "net": "GPIO0",
+          "width": 2.3999951999999998,
+          "height": 2.3999951999999998,
+          "drill": 1.5999967999999998,
+          "angle": 0,
+          "shape": "circle"
+        },
+        {
+          "number": "2",
+          "sourceId": "b1d6056ac4ddb84f",
+          "x": 48.022192499999996,
+          "y": 54.34117656,
+          "net": "GND",
+          "width": 2.3999951999999998,
+          "height": 2.3999951999999998,
+          "drill": 1.5999967999999998,
+          "angle": 0,
+          "shape": "circle"
+        }
+      ],
+      "holes": [
+        {
+          "x": 39.9823305,
+          "y": 59.42117656,
+          "diameter": 1.9999959999999999
+        },
+        {
+          "x": 50.982308499999995,
+          "y": 59.42117656,
+          "diameter": 1.9999959999999999
+        },
+        {
+          "x": 45.4821925,
+          "y": 59.42117656,
+          "diameter": 4.90000036
+        }
+      ],
+      "envelope": [
+        37.9821925,
+        51.92117656,
+        52.9821925,
+        66.92117655999999
+      ]
+    },
+    {
+      "ref": "JS1",
+      "title": "Original YA13S joystick",
+      "sourceFootprint": "e128f173b6cd23ab",
+      "x": 64.62495075999999,
+      "y": 57.59864273999999,
+      "pads": [
+        {
+          "number": "A1",
+          "sourceId": "e76",
+          "x": 57.37490175999998,
+          "y": 56.94878373999999,
+          "net": "+3V3",
+          "width": 1.6999966,
+          "height": 1.6999966,
+          "drill": 0.9999979999999999,
+          "angle": 90,
+          "shape": "circle"
+        },
+        {
+          "number": "A2",
+          "sourceId": "e77",
+          "x": 57.37490175999998,
+          "y": 59.448651739999995,
+          "net": "GPIO2",
+          "width": 1.6999966,
+          "height": 1.6999966,
+          "drill": 0.9999979999999999,
+          "angle": 90,
+          "shape": "circle"
+        },
+        {
+          "number": "A3",
+          "sourceId": "e78",
+          "x": 57.37490175999998,
+          "y": 61.94877374,
+          "net": "GND",
+          "width": 1.6999966,
+          "height": 1.6999966,
+          "drill": 0.9999979999999999,
+          "angle": 90,
+          "shape": "circle"
+        },
+        {
+          "number": "B1",
+          "sourceId": "e79",
+          "x": 63.12495375999998,
+          "y": 67.69857173999999,
+          "net": "GND",
+          "width": 1.6999966,
+          "height": 1.6999966,
+          "drill": 0.9999979999999999,
+          "angle": 90,
+          "shape": "circle"
+        },
+        {
+          "number": "B2",
+          "sourceId": "e80",
+          "x": 65.62507575999999,
+          "y": 67.69857173999999,
+          "net": "GPIO1",
+          "width": 1.6999966,
+          "height": 1.6999966,
+          "drill": 0.9999979999999999,
+          "angle": 90,
+          "shape": "circle"
+        },
+        {
+          "number": "B3",
+          "sourceId": "e81",
+          "x": 68.12494376,
+          "y": 67.69857173999999,
+          "net": "+3V3",
+          "width": 1.6999966,
+          "height": 1.6999966,
+          "drill": 0.9999979999999999,
+          "angle": 90,
+          "shape": "circle"
+        },
+        {
+          "number": "0",
+          "sourceId": "e82",
+          "x": 59.374897759999996,
+          "y": 64.74861573999999,
+          "net": "GND",
+          "width": 1.8,
+          "height": 1.8,
+          "drill": 1.1999975999999999,
+          "angle": 90,
+          "shape": "circle"
+        },
+        {
+          "number": "0",
+          "sourceId": "e83",
+          "x": 59.374897759999996,
+          "y": 54.14868774,
+          "net": "GND",
+          "width": 1.8,
+          "height": 1.8,
+          "drill": 1.1999975999999999,
+          "angle": 90,
+          "shape": "circle"
+        },
+        {
+          "number": "0",
+          "sourceId": "e84",
+          "x": 71.87499976,
+          "y": 64.74861573999999,
+          "net": "GND",
+          "width": 1.8,
+          "height": 1.8,
+          "drill": 1.1999975999999999,
+          "angle": 90,
+          "shape": "circle"
+        },
+        {
+          "number": "0",
+          "sourceId": "e85",
+          "x": 71.87499976,
+          "y": 54.14868774,
+          "net": "GND",
+          "width": 1.8,
+          "height": 1.8,
+          "drill": 1.1999975999999999,
+          "angle": 90,
+          "shape": "circle"
+        },
+        {
+          "number": "A",
+          "sourceId": "e86",
+          "x": 68.87500575999998,
+          "y": 51.99883173999999,
+          "net": "GND",
+          "width": 1.524,
+          "height": 1.524,
+          "drill": 0.9144,
+          "angle": 90,
+          "shape": "circle"
+        },
+        {
+          "number": "B",
+          "sourceId": "e87",
+          "x": 68.87500575999998,
+          "y": 47.49871374,
+          "net": "GPIO8",
+          "width": 1.524,
+          "height": 1.524,
+          "drill": 0.9144,
+          "angle": 90,
+          "shape": "circle"
+        },
+        {
+          "number": "D",
+          "sourceId": "e88",
+          "x": 62.375145759999995,
+          "y": 47.49871374,
+          "net": "GPIO8",
+          "width": 1.524,
+          "height": 1.524,
+          "drill": 0.9144,
+          "angle": 90,
+          "shape": "circle"
+        },
+        {
+          "number": "C",
+          "sourceId": "e89",
+          "x": 62.375145759999995,
+          "y": 51.99883173999999,
+          "net": "GND",
+          "width": 1.524,
+          "height": 1.524,
+          "drill": 0.9144,
+          "angle": 90,
+          "shape": "circle"
+        }
+      ],
+      "holes": [],
+      "envelope": [
+        56.32495,
+        46.14864,
+        73.02495,
+        68.74864
+      ]
+    },
+    {
+      "ref": "U2",
+      "title": "MAX98357A module",
+      "sourceFootprint": "5aaf4eea8f904dbb8f7d8e8dc6f555cd",
+      "x": 4.500000000000004,
+      "y": 48.0,
+      "pads": [
+        {
+          "number": "1",
+          "sourceId": "e1",
+          "x": 4.500000000000004,
+          "y": 48.0,
+          "net": "+3V3",
+          "width": 1.79999894,
+          "height": 1.79999894,
+          "drill": 1.20000014,
+          "angle": 0,
+          "shape": "rect"
+        },
+        {
+          "number": "2",
+          "sourceId": "e2",
+          "x": 4.500000000000004,
+          "y": 45.46,
+          "net": "GND",
+          "width": 1.79999894,
+          "height": 1.79999894,
+          "drill": 1.20000014,
+          "angle": 0,
+          "shape": "circle"
+        },
+        {
+          "number": "3",
+          "sourceId": "e3",
+          "x": 4.500000000000004,
+          "y": 42.92,
+          "net": "+3V3",
+          "width": 1.79999894,
+          "height": 1.79999894,
+          "drill": 1.20000014,
+          "angle": 0,
+          "shape": "circle"
+        },
+        {
+          "number": "4",
+          "sourceId": "e4",
+          "x": 4.500000000000004,
+          "y": 40.38,
+          "net": "",
+          "width": 1.79999894,
+          "height": 1.79999894,
+          "drill": 1.20000014,
+          "angle": 0,
+          "shape": "circle"
+        },
+        {
+          "number": "5",
+          "sourceId": "e5",
+          "x": 4.500000000000004,
+          "y": 37.839999999999996,
+          "net": "GPIO7",
+          "width": 1.79999894,
+          "height": 1.79999894,
+          "drill": 1.20000014,
+          "angle": 0,
+          "shape": "circle"
+        },
+        {
+          "number": "6",
+          "sourceId": "e6",
+          "x": 4.500000000000004,
+          "y": 35.3,
+          "net": "GPIO15",
+          "width": 1.79999894,
+          "height": 1.79999894,
+          "drill": 1.20000014,
+          "angle": 0,
+          "shape": "circle"
+        },
+        {
+          "number": "7",
+          "sourceId": "e7",
+          "x": 4.500000000000004,
+          "y": 32.76,
+          "net": "GPIO16",
+          "width": 1.79999894,
+          "height": 1.79999894,
+          "drill": 1.20000014,
+          "angle": 0,
+          "shape": "circle"
+        }
+      ],
+      "holes": [],
+      "envelope": [
+        2.72,
+        31.3,
+        23.1,
+        49.3
+      ]
+    },
+    {
+      "ref": "U3",
+      "title": "Round INMP441 / 14mm",
+      "sourceFootprint": "73b7a759f9084adc8996032c26e82fc4",
+      "x": 42.190000000000005,
+      "y": 44.64,
+      "pads": [
+        {
+          "number": "1",
+          "sourceId": "e2872",
+          "x": 42.190000000000005,
+          "y": 44.64,
+          "net": "GND",
+          "width": 1.79999894,
+          "height": 1.79999894,
+          "drill": 1.20000014,
+          "angle": 0,
+          "shape": "rect"
+        },
+        {
+          "number": "2",
+          "sourceId": "e2873",
+          "x": 42.190000000000005,
+          "y": 42.1,
+          "net": "+3V3",
+          "width": 1.79999894,
+          "height": 1.79999894,
+          "drill": 1.20000014,
+          "angle": 0,
+          "shape": "circle"
+        },
+        {
+          "number": "3",
+          "sourceId": "e2874",
+          "x": 42.190000000000005,
+          "y": 39.56,
+          "net": "GPIO6",
+          "width": 1.79999894,
+          "height": 1.79999894,
+          "drill": 1.20000014,
+          "angle": 0,
+          "shape": "circle"
+        },
+        {
+          "number": "4",
+          "sourceId": "e2887",
+          "x": 49.81,
+          "y": 44.64,
+          "net": "GND",
+          "width": 1.79999894,
+          "height": 1.79999894,
+          "drill": 1.20000014,
+          "angle": 0,
+          "shape": "circle"
+        },
+        {
+          "number": "6",
+          "sourceId": "e2888",
+          "x": 49.81,
+          "y": 39.56,
+          "net": "GPIO5",
+          "width": 1.79999894,
+          "height": 1.79999894,
+          "drill": 1.20000014,
+          "angle": 0,
+          "shape": "circle"
+        },
+        {
+          "number": "5",
+          "sourceId": "e2889",
+          "x": 49.81,
+          "y": 42.1,
+          "net": "GPIO4",
+          "width": 1.79999894,
+          "height": 1.79999894,
+          "drill": 1.20000014,
+          "angle": 0,
+          "shape": "circle"
+        }
+      ],
+      "holes": [
+        {
+          "x": 46,
+          "y": 42.1,
+          "diameter": 2.0
+        }
+      ],
+      "envelope": [
+        39,
+        35.1,
+        53,
+        49.1
+      ]
+    },
+    {
+      "ref": "J1",
+      "title": "LCD: GND VCC(3V3) SCL SDA RES DC CS BLK",
+      "sourceFootprint": "generated",
+      "x": 27,
+      "y": 31.0,
+      "pads": [
+        {
+          "number": "1",
+          "x": 27.0,
+          "y": 31.0,
+          "net": "GND",
+          "width": 1.8,
+          "height": 1.8,
+          "drill": 1.0,
+          "angle": 0,
+          "shape": "rect"
+        },
+        {
+          "number": "2",
+          "x": 29.54,
+          "y": 31.0,
+          "net": "+3V3",
+          "width": 1.8,
+          "height": 1.8,
+          "drill": 1.0,
+          "angle": 0,
+          "shape": "circle"
+        },
+        {
+          "number": "3",
+          "x": 32.08,
+          "y": 31.0,
+          "net": "GPIO21",
+          "width": 1.8,
+          "height": 1.8,
+          "drill": 1.0,
+          "angle": 0,
+          "shape": "circle"
+        },
+        {
+          "number": "4",
+          "x": 34.62,
+          "y": 31.0,
+          "net": "GPIO47",
+          "width": 1.8,
+          "height": 1.8,
+          "drill": 1.0,
+          "angle": 0,
+          "shape": "circle"
+        },
+        {
+          "number": "5",
+          "x": 37.16,
+          "y": 31.0,
+          "net": "GPIO45",
+          "width": 1.8,
+          "height": 1.8,
+          "drill": 1.0,
+          "angle": 0,
+          "shape": "circle"
+        },
+        {
+          "number": "6",
+          "x": 39.7,
+          "y": 31.0,
+          "net": "GPIO40",
+          "width": 1.8,
+          "height": 1.8,
+          "drill": 1.0,
+          "angle": 0,
+          "shape": "circle"
+        },
+        {
+          "number": "7",
+          "x": 42.24,
+          "y": 31.0,
+          "net": "GPIO41",
+          "width": 1.8,
+          "height": 1.8,
+          "drill": 1.0,
+          "angle": 0,
+          "shape": "circle"
+        },
+        {
+          "number": "8",
+          "x": 44.78,
+          "y": 31.0,
+          "net": "GPIO42",
+          "width": 1.8,
+          "height": 1.8,
+          "drill": 1.0,
+          "angle": 0,
+          "shape": "circle"
+        }
+      ],
+      "holes": [],
+      "envelope": [
+        25.73,
+        29.73,
+        46.05,
+        32.27
+      ]
+    }
+  ],
+  "mountingSockets": [
+    {
+      "parent": "U1",
+      "strip": 1,
+      "pins": 21,
+      "padNumbers": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11",
+        "12",
+        "13",
+        "14",
+        "15",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "pitch": 2.54,
+      "centerX": 32.329999999999984,
+      "centerY": 2.2939999999999983,
+      "bodyEnvelope": [
+        5.659999999999984,
+        1.0239999999999982,
+        58.999999999999986,
+        3.5639999999999983
+      ],
+      "heightVerified": false
+    },
+    {
+      "parent": "U1",
+      "strip": 2,
+      "pins": 21,
+      "padNumbers": [
+        "22",
+        "23",
+        "24",
+        "25",
+        "26",
+        "27",
+        "28",
+        "29",
+        "30",
+        "31",
+        "32",
+        "33",
+        "34",
+        "35",
+        "36",
+        "37",
+        "38",
+        "39",
+        "40",
+        "41",
+        "42"
+      ],
+      "pitch": 2.54,
+      "centerX": 32.329999999999984,
+      "centerY": 27.694,
+      "bodyEnvelope": [
+        5.659999999999984,
+        26.423999999999996,
+        58.999999999999986,
+        28.964000000000002
+      ],
+      "heightVerified": false
+    },
+    {
+      "parent": "U2",
+      "strip": 1,
+      "pins": 7,
+      "padNumbers": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7"
+      ],
+      "pitch": 2.54,
+      "centerX": 4.500000000000004,
+      "centerY": 40.379999999999995,
+      "bodyEnvelope": [
+        3.2300000000000044,
+        31.49,
+        5.770000000000005,
+        49.27
+      ],
+      "heightVerified": false
+    },
+    {
+      "parent": "U3",
+      "strip": 1,
+      "pins": 3,
+      "padNumbers": [
+        "1",
+        "2",
+        "3"
+      ],
+      "pitch": 2.54,
+      "centerX": 42.190000000000005,
+      "centerY": 42.1,
+      "bodyEnvelope": [
+        40.92,
+        38.29,
+        43.46000000000001,
+        45.910000000000004
+      ],
+      "heightVerified": false
+    },
+    {
+      "parent": "U3",
+      "strip": 2,
+      "pins": 3,
+      "padNumbers": [
+        "4",
+        "5",
+        "6"
+      ],
+      "pitch": 2.54,
+      "centerX": 49.81,
+      "centerY": 42.1,
+      "bodyEnvelope": [
+        48.54,
+        38.29,
+        51.080000000000005,
+        45.910000000000004
+      ],
+      "heightVerified": false
+    }
+  ],
+  "connectorMatingEnvelopes": [
+    {
+      "ref": "J1",
+      "maximumPlugBodyMm": [
+        22,
+        3
+      ],
+      "envelope": [
+        24.89,
+        29.5,
+        46.89,
+        32.5
+      ],
+      "heightVerified": false
+    }
+  ],
+  "fastenerEnvelopes": [
+    {
+      "ref": "H1",
+      "x": 11.040676420000004,
+      "y": 36.003133479999995,
+      "maximumHeadDiameterMm": 6.0,
+      "headHeightAllowanceMm": 3.0,
+      "copperKeepoutRadiusMm": 3.5,
+      "actualFastenerVerified": false,
+      "material": "unspecified"
+    },
+    {
+      "ref": "H2",
+      "x": 61.04967596999998,
+      "y": 12.009534019999998,
+      "maximumHeadDiameterMm": 6.0,
+      "headHeightAllowanceMm": 3.0,
+      "copperKeepoutRadiusMm": 3.5,
+      "actualFastenerVerified": false,
+      "material": "nylon"
+    },
+    {
+      "ref": "H3",
+      "x": 36.043674419999974,
+      "y": 36.05953418,
+      "maximumHeadDiameterMm": 6.0,
+      "headHeightAllowanceMm": 3.0,
+      "copperKeepoutRadiusMm": 3.5,
+      "actualFastenerVerified": false,
+      "material": "unspecified"
+    },
+    {
+      "ref": "H4",
+      "x": 61.056274890000005,
+      "y": 36.0265345,
+      "maximumHeadDiameterMm": 6.0,
+      "headHeightAllowanceMm": 3.0,
+      "copperKeepoutRadiusMm": 3.5,
+      "actualFastenerVerified": false,
+      "material": "unspecified"
+    },
+    {
+      "ref": "H5",
+      "x": 11.049588009999999,
+      "y": 12.016973679999996,
+      "maximumHeadDiameterMm": 6.0,
+      "headHeightAllowanceMm": 3.0,
+      "copperKeepoutRadiusMm": 3.5,
+      "actualFastenerVerified": false,
+      "material": "unspecified"
+    }
+  ],
+  "keycapEnvelopes": [
+    {
+      "ref": "SW1",
+      "planningSizeMm": 18.5,
+      "envelope": [
+        -1.791607500000005,
+        50.17117655999999,
+        16.708392499999995,
+        68.67117655999999
+      ]
+    },
+    {
+      "ref": "SW2",
+      "planningSizeMm": 18.5,
+      "envelope": [
+        17.2202925,
+        50.17117655999999,
+        35.7202925,
+        68.67117655999999
+      ]
+    },
+    {
+      "ref": "SW3",
+      "planningSizeMm": 18.5,
+      "envelope": [
+        36.2321925,
+        50.17117655999999,
+        54.7321925,
+        68.67117655999999
+      ]
+    }
+  ],
+  "joystickMotionReservation": {
+    "center": [
+      65.62495,
+      59.44864
+    ],
+    "radiusMm": 15.0,
+    "cap": "original 3D-printed spherical cap; user confirmed",
+    "capDiameterFromStepMm": 14.01,
+    "nominalEachSideAngleDeg": 30,
+    "planningEachSideAngleDeg": 32,
+    "maximumCapCenterTravelAllowanceMm": 7.99,
+    "purpose": "keep new modules and cable housings outside a conservative motion reservation",
+    "originalControlsRetained": true,
+    "threeDimensionalSweepVerified": false,
+    "unverified": [
+      "joystick pivot relative to printed cap",
+      "installed module/keycap/socket heights",
+      "screen/back-cover geometry",
+      "full sweep and click clearance to original SW3 keycap"
+    ]
+  },
+  "antennaKeepout": [
+    61.73,
+    0.594,
+    74.0,
+    29.294
+  ]
+}

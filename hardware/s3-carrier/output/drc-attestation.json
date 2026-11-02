@@ -1,0 +1,8 @@
+{
+  "result": "PASS",
+  "files": {
+    "HachimoDock-S3-carrier-A4.kicad_pcb": "3ea5f653f6bf27bdb09c90290e1f22ae493803e0c346911ff89b9b5f40b8624e",
+    "HachimoDock-S3-carrier-A4.kicad_pro": "b2a18f50c34a588883561c41c05b10932a7583cc24a686b083e6005ec281fcdb",
+    "drc.json": "cad36bbe3d17cea1ba2441ca362e8a33309eafbf00bc2b3aa09fd6bb6f6c72d5"
+  }
+}

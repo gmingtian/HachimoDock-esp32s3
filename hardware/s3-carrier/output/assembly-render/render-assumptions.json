@@ -1,0 +1,37 @@
+{
+  "revision": "A4",
+  "designSha256": "c99cb1041a49082fe1eb45d4825c697bb40f3f2109292dac8e39d847eaaa322e",
+  "renderMethod": "VTK/EGL from PCB coordinates and imported original STEP cap/keycap solids",
+  "printedCapAndKeycapSourceSha256": "0c4a8b58af7ed373da93895adf4c9dde235b14f9bbf6209ec10d7f310a2b896c",
+  "assumedHeightsMm": {
+    "carrier": 1.6,
+    "femaleSocket": 8.5,
+    "maleShoulder": 2.4,
+    "modulePcbBottom": 12.6,
+    "modulePcbThickness": 1.6,
+    "screwHeadMaximum": 3.0,
+    "keycapBottom": 15.2,
+    "printedSphereCenter": 26.6,
+    "screenPlugHeight": 14.0
+  },
+  "gainSelector": {
+    "shuntShown": "1-2 / 6dB",
+    "assumedShuntHeightMm": 10.3,
+    "actualHeightVerified": false
+  },
+  "screwHeadDiameterPlanningMm": 6,
+  "connectorBodyMaximumXYmm": [
+    22,
+    3
+  ],
+  "shownFasteners": [
+    "H1",
+    "H4"
+  ],
+  "locatingSupportHole": "H3; no screw installed",
+  "moduleElectronicsAndUsbExterior": "schematic; not a measured vendor STEP",
+  "screenBodyShown": false,
+  "screenBodyReason": "actual Unvision board dimensions/mounting remain unconfirmed",
+  "collisionSimulation": false,
+  "fabricationApproved": false
+}

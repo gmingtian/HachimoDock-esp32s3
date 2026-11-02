@@ -1,0 +1,159 @@
+{
+  "status": "dimensioned XY checks passed; complete 3D assembly and motion unverified",
+  "designSha256": "c99cb1041a49082fe1eb45d4825c697bb40f3f2109292dac8e39d847eaaa322e",
+  "boardSha256": "3ea5f653f6bf27bdb09c90290e1f22ae493803e0c346911ff89b9b5f40b8624e",
+  "layoutLockedToUpstream": [
+    "outline",
+    "five mounting holes",
+    "SW1",
+    "SW2",
+    "SW3",
+    "JS1"
+  ],
+  "checks": [
+    {
+      "pair": "屏幕插头—果云下排排母",
+      "clearanceMm": 0.536,
+      "minimumPlanningMm": 0.5
+    },
+    {
+      "pair": "屏幕插头—麦克风包络",
+      "clearanceMm": 2.6,
+      "minimumPlanningMm": 1.0
+    },
+    {
+      "pair": "麦克风包络—SW3键帽预留",
+      "clearanceMm": 1.0712,
+      "minimumPlanningMm": 1.0
+    },
+    {
+      "pair": "功放包络—SW1键帽预留",
+      "clearanceMm": 0.8712,
+      "minimumPlanningMm": 0.8
+    },
+    {
+      "pair": "摇杆本体—SW3键帽预留",
+      "clearanceMm": 1.5928,
+      "minimumPlanningMm": 1.0
+    },
+    {
+      "pair": "屏幕插头—H1螺丝头Ø6",
+      "clearanceMm": 11.2855,
+      "minimumPlanningMm": 0.5
+    },
+    {
+      "pair": "屏幕插头—H2螺丝头Ø6",
+      "clearanceMm": 19.5036,
+      "minimumPlanningMm": 0.5
+    },
+    {
+      "pair": "屏幕插头—H3螺丝头Ø6",
+      "clearanceMm": 0.5595,
+      "minimumPlanningMm": 0.5
+    },
+    {
+      "pair": "屏幕插头—H4螺丝头Ø6",
+      "clearanceMm": 11.5986,
+      "minimumPlanningMm": 0.5
+    },
+    {
+      "pair": "屏幕插头—H5螺丝头Ø6",
+      "clearanceMm": 19.2983,
+      "minimumPlanningMm": 0.5
+    },
+    {
+      "pair": "JP1含跳线帽—U1模块",
+      "clearanceMm": 8.403,
+      "minimumPlanningMm": 1.0
+    },
+    {
+      "pair": "JP1含跳线帽—U2模块",
+      "clearanceMm": 2.9,
+      "minimumPlanningMm": 1.0
+    },
+    {
+      "pair": "JP1含跳线帽—U3模块",
+      "clearanceMm": 9.0,
+      "minimumPlanningMm": 1.0
+    },
+    {
+      "pair": "JP1含跳线帽—屏幕插头",
+      "clearanceMm": 4.8,
+      "minimumPlanningMm": 1.0
+    },
+    {
+      "pair": "JP1含跳线帽—SW1键帽预留",
+      "clearanceMm": 10.2685,
+      "minimumPlanningMm": 1.0
+    },
+    {
+      "pair": "JP1含跳线帽—SW2键帽预留",
+      "clearanceMm": 4.3712,
+      "minimumPlanningMm": 1.0
+    },
+    {
+      "pair": "JP1含跳线帽—SW3键帽预留",
+      "clearanceMm": 7.6123,
+      "minimumPlanningMm": 1.0
+    },
+    {
+      "pair": "JP1含跳线帽—H1螺丝头Ø6",
+      "clearanceMm": 12.0154,
+      "minimumPlanningMm": 1.0
+    },
+    {
+      "pair": "JP1含跳线帽—H2螺丝头Ø6",
+      "clearanceMm": 37.0461,
+      "minimumPlanningMm": 1.0
+    },
+    {
+      "pair": "JP1含跳线帽—H3螺丝头Ø6",
+      "clearanceMm": 3.1697,
+      "minimumPlanningMm": 1.0
+    },
+    {
+      "pair": "JP1含跳线帽—H4螺丝头Ø6",
+      "clearanceMm": 28.0824,
+      "minimumPlanningMm": 1.0
+    },
+    {
+      "pair": "JP1含跳线帽—H5螺丝头Ø6",
+      "clearanceMm": 26.3725,
+      "minimumPlanningMm": 1.0
+    }
+  ],
+  "plugMaximumBodyMm": [
+    22,
+    3
+  ],
+  "keycapPlanningSizeMm": 18.5,
+  "gainSelectorAssemblyEnvelope": [
+    26.0,
+    37.3,
+    30.0,
+    45.8
+  ],
+  "shuntBodyMaximumMm": [
+    4,
+    5.5
+  ],
+  "joystickCap": "original 3D-printed cap; nominal sphere diameter 14mm",
+  "newPartClearanceOutsideMotionReservationMm": {
+    "U1": 15.5516,
+    "U2": 28.7192,
+    "U3": 1.3243,
+    "J1": 18.4941,
+    "J1插头": 17.8211,
+    "JP1含跳线帽": 23.15
+  },
+  "motionReservationRadiusMm": 15.0,
+  "reservationIsMeasuredMotion": false,
+  "SW3ToMotionReservationSignedXYGapMm": -4.1072,
+  "SW3Interpretation": "Conservative XY reservation overlaps original SW3 cap projection. This is not a 3D collision result; original controls are retained. Installed pivot/height and full tilt/click require assembly verification.",
+  "unverified": [
+    "socket heights and screw-head clearance under U1/U2",
+    "joystick pivot/printed-cap fit; full sweep and click relative to SW3",
+    "screen, housing, cable bend and USB plug stack-up"
+  ],
+  "fabricationApproved": false
+}

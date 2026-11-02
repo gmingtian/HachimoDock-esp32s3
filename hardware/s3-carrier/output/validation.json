@@ -1,0 +1,514 @@
+{
+  "revision": "A4",
+  "status": "engineering-draft",
+  "nativeCad": "KiCad 9.0.8",
+  "components": 9,
+  "electricalPads": 86,
+  "mountingHoles": 5,
+  "routedBranches": 69,
+  "vias": 24,
+  "nativeDrcViolations": 0,
+  "nativeDrcUnconnectedItems": 0,
+  "nativeDrcBoundToBoardAndRules": true,
+  "filledGroundLayers": [
+    "F.Cu",
+    "B.Cu"
+  ],
+  "allNativePadPositionsVerified": true,
+  "addedDiscreteComponents": false,
+  "mechanicalAudit": {
+    "status": "dimensioned XY checks passed; complete 3D assembly and motion unverified",
+    "designSha256": "c99cb1041a49082fe1eb45d4825c697bb40f3f2109292dac8e39d847eaaa322e",
+    "boardSha256": "3ea5f653f6bf27bdb09c90290e1f22ae493803e0c346911ff89b9b5f40b8624e",
+    "layoutLockedToUpstream": [
+      "outline",
+      "five mounting holes",
+      "SW1",
+      "SW2",
+      "SW3",
+      "JS1"
+    ],
+    "checks": [
+      {
+        "pair": "屏幕插头—果云下排排母",
+        "clearanceMm": 0.536,
+        "minimumPlanningMm": 0.5
+      },
+      {
+        "pair": "屏幕插头—麦克风包络",
+        "clearanceMm": 2.6,
+        "minimumPlanningMm": 1.0
+      },
+      {
+        "pair": "麦克风包络—SW3键帽预留",
+        "clearanceMm": 1.0712,
+        "minimumPlanningMm": 1.0
+      },
+      {
+        "pair": "功放包络—SW1键帽预留",
+        "clearanceMm": 0.8712,
+        "minimumPlanningMm": 0.8
+      },
+      {
+        "pair": "摇杆本体—SW3键帽预留",
+        "clearanceMm": 1.5928,
+        "minimumPlanningMm": 1.0
+      },
+      {
+        "pair": "屏幕插头—H1螺丝头Ø6",
+        "clearanceMm": 11.2855,
+        "minimumPlanningMm": 0.5
+      },
+      {
+        "pair": "屏幕插头—H2螺丝头Ø6",
+        "clearanceMm": 19.5036,
+        "minimumPlanningMm": 0.5
+      },
+      {
+        "pair": "屏幕插头—H3螺丝头Ø6",
+        "clearanceMm": 0.5595,
+        "minimumPlanningMm": 0.5
+      },
+      {
+        "pair": "屏幕插头—H4螺丝头Ø6",
+        "clearanceMm": 11.5986,
+        "minimumPlanningMm": 0.5
+      },
+      {
+        "pair": "屏幕插头—H5螺丝头Ø6",
+        "clearanceMm": 19.2983,
+        "minimumPlanningMm": 0.5
+      },
+      {
+        "pair": "JP1含跳线帽—U1模块",
+        "clearanceMm": 8.403,
+        "minimumPlanningMm": 1.0
+      },
+      {
+        "pair": "JP1含跳线帽—U2模块",
+        "clearanceMm": 2.9,
+        "minimumPlanningMm": 1.0
+      },
+      {
+        "pair": "JP1含跳线帽—U3模块",
+        "clearanceMm": 9.0,
+        "minimumPlanningMm": 1.0
+      },
+      {
+        "pair": "JP1含跳线帽—屏幕插头",
+        "clearanceMm": 4.8,
+        "minimumPlanningMm": 1.0
+      },
+      {
+        "pair": "JP1含跳线帽—SW1键帽预留",
+        "clearanceMm": 10.2685,
+        "minimumPlanningMm": 1.0
+      },
+      {
+        "pair": "JP1含跳线帽—SW2键帽预留",
+        "clearanceMm": 4.3712,
+        "minimumPlanningMm": 1.0
+      },
+      {
+        "pair": "JP1含跳线帽—SW3键帽预留",
+        "clearanceMm": 7.6123,
+        "minimumPlanningMm": 1.0
+      },
+      {
+        "pair": "JP1含跳线帽—H1螺丝头Ø6",
+        "clearanceMm": 12.0154,
+        "minimumPlanningMm": 1.0
+      },
+      {
+        "pair": "JP1含跳线帽—H2螺丝头Ø6",
+        "clearanceMm": 37.0461,
+        "minimumPlanningMm": 1.0
+      },
+      {
+        "pair": "JP1含跳线帽—H3螺丝头Ø6",
+        "clearanceMm": 3.1697,
+        "minimumPlanningMm": 1.0
+      },
+      {
+        "pair": "JP1含跳线帽—H4螺丝头Ø6",
+        "clearanceMm": 28.0824,
+        "minimumPlanningMm": 1.0
+      },
+      {
+        "pair": "JP1含跳线帽—H5螺丝头Ø6",
+        "clearanceMm": 26.3725,
+        "minimumPlanningMm": 1.0
+      }
+    ],
+    "plugMaximumBodyMm": [
+      22,
+      3
+    ],
+    "keycapPlanningSizeMm": 18.5,
+    "gainSelectorAssemblyEnvelope": [
+      26.0,
+      37.3,
+      30.0,
+      45.8
+    ],
+    "shuntBodyMaximumMm": [
+      4,
+      5.5
+    ],
+    "joystickCap": "original 3D-printed cap; nominal sphere diameter 14mm",
+    "newPartClearanceOutsideMotionReservationMm": {
+      "U1": 15.5516,
+      "U2": 28.7192,
+      "U3": 1.3243,
+      "J1": 18.4941,
+      "J1插头": 17.8211,
+      "JP1含跳线帽": 23.15
+    },
+    "motionReservationRadiusMm": 15.0,
+    "reservationIsMeasuredMotion": false,
+    "SW3ToMotionReservationSignedXYGapMm": -4.1072,
+    "SW3Interpretation": "Conservative XY reservation overlaps original SW3 cap projection. This is not a 3D collision result; original controls are retained. Installed pivot/height and full tilt/click require assembly verification.",
+    "unverified": [
+      "socket heights and screw-head clearance under U1/U2",
+      "joystick pivot/printed-cap fit; full sweep and click relative to SW3",
+      "screen, housing, cable bend and USB plug stack-up"
+    ],
+    "fabricationApproved": false
+  },
+  "automatedTests": "23 passed; unittest discover -s hardware/s3-carrier/tests -v",
+  "easyedaDataRoundTripVerified": true,
+  "easyedaEditorImportVerified": false,
+  "easyedaNativeKeepoutConverted": false,
+  "enclosureVerified": false,
+  "screenMechanicalDimensionsVerified": false,
+  "powerBudgetVerified": false,
+  "hardwareTested": false,
+  "fabricationApproved": false,
+  "directBacklightGpio": 42,
+  "amplifierGain": "JP1: 1-2=6dB, open=9dB, 2-3=12dB; I2S; module strapping unverified",
+  "gainSelector": {
+    "reference": "JP1",
+    "pitchMm": 2.54,
+    "pins": {
+      "1": "+3V3",
+      "2": "AMP_GAIN",
+      "3": "GND"
+    },
+    "modes": {
+      "1-2": 6,
+      "open": 9,
+      "2-3": 12
+    },
+    "headerBodyMaximumMm": [
+      2.54,
+      7.62
+    ],
+    "shuntBodyMaximumMm": [
+      4.0,
+      5.5
+    ],
+    "assemblyEnvelope": [
+      26.0,
+      37.3,
+      30.0,
+      45.8
+    ],
+    "singleShuntOnly": true,
+    "changeOnlyWhenUnpowered": true,
+    "moduleGainStrappingVerified": false,
+    "heightVerified": false
+  },
+  "speakerTerminalsOnCarrier": false,
+  "existingFirmwareSignalAudit": "PASS",
+  "deliberateFaultsRejected": 6,
+  "amplifierSupplyUserConfirmed": "3V3",
+  "joystickFirmwareStatus": "reserved-only; not initialized by current S3 code",
+  "mountingSockets": [
+    {
+      "parent": "U1",
+      "strip": 1,
+      "pins": 21,
+      "padNumbers": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11",
+        "12",
+        "13",
+        "14",
+        "15",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "pitch": 2.54,
+      "centerX": 32.329999999999984,
+      "centerY": 2.2939999999999983,
+      "bodyEnvelope": [
+        5.659999999999984,
+        1.0239999999999982,
+        58.999999999999986,
+        3.5639999999999983
+      ],
+      "heightVerified": false
+    },
+    {
+      "parent": "U1",
+      "strip": 2,
+      "pins": 21,
+      "padNumbers": [
+        "22",
+        "23",
+        "24",
+        "25",
+        "26",
+        "27",
+        "28",
+        "29",
+        "30",
+        "31",
+        "32",
+        "33",
+        "34",
+        "35",
+        "36",
+        "37",
+        "38",
+        "39",
+        "40",
+        "41",
+        "42"
+      ],
+      "pitch": 2.54,
+      "centerX": 32.329999999999984,
+      "centerY": 27.694,
+      "bodyEnvelope": [
+        5.659999999999984,
+        26.423999999999996,
+        58.999999999999986,
+        28.964000000000002
+      ],
+      "heightVerified": false
+    },
+    {
+      "parent": "U2",
+      "strip": 1,
+      "pins": 7,
+      "padNumbers": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7"
+      ],
+      "pitch": 2.54,
+      "centerX": 4.500000000000004,
+      "centerY": 40.379999999999995,
+      "bodyEnvelope": [
+        3.2300000000000044,
+        31.49,
+        5.770000000000005,
+        49.27
+      ],
+      "heightVerified": false
+    },
+    {
+      "parent": "U3",
+      "strip": 1,
+      "pins": 3,
+      "padNumbers": [
+        "1",
+        "2",
+        "3"
+      ],
+      "pitch": 2.54,
+      "centerX": 42.190000000000005,
+      "centerY": 42.1,
+      "bodyEnvelope": [
+        40.92,
+        38.29,
+        43.46000000000001,
+        45.910000000000004
+      ],
+      "heightVerified": false
+    },
+    {
+      "parent": "U3",
+      "strip": 2,
+      "pins": 3,
+      "padNumbers": [
+        "4",
+        "5",
+        "6"
+      ],
+      "pitch": 2.54,
+      "centerX": 49.81,
+      "centerY": 42.1,
+      "bodyEnvelope": [
+        48.54,
+        38.29,
+        51.080000000000005,
+        45.910000000000004
+      ],
+      "heightVerified": false
+    }
+  ],
+  "microphoneMounting": {
+    "source": "user-supplied pre-soldered module photo",
+    "diameterMm": 14.0,
+    "socketRowPitchMm": 7.62,
+    "labelSide": "up/outward",
+    "longPins": "down/into-carrier-sockets",
+    "leftTopToBottom": [
+      "SD",
+      "3V3",
+      "GND"
+    ],
+    "rightTopToBottom": [
+      "SCK",
+      "WS",
+      "L/R"
+    ],
+    "physicalPhotoOrientationChecked": true,
+    "pcbAssemblyTested": false
+  },
+  "screenConnectorOrder": [
+    "GND",
+    "VCC",
+    "SCL",
+    "SDA",
+    "RES",
+    "DC",
+    "CS",
+    "BLK"
+  ],
+  "usbSide": "left",
+  "usbOpeningAlignmentVerified": false,
+  "moduleRotationFromA1Deg": 180,
+  "moduleShiftTowardUsbMm": 3.0,
+  "usbEndReferenceEnvelopeXmm": -0.525,
+  "usbFaceDimensionsVerified": false,
+  "nylonMountingHoles": [
+    "H2"
+  ],
+  "fastenerEnvelopes": [
+    {
+      "ref": "H1",
+      "x": 11.040676420000004,
+      "y": 36.003133479999995,
+      "maximumHeadDiameterMm": 6.0,
+      "headHeightAllowanceMm": 3.0,
+      "copperKeepoutRadiusMm": 3.5,
+      "actualFastenerVerified": false,
+      "material": "unspecified"
+    },
+    {
+      "ref": "H2",
+      "x": 61.04967596999998,
+      "y": 12.009534019999998,
+      "maximumHeadDiameterMm": 6.0,
+      "headHeightAllowanceMm": 3.0,
+      "copperKeepoutRadiusMm": 3.5,
+      "actualFastenerVerified": false,
+      "material": "nylon"
+    },
+    {
+      "ref": "H3",
+      "x": 36.043674419999974,
+      "y": 36.05953418,
+      "maximumHeadDiameterMm": 6.0,
+      "headHeightAllowanceMm": 3.0,
+      "copperKeepoutRadiusMm": 3.5,
+      "actualFastenerVerified": false,
+      "material": "unspecified"
+    },
+    {
+      "ref": "H4",
+      "x": 61.056274890000005,
+      "y": 36.0265345,
+      "maximumHeadDiameterMm": 6.0,
+      "headHeightAllowanceMm": 3.0,
+      "copperKeepoutRadiusMm": 3.5,
+      "actualFastenerVerified": false,
+      "material": "unspecified"
+    },
+    {
+      "ref": "H5",
+      "x": 11.049588009999999,
+      "y": 12.016973679999996,
+      "maximumHeadDiameterMm": 6.0,
+      "headHeightAllowanceMm": 3.0,
+      "copperKeepoutRadiusMm": 3.5,
+      "actualFastenerVerified": false,
+      "material": "unspecified"
+    }
+  ],
+  "assemblyFastenerRefs": [
+    "H1",
+    "H4"
+  ],
+  "locatingSupportHole": "H3; no screw installed",
+  "fastenerAuditBasis": "Five conservative head envelopes retained; assembly uses two screws",
+  "sourceSha256": {
+    "goouuu-reference-carrier.epro2": "9fef4e2a34d6f59b826adc221a8ec60580c3fd773b34f5660a3688b55b813aec",
+    "upstream-pcb-v1.2.epro2": "332c12feab69aaecdbdde2aa5293da99279b9e755e1338a9e770b0cced18f5c1"
+  },
+  "designSha256": {
+    "BOM.csv": "163a64f2c24e98c0dd8f471b93be0d8cc3c84fc6d64f88b88b1bb55eeae16e92",
+    "HachimoDock-S3-carrier-A4-Gerber.zip": "f37d6a4aacb843249476b656e248e3e576f963c258f840ecbc87fd694797cb69",
+    "HachimoDock-S3-carrier-A4.epro2": "f3b274fec4c4f457241f2e33d177d27c9d36b3f87c24da7e860e3e2510ca2dd2",
+    "HachimoDock-S3-carrier-A4.kicad_pcb": "3ea5f653f6bf27bdb09c90290e1f22ae493803e0c346911ff89b9b5f40b8624e",
+    "HachimoDock-S3-carrier-A4.kicad_pro": "b2a18f50c34a588883561c41c05b10932a7583cc24a686b083e6005ec281fcdb",
+    "S3_Carrier.pretty/H1.kicad_mod": "7809cfb4a81141691e23969f87b8c6059f15c0beb753aeadec7f3dcdede1b8ec",
+    "S3_Carrier.pretty/H2.kicad_mod": "463b5d3c06c81f7805d79c4b05ad0cbe3ee411259e11ee9e861ad4da1929bf1e",
+    "S3_Carrier.pretty/H3.kicad_mod": "d1ee1d24b3bf4f599154a587da9a9142db568a4cdfb141a48b9d69f75dec888c",
+    "S3_Carrier.pretty/H4.kicad_mod": "4bddfa42b1afdcd4472b300423dbee26eb43acd852e4d4e4e6995069632aa991",
+    "S3_Carrier.pretty/H5.kicad_mod": "5ddad15d6dbb748589204c23d1fac5968e600570b5aef8e38813648c35bfd135",
+    "S3_Carrier.pretty/J1.kicad_mod": "7859c2b3ff80d96d5b3279d6beff63add1f7aeb6a3118034a1ea904d11c87b83",
+    "S3_Carrier.pretty/JP1.kicad_mod": "dbe0513ab42f26b890ab90606b084aa6d4e7d619d4f370cfa358fd225149b1a9",
+    "S3_Carrier.pretty/JS1.kicad_mod": "d89c4c754bdcf60a654d2c0e1cada199e5ffd87debdc1d27c93891ba50d07086",
+    "S3_Carrier.pretty/SW1.kicad_mod": "7656bb70e26d9269ebf0efb5b0b2af8bc3d081eb31b03f50dc2ffc1ec968495b",
+    "S3_Carrier.pretty/SW2.kicad_mod": "e1ed6733eab2485f817ec7f2e8997a90b4f8a17b4f6c52dff888eba09512b318",
+    "S3_Carrier.pretty/SW3.kicad_mod": "4f47db112d97c7e31ddc4348f7ca0d1cf1522889b2dfd09b1464915a27b993e6",
+    "S3_Carrier.pretty/U1.kicad_mod": "20b3fb8e28f2de5613666084c5bc98104b463e4a7fc4c66d10af86ca901c5dca",
+    "S3_Carrier.pretty/U2.kicad_mod": "2fe611c927a264052914252334dd99080cee215ad7e24b956d74321a470e6716",
+    "S3_Carrier.pretty/U3.kicad_mod": "8094fbb54b353d389134330101d24c26532c36e31790e264518a118a77e215da",
+    "assembly-orientation.png": "f145313f1f5c68cd770cf9a079121b5a5181c7ee164191e81d9a52d0c2b2cf34",
+    "assembly-orientation.svg": "e3a1c266776b23741c21d8d6ea77a276a03a0e08b4b99df54e92888c06415ef3",
+    "assembly-render/assembly-four-views.png": "e7507bad8136af99bc252be4c7c0d74913738b8e668814db7aa11f88ccbe4d52",
+    "assembly-render/assembly-isometric.png": "ff091eacdf012793ab5fbbcc0bacce7074c73017b03f62bd2cbd51398333be3d",
+    "assembly-render/connector-fastener-clearance.png": "c479e1022f88e9daa75d23ce8e32211f3243d8688be32e479508f9fc904b01fc",
+    "assembly-render/front-left.png": "6a3a1ce501564a76f5832d019c4ef12289f68083c2acf0e616a1d569d3400a50",
+    "assembly-render/front-right.png": "b7231c010558f6ec8794c7743085ed631b54e923343de6d5e3f969ce381892c9",
+    "assembly-render/rear.png": "2e5d6c7b18fb3572dfd9a76d08b857fd1c22f892bdd06751b6ad901d23010b43",
+    "assembly-render/render-assumptions.json": "4d71eb768610b6b5b5aa8307670868867bd978455b010acad14ce8b9d71c93d8",
+    "assembly-render/top.png": "a764f53b5ce341be29d6ead157dd9900e853142e7bd33a21e8316ad5a737fe78",
+    "audit-fault-checks.json": "95765e81a9b8c36ad7af9c34b5985669c8c150fc5cef884a5daf4ff7230a4165",
+    "connections.csv": "b31f7d75707fd731812058b62ea73dc09d0e8800d62a41512e08b8284afc708b",
+    "design.json": "c99cb1041a49082fe1eb45d4825c697bb40f3f2109292dac8e39d847eaaa322e",
+    "drc-attestation.json": "0f94f399207e83d6702fc24b185a4eecbf07f70b7245297b71fb5d56f9e6c517",
+    "drc.json": "cad36bbe3d17cea1ba2441ca362e8a33309eafbf00bc2b3aa09fd6bb6f6c72d5",
+    "electrical-audit.json": "02a5ff3ee567b3c4ca7fed5001f5bc9c68b79023b0cd34e061550d1bc5ec6c96",
+    "electrical-audit.md": "74687a0a8f8e1fb8094454a5e4312db730e01cb1f482687d311871a845b64c4c",
+    "fp-lib-table": "0cba8577a3014ae94425deb21deabaad3a20a7b9eaca1f869bcf66175fd1a622",
+    "independent-review.md": "8e8958d92b2d24fa0eff536d7c32f4ab69fea0f5e5a0e753cc3fdd725a9e7ebc",
+    "manufacturing-export.json": "fb6e8abbdd45c301b2707e9c327e744273040ea84479d265cf25238b4926273d",
+    "mechanical-audit.json": "2dcb0e5a602878a28547dd397f4299e42b786df4186bc4300c42c3e2370be285",
+    "mechanical-audit.md": "ebb08f346d21856c9f05513bc3b59b606057ce4f74e04354bca5e4d775c80681",
+    "pcb-preview.png": "b13d70bf035388564e28ff1a6b3985e21dfd85bab8eb710e1c6cd47eeb51124e",
+    "pcb-preview.svg": "9e90d732a4c7b2d8f5ec9637032f703ef28473fa59af52c475123c17c1e278a0",
+    "usb-options.json": "ccbcd075b6a5501ce6de80c4c7f0a49d7d08dfaf49235edef483b2fe9d16058e"
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "sourceBoardSha256": "3ea5f653f6bf27bdb09c90290e1f22ae493803e0c346911ff89b9b5f40b8624e",
+  "cases": [
+    {
+      "injectedFault": "swapped-lcd-clock",
+      "rejected": true,
+      "check": "LCD_CLK"
+    },
+    {
+      "injectedFault": "mic-wrong-slot",
+      "rejected": true,
+      "check": "+3V3 power/ground mapping mismatch"
+    },
+    {
+      "injectedFault": "amp-wrong-supply",
+      "rejected": true,
+      "check": "+3V3 power/ground mapping mismatch"
+    },
+    {
+      "injectedFault": "gain-tied-to-supply",
+      "rejected": true,
+      "check": "+3V3 power/ground mapping mismatch"
+    },
+    {
+      "injectedFault": "jumper-wrong-center",
+      "rejected": true,
+      "check": "GND power/ground mapping mismatch"
+    },
+    {
+      "injectedFault": "socket-drill-too-small",
+      "rejected": true,
+      "check": "Socket tail hole too small"
+    }
+  ]
+}

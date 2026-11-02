@@ -1,0 +1,37 @@
+{
+  "originalAssemblyStep": {
+    "filename": "桌搭-整机外壳3d打印版.STEP",
+    "sha256": "0c4a8b58af7ed373da93895adf4c9dde235b14f9bbf6209ec10d7f310a2b896c",
+    "inspection": "OpenCascade STEP import, solids 2/3/4 and 5; Y is height in this file",
+    "keycapBoundingSizeMm": [
+      18.021,
+      10.045,
+      18.021
+    ],
+    "printedCapOuterSphereRadiusMm": 7.0,
+    "printedCapBoundingSizeMm": [
+      14.01,
+      14.01,
+      14.01
+    ],
+    "sphereCenterInSourceMm": [
+      29.5,
+      10.1447474683,
+      15.75
+    ],
+    "joystickPivotToSphereCenterVerified": false
+  },
+  "ya13s": {
+    "manufacturer": "YTL",
+    "part": "YA13S-L7.4-B10Ka(60)-0-DL01",
+    "datasheet": "https://www.lcsc.com/datasheet/C37323748.pdf",
+    "drawingTotalMechanicalAngleDeg": 60,
+    "unspecifiedAngleToleranceDeg": 2,
+    "bodySizeMm": [
+      22.6,
+      16.7
+    ],
+    "datasheetBodyEnvelopeNotACapMotionModel": true
+  },
+  "noFabricationApproval": true
+}

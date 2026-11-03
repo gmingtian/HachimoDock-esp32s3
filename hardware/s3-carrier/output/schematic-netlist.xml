@@ -1,0 +1,510 @@
+<?xml version='1.0' encoding='utf-8'?>
+<export version="E">
+  <design>
+    <source>HachimoDock-S3-carrier-A4.kicad_sch</source>
+    <date>2026-11-03T14:13:26+0800</date>
+    <tool>Eeschema 9.0.8+dfsg-1</tool>
+    <sheet number="1" name="/" tstamps="/">
+      <title_block>
+        <title>HachimoDock S3 A4 - Carrier Module Connections</title>
+        <company>gmingtian / based on HachimoDock</company>
+        <rev>A4</rev>
+        <date>2026-11-03</date>
+        <source>HachimoDock-S3-carrier-A4.kicad_sch</source>
+        <comment number="1" value="Engineering prototype - physical validation pending" />
+        <comment number="2" value="" />
+        <comment number="3" value="" />
+        <comment number="4" value="" />
+        <comment number="5" value="" />
+        <comment number="6" value="" />
+        <comment number="7" value="" />
+        <comment number="8" value="" />
+        <comment number="9" value="" />
+      </title_block>
+    </sheet>
+  </design>
+  <components>
+    <comp ref="J1">
+      <value>LCD / 8P / 2.54mm</value>
+      <footprint>S3_Carrier:J1</footprint>
+      <fields>
+        <field name="Footprint">S3_Carrier:J1</field>
+        <field name="Datasheet" />
+        <field name="Description" />
+      </fields>
+      <libsource lib="S3_Carrier" part="J1" description="" />
+      <property name="Sheetname" value="" />
+      <property name="Sheetfile" value="HachimoDock-S3-carrier-A4.kicad_sch" />
+      <sheetpath names="/" tstamps="/" />
+      <tstamps>9c57cf12-b5ed-593e-814a-72b770889f73</tstamps>
+    </comp>
+    <comp ref="JP1">
+      <value>GAIN SELECT / 3P</value>
+      <footprint>S3_Carrier:JP1</footprint>
+      <fields>
+        <field name="Footprint">S3_Carrier:JP1</field>
+        <field name="Datasheet" />
+        <field name="Description" />
+      </fields>
+      <libsource lib="S3_Carrier" part="JP1" description="" />
+      <property name="Sheetname" value="" />
+      <property name="Sheetfile" value="HachimoDock-S3-carrier-A4.kicad_sch" />
+      <sheetpath names="/" tstamps="/" />
+      <tstamps>039c0d13-2c5d-5403-aa0e-86e27455b7f9</tstamps>
+    </comp>
+    <comp ref="JS1">
+      <value>YA13S / GPIO RESERVED</value>
+      <footprint>S3_Carrier:JS1</footprint>
+      <fields>
+        <field name="Footprint">S3_Carrier:JS1</field>
+        <field name="Datasheet" />
+        <field name="Description" />
+      </fields>
+      <libsource lib="S3_Carrier" part="JS1" description="" />
+      <property name="Sheetname" value="" />
+      <property name="Sheetfile" value="HachimoDock-S3-carrier-A4.kicad_sch" />
+      <sheetpath names="/" tstamps="/" />
+      <tstamps>834fc0ea-9d9b-564e-b43c-7af413838778</tstamps>
+    </comp>
+    <comp ref="SW1">
+      <value>PREVIOUS / GPIO39</value>
+      <footprint>S3_Carrier:SW1</footprint>
+      <fields>
+        <field name="Footprint">S3_Carrier:SW1</field>
+        <field name="Datasheet" />
+        <field name="Description" />
+      </fields>
+      <libsource lib="S3_Carrier" part="SW1" description="" />
+      <property name="Sheetname" value="" />
+      <property name="Sheetfile" value="HachimoDock-S3-carrier-A4.kicad_sch" />
+      <sheetpath names="/" tstamps="/" />
+      <tstamps>c6ccd60d-5d1c-5806-b9da-b84d55686954</tstamps>
+    </comp>
+    <comp ref="SW2">
+      <value>NEXT / GPIO38</value>
+      <footprint>S3_Carrier:SW2</footprint>
+      <fields>
+        <field name="Footprint">S3_Carrier:SW2</field>
+        <field name="Datasheet" />
+        <field name="Description" />
+      </fields>
+      <libsource lib="S3_Carrier" part="SW2" description="" />
+      <property name="Sheetname" value="" />
+      <property name="Sheetfile" value="HachimoDock-S3-carrier-A4.kicad_sch" />
+      <sheetpath names="/" tstamps="/" />
+      <tstamps>c53d69ca-133f-5e1a-969d-ef2cc78daf4b</tstamps>
+    </comp>
+    <comp ref="SW3">
+      <value>CONFIRM / GPIO0</value>
+      <footprint>S3_Carrier:SW3</footprint>
+      <fields>
+        <field name="Footprint">S3_Carrier:SW3</field>
+        <field name="Datasheet" />
+        <field name="Description" />
+      </fields>
+      <libsource lib="S3_Carrier" part="SW3" description="" />
+      <property name="Sheetname" value="" />
+      <property name="Sheetfile" value="HachimoDock-S3-carrier-A4.kicad_sch" />
+      <sheetpath names="/" tstamps="/" />
+      <tstamps>e7281afa-4f16-5e88-8574-e2d4a7f165c2</tstamps>
+    </comp>
+    <comp ref="U1">
+      <value>GOOUUU ESP32-S3 N16R8 / 42P</value>
+      <footprint>S3_Carrier:U1</footprint>
+      <fields>
+        <field name="Footprint">S3_Carrier:U1</field>
+        <field name="Datasheet" />
+        <field name="Description" />
+      </fields>
+      <libsource lib="S3_Carrier" part="U1" description="" />
+      <property name="Sheetname" value="" />
+      <property name="Sheetfile" value="HachimoDock-S3-carrier-A4.kicad_sch" />
+      <sheetpath names="/" tstamps="/" />
+      <tstamps>761fdef9-6d19-507c-98f9-2855aa9918cb</tstamps>
+    </comp>
+    <comp ref="U2">
+      <value>MAX98357A MODULE</value>
+      <footprint>S3_Carrier:U2</footprint>
+      <fields>
+        <field name="Footprint">S3_Carrier:U2</field>
+        <field name="Datasheet" />
+        <field name="Description" />
+      </fields>
+      <libsource lib="S3_Carrier" part="U2" description="" />
+      <property name="Sheetname" value="" />
+      <property name="Sheetfile" value="HachimoDock-S3-carrier-A4.kicad_sch" />
+      <sheetpath names="/" tstamps="/" />
+      <tstamps>f16a9354-7787-510d-b100-5211aae30ddb</tstamps>
+    </comp>
+    <comp ref="U3">
+      <value>INMP441 ROUND MODULE</value>
+      <footprint>S3_Carrier:U3</footprint>
+      <fields>
+        <field name="Footprint">S3_Carrier:U3</field>
+        <field name="Datasheet" />
+        <field name="Description" />
+      </fields>
+      <libsource lib="S3_Carrier" part="U3" description="" />
+      <property name="Sheetname" value="" />
+      <property name="Sheetfile" value="HachimoDock-S3-carrier-A4.kicad_sch" />
+      <sheetpath names="/" tstamps="/" />
+      <tstamps>bf87899d-41a4-595e-a7c5-aee099e7d154</tstamps>
+    </comp>
+  </components>
+  <libparts>
+    <libpart lib="S3_Carrier" part="J1">
+      <fields>
+        <field name="Reference">J</field>
+        <field name="Value">J1</field>
+        <field name="Footprint" />
+        <field name="Datasheet" />
+        <field name="Description" />
+      </fields>
+      <pins>
+        <pin num="1" name="GND" type="passive" />
+        <pin num="2" name="VCC_3V3" type="passive" />
+        <pin num="3" name="SCL_CLK" type="passive" />
+        <pin num="4" name="SDA_MOSI" type="passive" />
+        <pin num="5" name="RES" type="passive" />
+        <pin num="6" name="DC" type="passive" />
+        <pin num="7" name="CS" type="passive" />
+        <pin num="8" name="BLK" type="passive" />
+      </pins>
+    </libpart>
+    <libpart lib="S3_Carrier" part="JP1">
+      <fields>
+        <field name="Reference">JP</field>
+        <field name="Value">JP1</field>
+        <field name="Footprint" />
+        <field name="Datasheet" />
+        <field name="Description" />
+      </fields>
+      <pins>
+        <pin num="1" name="3V3_6dB" type="passive" />
+        <pin num="2" name="GAIN" type="passive" />
+        <pin num="3" name="GND_12dB" type="passive" />
+      </pins>
+    </libpart>
+    <libpart lib="S3_Carrier" part="JS1">
+      <fields>
+        <field name="Reference">JS</field>
+        <field name="Value">JS1</field>
+        <field name="Footprint" />
+        <field name="Datasheet" />
+        <field name="Description" />
+      </fields>
+      <pins>
+        <pin num="0" name="CASE_4_TABS" type="passive" />
+        <pin num="A" name="PUSH_GND_A" type="passive" />
+        <pin num="A1" name="AXIS_A+" type="passive" />
+        <pin num="A2" name="AXIS_A_WIPER" type="passive" />
+        <pin num="A3" name="AXIS_A-" type="passive" />
+        <pin num="B" name="PUSH_GPIO8_B" type="passive" />
+        <pin num="B1" name="AXIS_B-" type="passive" />
+        <pin num="B2" name="AXIS_B_WIPER" type="passive" />
+        <pin num="B3" name="AXIS_B+" type="passive" />
+        <pin num="C" name="PUSH_GND_C" type="passive" />
+        <pin num="D" name="PUSH_GPIO8_D" type="passive" />
+      </pins>
+    </libpart>
+    <libpart lib="S3_Carrier" part="SW1">
+      <fields>
+        <field name="Reference">SW</field>
+        <field name="Value">SW1</field>
+        <field name="Footprint" />
+        <field name="Datasheet" />
+        <field name="Description" />
+      </fields>
+      <pins>
+        <pin num="1" name="CONTACT" type="passive" />
+        <pin num="2" name="CONTACT" type="passive" />
+      </pins>
+    </libpart>
+    <libpart lib="S3_Carrier" part="SW2">
+      <fields>
+        <field name="Reference">SW</field>
+        <field name="Value">SW2</field>
+        <field name="Footprint" />
+        <field name="Datasheet" />
+        <field name="Description" />
+      </fields>
+      <pins>
+        <pin num="1" name="CONTACT" type="passive" />
+        <pin num="2" name="CONTACT" type="passive" />
+      </pins>
+    </libpart>
+    <libpart lib="S3_Carrier" part="SW3">
+      <fields>
+        <field name="Reference">SW</field>
+        <field name="Value">SW3</field>
+        <field name="Footprint" />
+        <field name="Datasheet" />
+        <field name="Description" />
+      </fields>
+      <pins>
+        <pin num="1" name="CONTACT" type="passive" />
+        <pin num="2" name="CONTACT" type="passive" />
+      </pins>
+    </libpart>
+    <libpart lib="S3_Carrier" part="U1">
+      <fields>
+        <field name="Reference">U</field>
+        <field name="Value">U1</field>
+        <field name="Footprint" />
+        <field name="Datasheet" />
+        <field name="Description" />
+      </fields>
+      <pins>
+        <pin num="1" name="GND" type="power_out" />
+        <pin num="2" name="3V3" type="power_out" />
+        <pin num="3" name="RST" type="bidirectional" />
+        <pin num="4" name="GPIO4" type="bidirectional" />
+        <pin num="5" name="GPIO5" type="bidirectional" />
+        <pin num="6" name="GPIO6" type="bidirectional" />
+        <pin num="7" name="GPIO7" type="bidirectional" />
+        <pin num="8" name="GPIO15" type="bidirectional" />
+        <pin num="9" name="GPIO16" type="bidirectional" />
+        <pin num="10" name="GPIO17" type="bidirectional" />
+        <pin num="11" name="GPIO18" type="bidirectional" />
+        <pin num="12" name="GPIO8" type="bidirectional" />
+        <pin num="13" name="GPIO19" type="bidirectional" />
+        <pin num="14" name="GPIO20" type="bidirectional" />
+        <pin num="15" name="GPIO3" type="bidirectional" />
+        <pin num="16" name="GPIO46" type="bidirectional" />
+        <pin num="17" name="GPIO9" type="bidirectional" />
+        <pin num="18" name="GPIO10" type="bidirectional" />
+        <pin num="19" name="GPIO11" type="bidirectional" />
+        <pin num="20" name="GPIO12" type="bidirectional" />
+        <pin num="21" name="3V3" type="passive" />
+        <pin num="22" name="GND" type="passive" />
+        <pin num="23" name="GPIO1" type="bidirectional" />
+        <pin num="24" name="GPIO2" type="bidirectional" />
+        <pin num="25" name="TX0" type="bidirectional" />
+        <pin num="26" name="RX0" type="bidirectional" />
+        <pin num="27" name="GPIO42" type="bidirectional" />
+        <pin num="28" name="GPIO41" type="bidirectional" />
+        <pin num="29" name="GPIO40" type="bidirectional" />
+        <pin num="30" name="GPIO39" type="bidirectional" />
+        <pin num="31" name="GPIO38" type="bidirectional" />
+        <pin num="32" name="GPIO37" type="bidirectional" />
+        <pin num="33" name="GPIO36" type="bidirectional" />
+        <pin num="34" name="GPIO35" type="bidirectional" />
+        <pin num="35" name="GPIO0" type="bidirectional" />
+        <pin num="36" name="GPIO45" type="bidirectional" />
+        <pin num="37" name="GPIO48" type="bidirectional" />
+        <pin num="38" name="GPIO47" type="bidirectional" />
+        <pin num="39" name="GPIO21" type="bidirectional" />
+        <pin num="40" name="GPIO14" type="bidirectional" />
+        <pin num="41" name="GPIO13" type="bidirectional" />
+        <pin num="42" name="5V+" type="power_out" />
+      </pins>
+    </libpart>
+    <libpart lib="S3_Carrier" part="U2">
+      <fields>
+        <field name="Reference">U</field>
+        <field name="Value">U2</field>
+        <field name="Footprint" />
+        <field name="Datasheet" />
+        <field name="Description" />
+      </fields>
+      <pins>
+        <pin num="1" name="VIN_3V3" type="power_in" />
+        <pin num="2" name="GND" type="power_in" />
+        <pin num="3" name="SD_EN" type="input" />
+        <pin num="4" name="GAIN" type="input" />
+        <pin num="5" name="DIN" type="input" />
+        <pin num="6" name="BCLK" type="input" />
+        <pin num="7" name="LRC" type="input" />
+      </pins>
+    </libpart>
+    <libpart lib="S3_Carrier" part="U3">
+      <fields>
+        <field name="Reference">U</field>
+        <field name="Value">U3</field>
+        <field name="Footprint" />
+        <field name="Datasheet" />
+        <field name="Description" />
+      </fields>
+      <pins>
+        <pin num="1" name="GND" type="power_in" />
+        <pin num="2" name="VDD_3V3" type="power_in" />
+        <pin num="3" name="SD_OUT" type="output" />
+        <pin num="4" name="LR_GND" type="input" />
+        <pin num="5" name="WS" type="input" />
+        <pin num="6" name="SCK" type="input" />
+      </pins>
+    </libpart>
+  </libparts>
+  <libraries>
+    <library logical="S3_Carrier">
+      <uri>S3_Carrier.kicad_sym</uri>
+    </library>
+  </libraries>
+  <nets>
+    <net code="1" name="+5V" class="Default">
+      <node ref="U1" pin="42" pinfunction="5V+" pintype="power_out" />
+    </net>
+    <net code="2" name="/+3V3" class="Default">
+      <node ref="J1" pin="2" pinfunction="VCC_3V3" pintype="passive" />
+      <node ref="JP1" pin="1" pinfunction="3V3_6dB" pintype="passive" />
+      <node ref="JS1" pin="A1" pinfunction="AXIS_A+" pintype="passive" />
+      <node ref="JS1" pin="B3" pinfunction="AXIS_B+" pintype="passive" />
+      <node ref="U1" pin="2" pinfunction="3V3" pintype="power_out" />
+      <node ref="U1" pin="21" pinfunction="3V3" pintype="passive" />
+      <node ref="U2" pin="1" pinfunction="VIN_3V3" pintype="power_in" />
+      <node ref="U2" pin="3" pinfunction="SD_EN" pintype="input" />
+      <node ref="U3" pin="2" pinfunction="VDD_3V3" pintype="power_in" />
+    </net>
+    <net code="3" name="/AMP_GAIN" class="Default">
+      <node ref="JP1" pin="2" pinfunction="GAIN" pintype="passive" />
+      <node ref="U2" pin="4" pinfunction="GAIN" pintype="input" />
+    </net>
+    <net code="4" name="/GND" class="Default">
+      <node ref="J1" pin="1" pinfunction="GND" pintype="passive" />
+      <node ref="JP1" pin="3" pinfunction="GND_12dB" pintype="passive" />
+      <node ref="JS1" pin="0" pinfunction="CASE_4_TABS" pintype="passive" />
+      <node ref="JS1" pin="A" pinfunction="PUSH_GND_A" pintype="passive" />
+      <node ref="JS1" pin="A3" pinfunction="AXIS_A-" pintype="passive" />
+      <node ref="JS1" pin="B1" pinfunction="AXIS_B-" pintype="passive" />
+      <node ref="JS1" pin="C" pinfunction="PUSH_GND_C" pintype="passive" />
+      <node ref="SW1" pin="2" pinfunction="CONTACT" pintype="passive" />
+      <node ref="SW2" pin="2" pinfunction="CONTACT" pintype="passive" />
+      <node ref="SW3" pin="2" pinfunction="CONTACT" pintype="passive" />
+      <node ref="U1" pin="1" pinfunction="GND" pintype="power_out" />
+      <node ref="U1" pin="22" pinfunction="GND" pintype="passive" />
+      <node ref="U2" pin="2" pinfunction="GND" pintype="power_in" />
+      <node ref="U3" pin="1" pinfunction="GND" pintype="power_in" />
+      <node ref="U3" pin="4" pinfunction="LR_GND" pintype="input" />
+    </net>
+    <net code="5" name="/GPIO0" class="Default">
+      <node ref="SW3" pin="1" pinfunction="CONTACT" pintype="passive" />
+      <node ref="U1" pin="35" pinfunction="GPIO0" pintype="bidirectional" />
+    </net>
+    <net code="6" name="/GPIO1" class="Default">
+      <node ref="JS1" pin="B2" pinfunction="AXIS_B_WIPER" pintype="passive" />
+      <node ref="U1" pin="23" pinfunction="GPIO1" pintype="bidirectional" />
+    </net>
+    <net code="7" name="/GPIO2" class="Default">
+      <node ref="JS1" pin="A2" pinfunction="AXIS_A_WIPER" pintype="passive" />
+      <node ref="U1" pin="24" pinfunction="GPIO2" pintype="bidirectional" />
+    </net>
+    <net code="8" name="/GPIO4" class="Default">
+      <node ref="U1" pin="4" pinfunction="GPIO4" pintype="bidirectional" />
+      <node ref="U3" pin="5" pinfunction="WS" pintype="input" />
+    </net>
+    <net code="9" name="/GPIO5" class="Default">
+      <node ref="U1" pin="5" pinfunction="GPIO5" pintype="bidirectional" />
+      <node ref="U3" pin="6" pinfunction="SCK" pintype="input" />
+    </net>
+    <net code="10" name="/GPIO6" class="Default">
+      <node ref="U1" pin="6" pinfunction="GPIO6" pintype="bidirectional" />
+      <node ref="U3" pin="3" pinfunction="SD_OUT" pintype="output" />
+    </net>
+    <net code="11" name="/GPIO7" class="Default">
+      <node ref="U1" pin="7" pinfunction="GPIO7" pintype="bidirectional" />
+      <node ref="U2" pin="5" pinfunction="DIN" pintype="input" />
+    </net>
+    <net code="12" name="/GPIO8" class="Default">
+      <node ref="JS1" pin="B" pinfunction="PUSH_GPIO8_B" pintype="passive" />
+      <node ref="JS1" pin="D" pinfunction="PUSH_GPIO8_D" pintype="passive" />
+      <node ref="U1" pin="12" pinfunction="GPIO8" pintype="bidirectional" />
+    </net>
+    <net code="13" name="/GPIO15" class="Default">
+      <node ref="U1" pin="8" pinfunction="GPIO15" pintype="bidirectional" />
+      <node ref="U2" pin="6" pinfunction="BCLK" pintype="input" />
+    </net>
+    <net code="14" name="/GPIO16" class="Default">
+      <node ref="U1" pin="9" pinfunction="GPIO16" pintype="bidirectional" />
+      <node ref="U2" pin="7" pinfunction="LRC" pintype="input" />
+    </net>
+    <net code="15" name="/GPIO21" class="Default">
+      <node ref="J1" pin="3" pinfunction="SCL_CLK" pintype="passive" />
+      <node ref="U1" pin="39" pinfunction="GPIO21" pintype="bidirectional" />
+    </net>
+    <net code="16" name="/GPIO38" class="Default">
+      <node ref="SW2" pin="1" pinfunction="CONTACT" pintype="passive" />
+      <node ref="U1" pin="31" pinfunction="GPIO38" pintype="bidirectional" />
+    </net>
+    <net code="17" name="/GPIO39" class="Default">
+      <node ref="SW1" pin="1" pinfunction="CONTACT" pintype="passive" />
+      <node ref="U1" pin="30" pinfunction="GPIO39" pintype="bidirectional" />
+    </net>
+    <net code="18" name="/GPIO40" class="Default">
+      <node ref="J1" pin="6" pinfunction="DC" pintype="passive" />
+      <node ref="U1" pin="29" pinfunction="GPIO40" pintype="bidirectional" />
+    </net>
+    <net code="19" name="/GPIO41" class="Default">
+      <node ref="J1" pin="7" pinfunction="CS" pintype="passive" />
+      <node ref="U1" pin="28" pinfunction="GPIO41" pintype="bidirectional" />
+    </net>
+    <net code="20" name="/GPIO42" class="Default">
+      <node ref="J1" pin="8" pinfunction="BLK" pintype="passive" />
+      <node ref="U1" pin="27" pinfunction="GPIO42" pintype="bidirectional" />
+    </net>
+    <net code="21" name="/GPIO45" class="Default">
+      <node ref="J1" pin="5" pinfunction="RES" pintype="passive" />
+      <node ref="U1" pin="36" pinfunction="GPIO45" pintype="bidirectional" />
+    </net>
+    <net code="22" name="/GPIO47" class="Default">
+      <node ref="J1" pin="4" pinfunction="SDA_MOSI" pintype="passive" />
+      <node ref="U1" pin="38" pinfunction="GPIO47" pintype="bidirectional" />
+    </net>
+    <net code="23" name="unconnected-(U1-GPIO3-Pad15)" class="Default">
+      <node ref="U1" pin="15" pinfunction="GPIO3" pintype="bidirectional+no_connect" />
+    </net>
+    <net code="24" name="unconnected-(U1-GPIO9-Pad17)" class="Default">
+      <node ref="U1" pin="17" pinfunction="GPIO9" pintype="bidirectional+no_connect" />
+    </net>
+    <net code="25" name="unconnected-(U1-GPIO10-Pad18)" class="Default">
+      <node ref="U1" pin="18" pinfunction="GPIO10" pintype="bidirectional+no_connect" />
+    </net>
+    <net code="26" name="unconnected-(U1-GPIO11-Pad19)" class="Default">
+      <node ref="U1" pin="19" pinfunction="GPIO11" pintype="bidirectional+no_connect" />
+    </net>
+    <net code="27" name="unconnected-(U1-GPIO12-Pad20)" class="Default">
+      <node ref="U1" pin="20" pinfunction="GPIO12" pintype="bidirectional+no_connect" />
+    </net>
+    <net code="28" name="unconnected-(U1-GPIO13-Pad41)" class="Default">
+      <node ref="U1" pin="41" pinfunction="GPIO13" pintype="bidirectional+no_connect" />
+    </net>
+    <net code="29" name="unconnected-(U1-GPIO14-Pad40)" class="Default">
+      <node ref="U1" pin="40" pinfunction="GPIO14" pintype="bidirectional+no_connect" />
+    </net>
+    <net code="30" name="unconnected-(U1-GPIO17-Pad10)" class="Default">
+      <node ref="U1" pin="10" pinfunction="GPIO17" pintype="bidirectional+no_connect" />
+    </net>
+    <net code="31" name="unconnected-(U1-GPIO18-Pad11)" class="Default">
+      <node ref="U1" pin="11" pinfunction="GPIO18" pintype="bidirectional+no_connect" />
+    </net>
+    <net code="32" name="unconnected-(U1-GPIO19-Pad13)" class="Default">
+      <node ref="U1" pin="13" pinfunction="GPIO19" pintype="bidirectional+no_connect" />
+    </net>
+    <net code="33" name="unconnected-(U1-GPIO20-Pad14)" class="Default">
+      <node ref="U1" pin="14" pinfunction="GPIO20" pintype="bidirectional+no_connect" />
+    </net>
+    <net code="34" name="unconnected-(U1-GPIO35-Pad34)" class="Default">
+      <node ref="U1" pin="34" pinfunction="GPIO35" pintype="bidirectional+no_connect" />
+    </net>
+    <net code="35" name="unconnected-(U1-GPIO36-Pad33)" class="Default">
+      <node ref="U1" pin="33" pinfunction="GPIO36" pintype="bidirectional+no_connect" />
+    </net>
+    <net code="36" name="unconnected-(U1-GPIO37-Pad32)" class="Default">
+      <node ref="U1" pin="32" pinfunction="GPIO37" pintype="bidirectional+no_connect" />
+    </net>
+    <net code="37" name="unconnected-(U1-GPIO46-Pad16)" class="Default">
+      <node ref="U1" pin="16" pinfunction="GPIO46" pintype="bidirectional+no_connect" />
+    </net>
+    <net code="38" name="unconnected-(U1-GPIO48-Pad37)" class="Default">
+      <node ref="U1" pin="37" pinfunction="GPIO48" pintype="bidirectional+no_connect" />
+    </net>
+    <net code="39" name="unconnected-(U1-RST-Pad3)" class="Default">
+      <node ref="U1" pin="3" pinfunction="RST" pintype="bidirectional+no_connect" />
+    </net>
+    <net code="40" name="unconnected-(U1-RX0-Pad26)" class="Default">
+      <node ref="U1" pin="26" pinfunction="RX0" pintype="bidirectional+no_connect" />
+    </net>
+    <net code="41" name="unconnected-(U1-TX0-Pad25)" class="Default">
+      <node ref="U1" pin="25" pinfunction="TX0" pintype="bidirectional+no_connect" />
+    </net>
+  </nets>
+</export>

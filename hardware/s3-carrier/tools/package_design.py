@@ -31,6 +31,17 @@ def main():
     faults=json.loads((out/'audit-fault-checks.json').read_text())
     if faults['sourceBoardSha256']!=audit['boardSha256'] or len(faults['cases'])!=6 or not all(c['rejected'] for c in faults['cases']):
         raise SystemExit('Fault detection checks are missing or stale; refusing to package.')
+    if (out/f'{STEM}.kicad_sch').exists():
+        import xml.etree.ElementTree as ET
+        from schematic_audit import compare_netlist
+        schematic=json.loads((out/'schematic-audit.json').read_text())
+        if schematic['boardSha256']!=audit['boardSha256'] or schematic.get('ercViolations')!=0:
+            raise SystemExit('Schematic/PCB audit is missing or stale.')
+        for name,key in [(f'{STEM}.kicad_sch','schematicSha256'),
+                         ('schematic-netlist.xml','netlistSha256'),('schematic-erc.json','ercSha256')]:
+            if hashlib.sha256((out/name).read_bytes()).hexdigest()!=schematic[key]:
+                raise SystemExit(f'Schematic audit is stale: {name}')
+        compare_netlist(ET.parse(out/'schematic-netlist.xml').getroot(),audit['nativeElectricalPads'])
     for name,digest in audit['codeSha256'].items():
         if hashlib.sha256((ROOT.parents[1]/'firmware/s3'/name).read_bytes()).hexdigest()!=digest:
             raise SystemExit('S3 code changed after electrical audit; refusing to package.')

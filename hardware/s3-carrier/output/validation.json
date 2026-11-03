@@ -175,7 +175,7 @@
     ],
     "fabricationApproved": false
   },
-  "automatedTests": "23 passed; unittest discover -s hardware/s3-carrier/tests -v",
+  "automatedTests": "28 passed; unittest discover -s hardware/s3-carrier/tests -v",
   "easyedaDataRoundTripVerified": true,
   "easyedaEditorImportVerified": false,
   "easyedaNativeKeepoutConverted": false,
@@ -468,9 +468,12 @@
   "designSha256": {
     "BOM.csv": "163a64f2c24e98c0dd8f471b93be0d8cc3c84fc6d64f88b88b1bb55eeae16e92",
     "HachimoDock-S3-carrier-A4-Gerber.zip": "f37d6a4aacb843249476b656e248e3e576f963c258f840ecbc87fd694797cb69",
+    "HachimoDock-S3-carrier-A4-schematic.pdf": "466c45aa5fa7f4e854cc489dc7a25bf491f91cc7eaaab91c0de9b3d3099e05d8",
     "HachimoDock-S3-carrier-A4.epro2": "f3b274fec4c4f457241f2e33d177d27c9d36b3f87c24da7e860e3e2510ca2dd2",
     "HachimoDock-S3-carrier-A4.kicad_pcb": "3ea5f653f6bf27bdb09c90290e1f22ae493803e0c346911ff89b9b5f40b8624e",
     "HachimoDock-S3-carrier-A4.kicad_pro": "b2a18f50c34a588883561c41c05b10932a7583cc24a686b083e6005ec281fcdb",
+    "HachimoDock-S3-carrier-A4.kicad_sch": "f92f0824d6a0f048196c06ed42fdad58a24fc77102f4e2e1d758099eba8d7d45",
+    "S3_Carrier.kicad_sym": "29993c15d00ae47de5794c7809a42d203103b43c1623311d5a0eae5253012ea1",
     "S3_Carrier.pretty/H1.kicad_mod": "7809cfb4a81141691e23969f87b8c6059f15c0beb753aeadec7f3dcdede1b8ec",
     "S3_Carrier.pretty/H2.kicad_mod": "463b5d3c06c81f7805d79c4b05ad0cbe3ee411259e11ee9e861ad4da1929bf1e",
     "S3_Carrier.pretty/H3.kicad_mod": "d1ee1d24b3bf4f599154a587da9a9142db568a4cdfb141a48b9d69f75dec888c",
@@ -500,7 +503,7 @@
     "design.json": "c99cb1041a49082fe1eb45d4825c697bb40f3f2109292dac8e39d847eaaa322e",
     "drc-attestation.json": "0f94f399207e83d6702fc24b185a4eecbf07f70b7245297b71fb5d56f9e6c517",
     "drc.json": "cad36bbe3d17cea1ba2441ca362e8a33309eafbf00bc2b3aa09fd6bb6f6c72d5",
-    "electrical-audit.json": "02a5ff3ee567b3c4ca7fed5001f5bc9c68b79023b0cd34e061550d1bc5ec6c96",
+    "electrical-audit.json": "2362f25f0d164a37d111dfb3b1bbc7ff6269aa33a2211755e187a27b6a79c3d8",
     "electrical-audit.md": "74687a0a8f8e1fb8094454a5e4312db730e01cb1f482687d311871a845b64c4c",
     "fp-lib-table": "0cba8577a3014ae94425deb21deabaad3a20a7b9eaca1f869bcf66175fd1a622",
     "independent-review.md": "8e8958d92b2d24fa0eff536d7c32f4ab69fea0f5e5a0e753cc3fdd725a9e7ebc",
@@ -509,6 +512,11 @@
     "mechanical-audit.md": "ebb08f346d21856c9f05513bc3b59b606057ce4f74e04354bca5e4d775c80681",
     "pcb-preview.png": "b13d70bf035388564e28ff1a6b3985e21dfd85bab8eb710e1c6cd47eeb51124e",
     "pcb-preview.svg": "9e90d732a4c7b2d8f5ec9637032f703ef28473fa59af52c475123c17c1e278a0",
+    "schematic-audit.json": "d333bfa42962c415867520ec837b2290e2a353257c3462d13f6d93ff0003e9d1",
+    "schematic-erc.json": "d48d3bad91d3f948f13415c27d40a8795f132acd7414c2049c1424089600fd99",
+    "schematic-netlist.xml": "b8e506fc4ffc236f586f4d99f7bc40783ec937393e44590cb53c30a76babdc4c",
+    "schematic-preview.png": "8a99ff08cc00b27f9196cf66af50bb02179ad4701b374b2388a5ec1ff06c185c",
+    "sym-lib-table": "06b56d2aafa9e20d3947cfc06aa9f71226d670a80f8fe26d8594739caea46cb0",
     "usb-options.json": "ccbcd075b6a5501ce6de80c4c7f0a49d7d08dfaf49235edef483b2fe9d16058e"
   }
 }

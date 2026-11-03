@@ -1,0 +1,14 @@
+{
+  "components": 9,
+  "uniquePins": 83,
+  "physicalPads": 86,
+  "connectedUniquePins": 64,
+  "netCount": 22,
+  "result": "PASS",
+  "boardSha256": "3ea5f653f6bf27bdb09c90290e1f22ae493803e0c346911ff89b9b5f40b8624e",
+  "schematicSha256": "f92f0824d6a0f048196c06ed42fdad58a24fc77102f4e2e1d758099eba8d7d45",
+  "netlistSha256": "b8e506fc4ffc236f586f4d99f7bc40783ec937393e44590cb53c30a76babdc4c",
+  "ercSha256": "d48d3bad91d3f948f13415c27d40a8795f132acd7414c2049c1424089600fd99",
+  "ercViolations": 0,
+  "scope": "Carrier module interfaces; module internals and automatic PCB UUID relinking excluded"
+}

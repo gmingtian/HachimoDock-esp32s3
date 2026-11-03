@@ -1,0 +1,19 @@
+{
+    "$schema": "https://schemas.kicad.org/erc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-03T14:13:27+0800",
+    "included_severities": [
+        "error",
+        "warning",
+        "exclusion"
+    ],
+    "kicad_version": "9.0.8",
+    "sheets": [
+        {
+            "path": "/",
+            "uuid_path": "/ce5b82af-5759-5046-b359-681903d4a5bb",
+            "violations": []
+        }
+    ],
+    "source": "HachimoDock-S3-carrier-A4.kicad_sch"
+}

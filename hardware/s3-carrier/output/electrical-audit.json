@@ -6,7 +6,7 @@
     "pet_s3_board.h": "18c580d0dbca074ef80d06a2fccc1c33ce375b39d6d97d4285cf3e447814c4d7",
     "pet_s3_audio_codec.h": "7eefa6f7187408a8e3bfbfbb9a17a5e975f7c248951cf46b101ae8a9cc2be856",
     "pet_s3_input_task.inc": "27f227b38fcb13d75799a80bac22f7b32e33b4cdb50779362e6f010c8d52ce38",
-    "pet_s3_lcd.inc": "23f5b0f5fe1682d155dbfec9a4bb759a5214f1f6d2536ca1b81b360ccbc13e06"
+    "pet_s3_lcd.inc": "70288e50aff136f84f379a1122eba1a5870afeb040f2e642b129707ae036f53d"
   },
   "designSha256": "c99cb1041a49082fe1eb45d4825c697bb40f3f2109292dac8e39d847eaaa322e",
   "allNativePadPositionsVerified": true,

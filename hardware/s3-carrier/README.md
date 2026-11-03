@@ -4,6 +4,8 @@
 
 [下载 A4 Gerber 制造文件](output/HachimoDock-S3-carrier-A4-Gerber.zip) · [BOM](output/BOM.csv) · [接线表](output/connections.csv) · [电气核对](output/electrical-audit.md) · [平面间隙核对](output/mechanical-audit.md)
 
+[原理图 PDF](output/HachimoDock-S3-carrier-A4-schematic.pdf) · [可编辑 KiCad 原理图](output/HachimoDock-S3-carrier-A4.kicad_sch) · [原理图与 PCB 网表比对](output/schematic-audit.json)
+
 Gerber ZIP 的 SHA256 为 `f37d6a4aacb843249476b656e248e3e576f963c258f840ecbc87fd694797cb69`，对应 PCB SHA256 为 `3ea5f653f6bf27bdb09c90290e1f22ae493803e0c346911ff89b9b5f40b8624e`；逐文件校验见 `output/manufacturing-export.json`。本次装配说明及渲染修订未改变该 PCB 或 Gerber。
 
 **A4 在 A3 上增加 JP1 功放增益跳线座。** 所有原有模块、屏幕接口、按键、摇杆、板框及孔位保持 A3 坐标，仅增加三针排针及 GAIN 网络，并重新布线和检查。已上传嘉立创的 A3 Gerber 不包含此功能，须替换为 `HachimoDock-S3-carrier-A4-Gerber.zip`。
@@ -59,7 +61,11 @@ J1 位于 Y=31.0mm，麦克风中心仍为 (46,42.1)mm。屏幕插头按**最大
 
 图中只展示 H1/H4 两处螺丝；俯视、前后视角沿用同一套 PCB 坐标。带外壳的 AI 概念图不作为本工程的尺寸或装配依据。
 
-本次提供 PCB 和网络表，未提供可与 PCB 自动联动的完整原理图工程。
+现已补充**模块级 KiCad 原理图及同源 PDF**：展示底板上的九个功能器件/接口，符号内嵌并附带 `S3_Carrier.kicad_sym` 和 `sym-lib-table`。相同网络标签表示相连；叉号表示该开发板引脚未接入本底板外设，不代表开发板内部没有连接。U1 的电源输出类型表示板载 USB/稳压电路提供电源。
+
+原理图由当前 PCB 连接反向整理，再用 KiCad 原生导出网表，与实际 PCB 的86个电气焊盘、83个唯一编号端子和22个网络比对。JS1的四个金属固定焊脚共用编号0，图中合并为 `CASE_4_TABS`。`#PWR01` 只是5V电源标记，不是新增实物元件。原理图 ERC 检查范围为模块接口，不展开模块内部芯片、电源或模拟电路。
+
+**本次未改动 PCB/Gerber，也未重建符号 UUID 到 PCB 封装的自动关联。** 可以独立查看、编辑原理图；不能未经检查就执行“从原理图更新PCB”，否则可能重新匹配或新增封装。当前对应关系由原生网表比对报告证明，机械与实物验证边界不变。
 
 ## 装配与接口
 
@@ -130,3 +136,18 @@ USB GPIO19/20、PSRAM GPIO35/36/37 不接底板外围。摇杆使用 3.3 V 电�
 ## 重新生成
 
 先运行 `tools/build_design.py`，再运行 `tools/route_board.py`（NumPy、Shapely）；随后以 KiCad 9 的 Python 环境运行 `tools/prepare_kicad.py`，通过 `tools/verify_drc.py --kicad-cli /path/to/kicad-cli` 运行原生DRC并生成校验记录，再运行 `tools/audit_native.py`、`tools/check_audit_faults.py` 和 `tools/check_clearances.py`。最后执行 `tools/export_easyeda.py`、`tools/preview.py`、`tools/assembly_preview.py` 和 `python -m unittest discover -s tests -v`。`tools/package_design.py` 会检查固件代码、PCB、工程规则及各报告的校验值。不要只重新生成设计而省略布线与审核。
+
+仅重新生成原理图时，在仓库根目录执行下列命令；不会修改PCB：
+
+```sh
+python3 hardware/s3-carrier/tools/generate_schematic.py
+kicad-cli sch export netlist --format kicadxml -o hardware/s3-carrier/output/schematic-netlist.xml hardware/s3-carrier/output/HachimoDock-S3-carrier-A4.kicad_sch
+kicad-cli sch erc --format json --severity-all --exit-code-violations -o hardware/s3-carrier/output/schematic-erc.json hardware/s3-carrier/output/HachimoDock-S3-carrier-A4.kicad_sch
+kicad-cli sch export pdf --default-font 'Noto Sans CJK SC' -o hardware/s3-carrier/output/HachimoDock-S3-carrier-A4-schematic.pdf hardware/s3-carrier/output/HachimoDock-S3-carrier-A4.kicad_sch
+python3 hardware/s3-carrier/tools/schematic_audit.py
+python3 -m unittest discover -s hardware/s3-carrier/tests -v
+```
+
+网表审计会将原生导出文件中的本机原理图、符号库绝对路径转换为文件名，便于分享；网络连接数据保持原样。
+
+PDF中的中文使用 Noto Sans CJK SC 字体；重新导出后需检查文字与图形排版。修改网络后必须重新导出网表和ERC并比对，不能沿用旧报告。

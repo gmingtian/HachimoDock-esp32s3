@@ -31,6 +31,7 @@ def test_h264_scaling_preserves_pixels_without_reconverting_enlarged_pixels(tmp_
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include "pet_s3_video_background.h"
 #define PET_P4_UI_WIDTH 640
 #define PET_P4_UI_HEIGHT 480
 static uint16_t frame[640*480], expected[640*480];
@@ -60,9 +61,6 @@ static void check(int w,int h,int stride,int storage_h,bool clean) {
     uint8_t g=clamp_u8((298*luma-55*cb-136*cr+128)>>8);
     uint8_t b=clamp_u8((298*luma+541*cb+128)>>8);
     uint16_t color=rgb565(r,g,b);
-#if CONFIG_IDF_TARGET_ESP32S3
-    if(clean&&r<=12&&g<=12&&b<=12)color=0;
-#endif
     expected[(y0+y)*640+x0+x]=color;
   }
   memset(frame,0xa5,sizeof(frame));conversions=0;
@@ -89,6 +87,22 @@ static void check_idle_black(void) {
   assert(frame[240*640+320]!=0);
 #endif
 }
+static void check_foreground_shadow(void) {
+  memset(input,28,16*16); /* neutral grey14: formerly visible background blocks */
+  memset(input+16*16,128,16*16/2);
+  for(int y=0;y<16;y++)for(int x=4;x<12;x++)input[y*16+x]=180;
+  for(int y=0;y<16;y++)input[y*16+8]=28; /* equally dark nose inside white fur */
+  scale_h264_frame_cpu(input,16,16,16,16,false);
+  uint16_t edge=frame[240*640+200],nose=frame[240*640+320];
+  assert(edge && nose);
+  scale_h264_frame_cpu(input,16,16,16,16,true);
+#if CONFIG_IDF_TARGET_ESP32S3
+  assert(frame[240*640+200]==0);
+#else
+  assert(frame[240*640+200]==edge);
+#endif
+  assert(frame[240*640+320]==nose);
+}
 int main(void) {
   check(320,240,320,240,false);
   check(320,240,336,240,false);
@@ -107,6 +121,7 @@ int main(void) {
   clear_framebuffer_outside_rect(-1,0,10,10);
   for(unsigned i=0;i<640*480;i++)assert(frame[i]==0);
   check_idle_black();
+  check_foreground_shadow();
   return 0;
 }
 '''
@@ -115,5 +130,6 @@ int main(void) {
     binary = tmp_path / 'video'
     subprocess.run(['cc', '-std=c11', '-O2', '-Wall', '-Wextra', '-Werror',
                     '-fsanitize=address,undefined', f'-DCONFIG_IDF_TARGET_ESP32S3={s3}',
+                    '-I', str(ROOT/'s3'),
                     str(test), '-o', str(binary)], check=True)
     subprocess.run([str(binary)], check=True)

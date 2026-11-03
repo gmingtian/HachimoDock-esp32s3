@@ -24,6 +24,7 @@
 #include "soc/soc_caps.h"
 #if CONFIG_IDF_TARGET_ESP32S3
 #include "../s3/pet_s3_render.h"
+#include "../s3/pet_s3_video_background.h"
 #include "../s3/pet_s3_menu.h"
 #define BSP_LCD_H_RES PET_S3_PANEL_WIDTH
 #define BSP_LCD_V_RES PET_S3_PANEL_HEIGHT
@@ -2221,14 +2222,11 @@ static void scale_h264_frame_cpu(
         int green = (298 * luma - 55 * u - 136 * v + 128) >> 8;
         int blue = (298 * luma + 541 * u + 128) >> 8;
         color = rgb565(clamp_u8(red), clamp_u8(green), clamp_u8(blue));
-        /* Limited-range video compression leaves faint blocks around black
-         * idle artwork. Only neutral near-black output (<=12/255 per channel)
-         * is crushed, before UI overlays; all other colors stay bit-exact. */
-        if (clean_black && red <= 12 && green <= 12 && blue <= 12) color = 0;
         previous_sx = sx;
       }
       target[x] = color;
     }
+    if (clean_black) pet_s3_clean_video_background(target, dst_w);
     previous_sy = sy;
     previous_row = target;
   }
@@ -2347,7 +2345,7 @@ static bool render_h264_asset_frame(
       asset->height,
       i420_stride,
       i420_storage_h,
-      !strcmp(asset->family, "idle") || !strncmp(asset->family, "idle.", 5)
+      true /* Generic black-background detection, independent of pet/family. */
     );
     g_last_h264_convert_us += elapsed_us_clamped(convert_started_us, esp_timer_get_time());
   }
@@ -5604,6 +5602,15 @@ esp_err_t pet_p4_renderer_render(
 #endif
   int64_t lcd_started_us = esp_timer_get_time();
   uint32_t rotate_us = elapsed_us_clamped(rotate_started_us, lcd_started_us);
+#if CONFIG_IDF_TARGET_ESP32S3
+  pet_s3_rect_t changed;
+  bool unchanged = !pet_s3_changed_rows(g_native_framebuffer, previous_native,
+    BSP_LCD_H_RES, BSP_LCD_V_RES, previous_valid, &changed);
+  esp_err_t lcd_err = unchanged ? ESP_OK : pet_p4_lcd_draw_rgb565(
+    changed.x, changed.y, changed.width, changed.height,
+    g_native_framebuffer + (size_t) changed.y * BSP_LCD_H_RES
+  );
+#else
   bool unchanged = pet_p4_frame_unchanged(g_native_framebuffer, previous_native,
     (size_t) BSP_LCD_H_RES * BSP_LCD_V_RES * sizeof(uint16_t), previous_valid);
   esp_err_t lcd_err = unchanged ? ESP_OK : pet_p4_lcd_draw_rgb565(
@@ -5613,6 +5620,7 @@ esp_err_t pet_p4_renderer_render(
     BSP_LCD_V_RES,
     g_native_framebuffer
   );
+#endif
   g_last_native_valid = lcd_err == ESP_OK;
   if (unchanged) g_lcd_skipped++;
   else if (lcd_err == ESP_OK) g_lcd_submitted++;

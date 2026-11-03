@@ -21,6 +21,7 @@ static uint16_t *g_stripe;
 static esp_err_t g_backlight_status=ESP_ERR_INVALID_STATE;
 static bool g_revealed;
 #define PET_S3_LCD_STRIPE_ROWS 16
+#define PET_S3_LCD_STRIPE_BUFFERS 2
 
 static bool IRAM_ATTR pet_s3_lcd_done(esp_lcd_panel_io_handle_t io,
     esp_lcd_panel_io_event_data_t *event,void *ctx) {
@@ -41,7 +42,8 @@ esp_err_t pet_p4_lcd_init(void) {
   ESP_RETURN_ON_ERROR(pet_p4_lcd_prepare_boot(),TAG,"backlight off");
   g_transfer_done=xSemaphoreCreateBinary();
   g_draw_lock=xSemaphoreCreateMutex();
-  g_stripe=heap_caps_malloc(PET_S3_LCD_WIDTH*PET_S3_LCD_STRIPE_ROWS*2,MALLOC_CAP_DMA|MALLOC_CAP_INTERNAL);
+  g_stripe=heap_caps_malloc(PET_S3_LCD_WIDTH*PET_S3_LCD_STRIPE_ROWS*sizeof(*g_stripe)
+    *PET_S3_LCD_STRIPE_BUFFERS,MALLOC_CAP_DMA|MALLOC_CAP_INTERNAL);
   if(!g_transfer_done||!g_draw_lock||!g_stripe)return ESP_ERR_NO_MEM;
   spi_bus_config_t bus={.sclk_io_num=PET_S3_LCD_CLK,.mosi_io_num=PET_S3_LCD_MOSI,
     .miso_io_num=-1,.quadwp_io_num=-1,.quadhd_io_num=-1,
@@ -75,19 +77,30 @@ esp_err_t pet_p4_lcd_draw_rgb565(int x,int y,int width,int height,const uint16_t
     return ESP_ERR_INVALID_ARG;
   xSemaphoreTake(g_draw_lock,portMAX_DELAY);
   esp_err_t err=ESP_OK;
+  bool pending=false;
+  unsigned stripe_index=0;
+  while(xSemaphoreTake(g_transfer_done,0)==pdTRUE){}
   for(int row=0;row<height;row+=PET_S3_LCD_STRIPE_ROWS) {
     int rows=height-row;
     if(rows>PET_S3_LCD_STRIPE_ROWS)rows=PET_S3_LCD_STRIPE_ROWS;
+    uint16_t *stripe=g_stripe+(stripe_index++%PET_S3_LCD_STRIPE_BUFFERS)
+      *PET_S3_LCD_WIDTH*PET_S3_LCD_STRIPE_ROWS;
+    /* Prepare the other buffer while SPI owns the previous one. Only one DMA
+     * transaction is outstanding, so a binary completion semaphore suffices. */
     for(int i=0;i<width*rows;i++) {
       uint16_t pixel=pixels[row*width+i];
-      g_stripe[i]=(uint16_t)((pixel>>8)|(pixel<<8));
+      stripe[i]=(uint16_t)((pixel>>8)|(pixel<<8));
     }
-    while(xSemaphoreTake(g_transfer_done,0)==pdTRUE){}
-    err=esp_lcd_panel_draw_bitmap(g_panel,x,y+row,x+width,y+row+rows,g_stripe);
+    if(pending) {
+      xSemaphoreTake(g_transfer_done,portMAX_DELAY);
+      pending=false;
+    }
+    err=esp_lcd_panel_draw_bitmap(g_panel,x,y+row,x+width,y+row+rows,stripe);
     if(err!=ESP_OK)break;
-    /* Never reuse a DMA stripe while its transaction is still queued. */
-    xSemaphoreTake(g_transfer_done,portMAX_DELAY);
+    pending=true;
   }
+  /* Preserve the synchronous public contract, including the last short stripe. */
+  if(pending)xSemaphoreTake(g_transfer_done,portMAX_DELAY);
   xSemaphoreGive(g_draw_lock);
   return err;
 }

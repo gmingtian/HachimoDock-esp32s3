@@ -20,6 +20,26 @@
 
 typedef struct { int x, y, width, height; } pet_s3_rect_t;
 
+/* Full-width changed band: complete framebuffers remain available for screenshots
+ * and the next comparison. An invalid/aliased reference always forces recovery. */
+static inline bool pet_s3_changed_rows(const uint16_t *next, const uint16_t *previous,
+    int width, int height, bool valid, pet_s3_rect_t *r) {
+  if (!next || !r || width <= 0 || height <= 0) return false;
+  *r = (pet_s3_rect_t){0, 0, width, height};
+  if (!valid || !previous || next == previous) return true;
+  const size_t row_bytes = (size_t) width * sizeof(*next);
+  int top = 0;
+  while (top < height && !memcmp(next + (size_t) top * width,
+      previous + (size_t) top * width, row_bytes)) ++top;
+  if (top == height) return false;
+  int bottom = height - 1;
+  while (bottom > top && !memcmp(next + (size_t) bottom * width,
+      previous + (size_t) bottom * width, row_bytes)) --bottom;
+  r->y = top;
+  r->height = bottom - top + 1;
+  return true;
+}
+
 /* Restore the shared logical canvas from native artwork without filtering a
  * second time. Final 1/2 presentation then reproduces every native pixel. */
 static inline void pet_s3_expand_2x(const uint16_t *src,int stride,uint16_t *dst,int width,int height) {
@@ -52,7 +72,18 @@ static inline bool pet_s3_scale_rgb565(const uint16_t *src, int sw, int sh, int 
                                      uint16_t *dst, int dw, int dh) {
   pet_s3_rect_t r;
   if (!src || !dst || stride < sw || !pet_s3_fit_rect(sw,sh,dw,dh,&r)) return false;
-  memset(dst, 0, (size_t) dw * dh * sizeof(*dst));
+  /* The landscape compositor presents at exactly half size. This is the same
+   * nearest-neighbor sampling, without a clear or a division for each pixel. */
+  if (!(sw & 1) && !(sh & 1) && sw / 2 == dw && sh / 2 == dh) {
+    for (int y = 0; y < dh; ++y) {
+      const uint16_t *row = src + (size_t) y * 2 * stride;
+      uint16_t *out = dst + (size_t) y * dw;
+      for (int x = 0; x < dw; ++x) out[x] = row[x * 2];
+    }
+    return true;
+  }
+  if (r.width != dw || r.height != dh)
+    memset(dst, 0, (size_t) dw * dh * sizeof(*dst));
   for (int y = 0; y < r.height; ++y) {
     const uint16_t *row = src + (size_t) ((int64_t) y * sh / r.height) * stride;
     uint16_t *out = dst + (size_t) (r.y + y) * dw + r.x;

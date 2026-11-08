@@ -12,6 +12,7 @@ import {
   sortComponentsByCreatedAt,
   mergeComponentCatalog,
   isComponentVisible,
+  isWithdrawnComponent,
   DEFAULT_COMPONENT_ORDER,
   sortComponentsByDefaultOrder,
 } from "./library-order.js";
@@ -116,4 +117,28 @@ test("component library keeps source order for equal or missing creation times",
     items.map((item) => item.id),
   );
   assert.equal(componentCreatedAtMs({ createdAt: "not-a-date" }), 0);
+});
+
+test("catalog visibility is checked on active, preview, restore and creator UI routes", () => {
+  const center=readFileSync(new URL("../ComponentCenter.jsx",import.meta.url),"utf8");
+  assert.match(center,/function openComponent\(component\) \{if\(!isComponentVisible\(component\)\)return/);
+  assert.match(center,/previewComponent && isComponentVisible\(previewComponent\) &&/);
+  assert.match(center,/if \(!component \|\| !isComponentVisible\(component\)\) return false/);
+  assert.match(center,/isComponentVisible\(activeComponentRecord\)/);
+  assert.match(center,/isComponentVisible\(item\) && !catalogIds.has\(item.id\)/);
+  const sidebar=readFileSync(new URL("../shell/ContextRail.jsx",import.meta.url),"utf8");
+  assert.match(sidebar,/isComponentVisible\(currentComponent\) && currentComponent\?\.name/);
+  const removed=readFileSync(new URL("./RemovedComponents.jsx",import.meta.url),"utf8");
+  assert.match(removed,/filter\(item=>!isWithdrawnComponent\(item\)\)/);
+  const community=readFileSync(new URL("./CommunityCenter.jsx",import.meta.url),"utf8");
+  assert.match(community,/items\?\.filter\(work => !isWithdrawnComponent\(work\)\)/);
+});
+
+
+test("current radio catalog stays visible without rewriting saved copies", () => {
+  const cached=Object.freeze({id:"city-radio",isLocal:true});
+  assert.equal(isComponentVisible(cached),true);
+  assert.equal(isWithdrawnComponent(cached),false);
+  assert.equal(isWithdrawnComponent({componentId:"city-radio"}),false);
+  assert.equal(mergeComponentCatalog([cached],[])[0],cached);
 });

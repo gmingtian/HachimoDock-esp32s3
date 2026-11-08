@@ -136,7 +136,8 @@ test("Follow-only switches are not presented as appearance transfers", () => {
   assert.match(source, /const followOnly = appearance\.id === currentDisplay\.appearance\?\.id/);
   assert.match(source, /syncProgress\.followOnly \? "正在切换跟随" : "正在切换形象"/);
   assert.match(source, /\{!syncProgress\.followOnly && <Button/);
-  assert.match(source, /沿用设备当前的「\{appearanceName\}」，无需重新传输素材/);
+  assert.match(source, /text: "正在确认…"/);
+  assert.match(source, /initialProgress: followOnly/);
   // Pre-transfer device steps sweep instead of freezing at 0%.
   assert.match(source, /syncProgress\.indeterminate \? "准备中"/);
   assert.match(extractCssRule(styles, ".channel-matrix-sync__bar.is-indeterminate > span"), /animation:/);
@@ -166,4 +167,17 @@ test("FormosaPickerModal CSS stays compact when only a few appearances exist", (
   assert.match(styles, /\.channel-row__thumb-wrap\s*\{[\s\S]*background:\s*#000/);
   assert.match(styles, /\.channel-row__thumb:is\(img,\s*video\)\s*\{[\s\S]*object-fit:\s*contain/);
   assert.match(styles, /\.modal-card--formosa-picker\s+\.modal-footer\s*\{/);
+});
+
+test("DSH row exposes a persisted approval timeout selector", () => {
+  assert.match(source, /load_dsh_approval_timeout/);
+  assert.match(source, /save_dsh_approval_timeout/);
+  assert.match(source, /dshApprovalTimeoutMs/);
+  assert.match(source, /DSH_APPROVAL_TIMEOUT_OPTIONS/);
+  assert.match(source, /agent\.id === "deepseek-harness"/);
+  assert.match(source, /超时时间/);
+  assert.match(source, /永不超时/);
+  assert.match(extractCssRule(styles, ".channel-row__approval-timeout-trigger"), /border-radius:\s*var\(--radius-md\)/);
+  assert.match(source, /channel-row__approval-timeout-menu/);
+  assert.match(source, /channel-row__approval-timeout-option/);
 });

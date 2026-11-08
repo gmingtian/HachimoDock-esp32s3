@@ -21,9 +21,6 @@ import Button from "../shell/Button";
 import { buildUsageHelp, friendlyControlLabel } from "../lib/usage-help.js";
 
 const CONTROL_GROUP_META = {
-  s3_sw1: { label: "上一个", detail: "GPIO39 · 长按返回" },
-  s3_sw2: { label: "下一个", detail: "GPIO38 · 长按组件菜单" },
-  s3_sw3: { label: "确认", detail: "GPIO0 · 按住语音" },
   p4_sw1: { label: "SW1", detail: "左侧按键" },
   p4_sw2: { label: "SW2", detail: "中间按键" },
   p4_sw3: { label: "SW3", detail: "右侧按键" },
@@ -70,7 +67,8 @@ function groupControlRows(controlRows, isP4Runtime) {
   const groups = [];
   const byId = new Map();
   controlRows.forEach((row) => {
-    const groupId = isP4Runtime ? row.controlId || row.id : "legacy_encoder";
+    // A4 shares the official deck; keep its fresh preference IDs on the rows.
+    const groupId = isP4Runtime ? (row.controlId || row.id).replace(/^s3j_/, "p4_") : "legacy_encoder";
     if (!byId.has(groupId)) {
       const meta = CONTROL_GROUP_META[groupId] || {
         label: row.label,
@@ -139,6 +137,7 @@ function ControlGlyph({ controlId, label, active = false }) {
 }
 
 export default function BoardButtonPanel({
+  selectedAgentId,
   voiceConfig,
   buttonActions = DEFAULT_BUTTON_ACTIONS,
   buttonValues = {},
@@ -195,7 +194,7 @@ export default function BoardButtonPanel({
   };
 
   const isControlHovered = (controlId) => hoveredButtonId === controlId
-    || controlRows.some((row) => row.controlId === controlId && row.id === hoveredButtonId);
+    || controlRows.some((row) => row.controlId?.replace(/^s3j_/, "p4_") === controlId && row.id === hoveredButtonId);
 
   return (
     <div className="board-button-panel" data-testid="board-button-config-card">
@@ -288,9 +287,10 @@ export default function BoardButtonPanel({
                       <rect
                         className={[
                           "board-button-map__hardware-key",
-                          controlId === "p4_sw1"
-                            && buttonActions.p4_sw1_long === "voice_ptt"
-                            && voiceConfig.enabled
+                          voiceConfig.enabled && controlRows.some((row) => (
+                            row.controlId?.replace(/^s3j_/, "p4_") === controlId
+                            && buttonActions[row.id] === "voice_ptt"
+                          ))
                             ? "is-active"
                             : "",
                           isControlHovered(controlId) ? "is-hovered" : "",
@@ -378,12 +378,14 @@ export default function BoardButtonPanel({
                   {group.rows.map((row) => {
                     const currentActionId = buttonActions?.[row.id] || row.defaultAction;
                     const isShortPress = isP4Runtime && row.event.endsWith(".short_press");
-                    const allowedOptions = BUTTON_FUNCTION_OPTIONS.filter((option) =>
-                      row.actionOptions.includes(option.id)
-                        || (isShortPress && option.id === "voice_ptt"),
-                    );
+                    const allowedOptions = BUTTON_FUNCTION_OPTIONS.filter((option) => {
+                      if (option.id === "dsh_interrupt" && selectedAgentId !== "deepseek-harness") return false;
+                      return row.actionOptions.includes(option.id)
+                        || (isShortPress && option.id === "voice_ptt");
+                    });
                     const isVoicePttRow = currentActionId === "voice_ptt";
-                    const rowHovered = hoveredButtonId === row.id || (row.controlId && hoveredButtonId === row.controlId);
+                    const rowHovered = hoveredButtonId === row.id || (row.controlId && hoveredButtonId === row.controlId)
+                      || hoveredButtonId === group.id;
                     const fieldId = `button-action-${row.id}`;
                     const promptId = `button-prompt-${row.id}`;
                     return (

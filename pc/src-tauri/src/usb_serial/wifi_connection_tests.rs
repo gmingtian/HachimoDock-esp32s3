@@ -60,7 +60,7 @@ fn wifi_s3_unsupported_builtin_install_fails_before_any_device_write() {
     peer.set_read_timeout(Some(Duration::from_millis(100))).unwrap();
     let empty=tempfile::tempdir().unwrap();
     let result=manager.install_widget_clawpkg_on_board("s3-shared","fresh-fruit-slice",empty.path(),&HashMap::new(),|_,_,_|{});
-    assert!(result.unwrap_err().contains("不支持 S3 三键"));
+    assert!(result.unwrap_err().contains("需要触屏"));
     assert!(peer.read(&mut [0u8;16]).is_err(),"unsupported package must not enter begin/erase");
 }
 
@@ -123,11 +123,21 @@ fn wifi_tls_shared_raw_assets_widget_firmware_and_bidirectional_audio() {
     let manager=UsbSerialManager::new();manager.set_desktop_device_id("desktop-fixture");
     let (tx,rx)=mpsc::channel();manager.connect_wifi(&identity,address,false,move|topic,payload|{let _=tx.send((topic,payload));}).unwrap();
     assert_eq!(manager.status().transport,"wifi");
-    manager.send_asset_begin_checked("raw-fixture",8192).unwrap();
-    let raw:Vec<u8>=(0..8192).map(|n|(n%251)as u8).collect();
-    manager.send_asset_raw_chunk_once("raw-fixture","p4/families/idle.default.h264",&raw,0).unwrap();
-    manager.send_asset_file_commit_checked("raw-fixture","p4/families/idle.default.h264",8192,&asset_checksum_hex(&raw),1).unwrap();
-    manager.send_asset_commit_checked("raw-fixture",1,8192).unwrap();
+    assert!(manager.active_appearance_attempt().unwrap().is_none());
+    assert!(manager.send_asset_begin_checked("unowned-fixture",8192).unwrap_err().contains("appearance transaction owner required"));
+    // Exercise the shared TLS wire through the same ownership scope as a real
+    // appearance transfer; an authenticated connection alone cannot mutate it.
+    manager.with_appearance_attempt("s3-shared",||{
+        manager.run_serial_asset_transaction("raw-fixture",||{
+            manager.send_asset_begin_checked("raw-fixture",8192)?;
+            let raw:Vec<u8>=(0..8192).map(|n|(n%251)as u8).collect();
+            manager.send_asset_raw_chunk_once("raw-fixture","p4/families/idle.default.h264",&raw,0)?;
+            manager.send_asset_file_commit_checked("raw-fixture","p4/families/idle.default.h264",8192,&asset_checksum_hex(&raw),1)?;
+            manager.send_asset_commit_checked("raw-fixture",1,8192)
+        })
+    }).unwrap();
+    assert!(manager.active_appearance_attempt().unwrap().is_none());
+    assert!(manager.send_asset_begin_checked("unowned-after-commit",8192).unwrap_err().contains("appearance transaction owner required"));
     let widget=manager.register_widget_ack_waiter("widget-fixture","chunk",Some("runtime/widget.json"),Some(0)).unwrap();
     manager.send_to_board("s3-shared","widget/chunk",&serde_json::json!({"transferId":"widget-fixture","path":"runtime/widget.json","index":0,"data":"e30="})).unwrap();
     assert_eq!(widget.recv_timeout(Duration::from_secs(2)).unwrap()["ok"],true);

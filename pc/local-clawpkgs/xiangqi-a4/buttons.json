@@ -1,0 +1,38 @@
+[
+  {
+    "action": "xiangqi.place",
+    "control": "SW1",
+    "event": "button.sw1.short_press",
+    "label": "开始/选棋/落子/重开"
+  },
+  {
+    "action": "xiangqi.undo",
+    "control": "SW2",
+    "event": "button.sw2.short_press",
+    "label": "取消选中/一级悔棋"
+  },
+  {
+    "action": "xiangqi.left",
+    "control": "前方摇杆",
+    "event": "knob.rotate_ccw",
+    "label": "向左/切换落点"
+  },
+  {
+    "action": "xiangqi.right",
+    "control": "前方摇杆",
+    "event": "knob.rotate_cw",
+    "label": "向右/切换落点"
+  },
+  {
+    "action": "xiangqi.up",
+    "control": "前方摇杆",
+    "event": "joystick.up",
+    "label": "向上/选难度/切点"
+  },
+  {
+    "action": "xiangqi.down",
+    "control": "前方摇杆",
+    "event": "joystick.down",
+    "label": "向下/选难度/切点"
+  }
+]

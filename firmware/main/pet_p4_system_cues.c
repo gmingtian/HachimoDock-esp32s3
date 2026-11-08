@@ -1,19 +1,19 @@
 #include "pet_p4_system_cues.h"
+#include "pet_p4_cue_packed.h"
 #include <string.h>
 
-extern const uint8_t done_start[] __asm__("_binary_done_wav_start");
-extern const uint8_t done_end[] __asm__("_binary_done_wav_end");
-extern const uint8_t error_start[] __asm__("_binary_error_wav_start");
-extern const uint8_t error_end[] __asm__("_binary_error_wav_end");
-/* The shipped waiting/error WAVs are byte-identical. CMake verifies that
- * invariant; share the payload without merging their lifecycle identities. */
+/* Waiting/error canonical WAVs are identical. They share one immutable decoded
+ * PCM entry without merging lifecycle identities or legacy override checks. */
 
 static uint32_t le32(const uint8_t *p) {
   return (uint32_t)p[0] | (uint32_t)p[1] << 8 | (uint32_t)p[2] << 16 | (uint32_t)p[3] << 24;
 }
 
 bool pet_p4_system_cue_family(const char *family) {
-  return family && (!strcmp(family,"done") || !strcmp(family,"error") || !strcmp(family,"waiting_user"));
+  return family && (!strcmp(family,"done") || !strcmp(family,"error")
+    || !strcmp(family,"waiting_user") || !strcmp(family,"permission_request")
+    || !strcmp(family,"permission_approved") || !strcmp(family,"permission_denied")
+    || !strcmp(family,"permission_expired") || !strcmp(family,"session_terminated"));
 }
 
 /* Only known shipped defaults migrate. Unknown WAVs remain appearance overrides. */
@@ -49,10 +49,15 @@ bool pet_p4_cue_parse_wav(const uint8_t *wav, size_t size, const uint8_t **pcm, 
 }
 
 bool pet_p4_system_cue_pcm(const char *family, const uint8_t **pcm, size_t *size) {
-  const uint8_t *start, *end;
   if (!pet_p4_system_cue_family(family)) return false;
-  if (!strcmp(family,"done")) { start=done_start; end=done_end; }
-  else if (!strcmp(family,"error")) { start=error_start; end=error_end; }
-  else { start=error_start; end=error_end; }
-  return pet_p4_cue_parse_wav(start, (size_t)(end-start), pcm, size);
+  unsigned index = 6; /* error and waiting_user are the same decoded PCM. */
+  if (!strcmp(family,"permission_request")) index = 0;
+  else if (!strcmp(family,"permission_approved")) index = 1;
+  else if (!strcmp(family,"permission_denied")) index = 2;
+  else if (!strcmp(family,"permission_expired")) index = 3;
+  else if (!strcmp(family,"session_terminated")) index = 4;
+  else if (!strcmp(family,"done")) index = 5;
+  return pet_p4_cue_packed_pcm(index,pcm,size);
 }
+
+bool pet_p4_system_cues_init(void) { return pet_p4_cue_packed_init(); }

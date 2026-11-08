@@ -1,0 +1,66 @@
+{
+  "units": "mm",
+  "status": "speaker-slot-engineering-trial",
+  "physical_fit_verified": false,
+  "wall_mm": 1.5,
+  "speaker_mm": [
+    20,
+    11,
+    4.35
+  ],
+  "cavity_mm": [
+    20.4,
+    11.4,
+    4.605
+  ],
+  "right_upper_wire_port_mm": 4,
+  "center_xz_mm": [
+    43.87917934636719,
+    41.81269382103565
+  ],
+  "grid_right_shift_mm": 7.754237288135592,
+  "overlaps_mm3": {
+    "speaker_to_lower": 0.0,
+    "speaker_to_upper": 0.0,
+    "cavity_obstruction": 0.0,
+    "wire_port_obstruction": 0.0,
+    "added_case_interference": 6.211283132510067e-05
+  },
+  "wall_filled_fractions": {
+    "left": 1.0,
+    "right_bottom": 1.0,
+    "right_top": 1.0,
+    "bottom": 1.0,
+    "top": 1.0
+  },
+  "vent_count": 54,
+  "max_vent_obstruction_mm3": 0.0,
+  "gaps_mm": {
+    "speaker_to_lcd": 12.313093383492825,
+    "mount_to_lcd": 10.934234840777654,
+    "speaker_to_spi": 31.359610890598983
+  },
+  "pcb_fixings": {
+    "H3": {
+      "front_bearing_fraction": 1.0,
+      "front_pilot_obstruction_mm3": 0.0,
+      "rear_screw_route_obstruction_mm3": 0.0,
+      "rear_head_route_obstruction_mm3": 0.0,
+      "rear_head_seat_fraction": 0.9999999999999999
+    },
+    "H4": {
+      "front_bearing_fraction": 1.0,
+      "front_pilot_obstruction_mm3": 0.0,
+      "rear_screw_route_obstruction_mm3": 0.0,
+      "rear_head_route_obstruction_mm3": 0.0,
+      "rear_head_seat_fraction": 0.9999999999999999
+    },
+    "H1_locator_fraction": 1.0
+  },
+  "added_volume_mm3": 393.5834662454927,
+  "removed_volume_mm3": 9.280701581790266,
+  "file": "a4-lower-r4.4-speaker.stl",
+  "bytes": 7727684,
+  "sha256": "608fb8056016b028f99e9a6d6622f4be27979261779831fed110d7f0a131031a",
+  "closed_single_solid": true
+}

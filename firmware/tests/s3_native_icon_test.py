@@ -7,7 +7,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def test_every_vector_icon_keeps_thin_strokes_at_native_pixel_size(tmp_path):
     source = (ROOT/'main/pet_p4_renderer.c').read_text()
-    icon = source[source.index('static void draw_app_icon('):source.index('static const pet_surface_t *g_app_text_surface;')]
+    icon = source[source.index('static void draw_app_icon('):source.index('static const pet_surface_t *g_app_text_surface;',source.index('static void draw_app_icon('))]
     test = tmp_path/'icons.c'
     test.write_text(r'''
 #include <assert.h>

@@ -1,0 +1,9 @@
+{
+  "autodeskProduct": "Fusion360",
+  "type": "addin",
+  "author": "Local enclosure workspace",
+  "description": {"": "Local session API for the A4 enclosure. No network listener or automatic startup."},
+  "supportedOS": "windows",
+  "editEnabled": true,
+  "version": "1.0.0"
+}

@@ -24,6 +24,7 @@ import Card from "./shell/Card.jsx";
 import LlmNetworkSettings from "./LlmNetworkSettings.jsx";
 import GenerationDiagnostics from "./GenerationDiagnostics.jsx";
 import TextModelSelect from "./TextModelSelect.jsx";
+import ImageModelSelect from "./ImageModelSelect.jsx";
 import { VideoModelSelect } from "./VideoGenerationSettings.jsx";
 import { useUsageHelp } from "./shell/DeviceContext.jsx";
 import UsageHelp from "./UsageHelp.jsx";
@@ -56,6 +57,7 @@ function persistedProviderConfig(config) {
     baseUrl: config.baseUrl || "",
     model: config.model || "",
     thinkingModel: config.thinkingModel || "",
+    imageModel: (config.imageModel || "").trim(),
     fastGeneration: config.fastGeneration !== false,
     videoParameters: config.videoParameters || {},
     advanced: config.advanced || {},
@@ -66,7 +68,7 @@ function resultToneClass(tone) {
   return tone ? ` is-${tone}` : "";
 }
 
-export default function ApiSettings({ onBack, configReadError = "" }) {
+export default function ApiSettings({ onBack, configReadError = "", active = true }) {
   const usageHelp = useUsageHelp();
   const [showSecrets, setShowSecrets] = useState(false);
   const [videoConfigs, setVideoConfigs] = useState(loadVideoConfigs);
@@ -304,8 +306,8 @@ export default function ApiSettings({ onBack, configReadError = "" }) {
   return (
     <div className="api-settings-page">
     <PageShell
-      title="API 配置"
-      subtitle="按需配置语音输入、宠物聊天和形象生成服务"
+      title="设置"
+      subtitle="API 服务配置"
       actions={(
         <div className="api-settings__page-actions">
           <button
@@ -587,6 +589,12 @@ export default function ApiSettings({ onBack, configReadError = "" }) {
                     <span className="ui-field__label">图像理解 / 提示词模型</span>
                     <TextModelSelect vision label="图像理解模型" value={config.thinkingModel}
                       onChange={thinkingModel => updateProvider(provider.id, { thinkingModel })}
+                      apiKey={config.apiKey} baseUrl={config.baseUrl} />
+                  </div>}
+                  {provider.id === "volcengine" && <div className="ui-field">
+                    <span className="ui-field__label">图片处理模型</span>
+                    <ImageModelSelect value={config.imageModel}
+                      onChange={imageModel => updateProvider(provider.id, { imageModel })}
                       apiKey={config.apiKey} baseUrl={config.baseUrl} />
                   </div>}
                 </fieldset>

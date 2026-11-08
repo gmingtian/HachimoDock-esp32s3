@@ -61,7 +61,7 @@ class PreviewVerificationTests(unittest.TestCase):
         verify = load('verify-preview-resources')
         source = SCRIPTS.parents[1] / 'firmware/assets/s3-landscape-ui'
         result = verify.validate_native_ui(source)
-        self.assertEqual((result['components'], result['cachedImages']), (25, 64))
+        self.assertEqual((result['components'], result['cachedImages']), (28, 74))
         with tempfile.TemporaryDirectory() as tmp:
             destination = Path(tmp) / 's3-landscape-ui'
             shutil.copytree(source, destination)
@@ -85,14 +85,14 @@ class PreviewVerificationTests(unittest.TestCase):
                 destination = source / logical
                 destination.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copyfile(root / logical, destination)
-            self.assertEqual(verify.validate_desktop_metadata(source), '0.1.170')
+            self.assertEqual(verify.validate_desktop_metadata(source), '0.1.202')
             config_path = source / 'pc/src-tauri/tauri.conf.json'
             config = json.loads(config_path.read_text())
             config['version'] = '0.0.0'
             config_path.write_text(json.dumps(config))
             with self.assertRaisesRegex(ValueError, 'version mismatch'):
                 verify.validate_desktop_metadata(source)
-            config['version'] = '0.1.170'
+            config['version'] = '0.1.202'
             del config['bundle']['resources']['../../firmware/assets/s3-landscape-ui']
             config_path.write_text(json.dumps(config))
             with self.assertRaisesRegex(ValueError, 'resource map'):
@@ -116,8 +116,8 @@ class PreviewVerificationTests(unittest.TestCase):
         result = verify.validate_firmware(firmware)
         self.assertEqual(result['chipId'], 9)
         self.assertEqual(result['projectName'], 'pet_manager_s3_runtime')
-        self.assertEqual(result['version'], '0.7.103-s3-r6-l320')
-        self.assertEqual(result['sha256'], '3c566489c96b5efae072d8383c87eb46333b9d28cdb53322813e9dc33a5e279d')
+        self.assertEqual(result['version'], '0.7.103-s3-r16c-80m-l320')
+        self.assertEqual(result['sha256'], '07ffa6be00feb6cb90ddd747099d20d3fa79ffbcf7bac4cbacdd8057e4496efb')
 
     def test_corrupt_s3_helper_source_is_rejected(self):
         verify = load('verify-preview-resources')

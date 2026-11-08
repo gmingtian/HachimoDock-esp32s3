@@ -56,3 +56,37 @@ def test_extension_and_complete_package_are_valid():
     assert extension_errors(ext)
     ext['script']='shell()'
     assert extension_errors(ext)
+
+
+def test_bundled_catalog_policy_and_bounded_json():
+    from pc_extension import catalog_errors
+    from urllib.parse import urlsplit
+    # Test the shipped artifact without importing the builder CLI.
+    rows=json.loads((ROOT/'pc/builtin-clawpkgs/city-radio/pc/catalog.json').read_text())
+    assert len(rows)>500
+    for row in rows:
+        assert row['province'] not in {'中国香港','中国澳门','中国台湾'}
+        assert row['category']!='外语'
+        assert not any(t in row['name'].upper() for t in ('CGTN','CRI','香港','澳门','台湾','台海'))
+        assert not any(t in row['url'] for t in ('rfi.fr','radio-browser','radio.co','chinesemusicworld'))
+        assert urlsplit(row['url']).hostname not in {'183.64.174.171','125.82.171.154','125.62.24.73'}
+    assert not catalog_errors(json.dumps(rows).encode())
+    for bad in [b'[1]',b'[{"nested":{}}]',b'[{"v":NaN}]',b'[{"v":"\\ud800"}]',b'[]',b' '* (512*1024+1)]:
+        assert catalog_errors(bad),bad[:40]
+
+
+def test_catalog_declaration_pairing_and_domestic_location(tmp_path):
+    import shutil
+    package=tmp_path/'city-radio'
+    shutil.copytree(ROOT/'pc/builtin-clawpkgs/city-radio',package)
+    ext=json.loads((package/'pc/extension.json').read_text())
+    assert ext['permissions']['networkHosts']==['ip9.com.cn']
+    assert ext['discovery']['locationEndpoint']=='https://ip9.com.cn/get'
+    assert ext['search']['endpoint']=='' and ext['discovery']['endpoints']==[]
+    assert not extension_errors(ext)
+    (package/'pc/catalog.json').unlink()
+    assert any('catalog' in e for e in validate_widget(package))
+    (package/'pc/catalog.json').write_text('[{"id":"x"}]')
+    del ext['search']['catalog']
+    (package/'pc/extension.json').write_text(json.dumps(ext))
+    assert any('catalog' in e for e in validate_widget(package))

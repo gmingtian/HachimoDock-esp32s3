@@ -16,6 +16,21 @@ import { dirname, join } from "node:path";
 const here = dirname(fileURLToPath(import.meta.url));
 const source = readFileSync(join(here, "BoardButtonPanel.jsx"), "utf8");
 
+test("A4 preferences use the official four physical groups without restoring old three-key labels", () => {
+  const meta = source.slice(source.indexOf("const CONTROL_GROUP_META ="), source.indexOf("// Each callout"));
+  const group = source.slice(source.indexOf("function groupControlRows("), source.indexOf("function gestureLabel("));
+  const groupRows = new Function(`${meta}\n${group}\nreturn groupControlRows;`)();
+  const rows = ["sw1", "sw2", "sw3", "joystick"].flatMap(control => ["short", "long"].map(gesture => ({
+    id: `s3j_${control}_${gesture}`, controlId: `s3j_${control}`, label: `${control} ${gesture}`,
+  })));
+  const groups = groupRows(rows, true);
+  assert.deepEqual(groups.map(({ id, label }) => [id, label]), [
+    ["p4_sw1", "SW1"], ["p4_sw2", "SW2"], ["p4_sw3", "SW3"], ["p4_joystick", "摇杆"],
+  ]);
+  assert.deepEqual(groups.flatMap(group => group.rows), rows);
+  assert.doesNotMatch(source, /s3_sw[123]/);
+});
+
 test("common button operations are expanded on first render", () => {
   assert.match(source, /<details open>\s*<summary>常用操作/);
 });
@@ -280,4 +295,10 @@ test("USB OTA dispatch wiring stays — calls onApplyVoiceConfig and shows the b
 test("BoardButtonPanel is always visible (no Card.Collapsible wrapper in this file)", () => {
   // The panel itself does not collapse — the parent DeviceDashboard places it in a plain Card.
   assert.doesNotMatch(source, /Card\.Collapsible/);
+});
+
+test("DSH interrupt action is only offered while following DeepSeek Harness", () => {
+  assert.match(source, /selectedAgentId/);
+  assert.match(source, /dsh_interrupt/);
+  assert.match(source, /selectedAgentId !== "deepseek-harness"/);
 });

@@ -1,0 +1,17 @@
+{
+  "dashboard": {
+    "title": "中国象棋",
+    "eyebrow": "红方先行 · 离线人机",
+    "headline": "1键开始",
+    "metricLabel": "对手",
+    "metricValue": "普通",
+    "metricUnit": "",
+    "badge": "",
+    "note": "亮点可走 · 红圈可吃",
+    "footer": "摇杆选点 · 1键确认 · 2键取消/悔棋 · 3键退出",
+    "visualStyle": "clean",
+    "visualPalette": "sunset",
+    "visualLayout": "arcade",
+    "visualSprite": "target"
+  }
+}

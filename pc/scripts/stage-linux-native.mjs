@@ -1,9 +1,12 @@
 /** Stage an unpackaged native ELF with every resource Tauri resolves at runtime. */
-import {chmodSync,copyFileSync,cpSync,existsSync,mkdirSync,readFileSync,writeFileSync} from 'node:fs';
-import {basename,dirname,join,resolve,isAbsolute} from 'node:path';
+import {chmodSync,copyFileSync,cpSync,existsSync,lstatSync,mkdirSync,readdirSync,readFileSync,writeFileSync} from 'node:fs';
+import {basename,dirname,join,resolve,isAbsolute,relative,sep} from 'node:path';
 import {fileURLToPath} from 'node:url';
 
 export function stageLinuxNative({tauriRoot,resources,outputRoot,binaryPath,packageName='pet-manager-tauri'}) {
+ const previous=lstatSync(outputRoot,{throwIfNoEntry:false});
+ if(previous&&(!previous.isDirectory()||previous.isSymbolicLink()))throw new Error(`Linux staging output must be a real directory: ${resolve(outputRoot)}`);
+ if(previous&&readdirSync(outputRoot).length)throw new Error(`Refusing nonempty Linux staging directory: ${resolve(outputRoot)}. Move it to a backup or remove only this build-output directory, then rerun npm run stage:linux.`);
  const prefix=readFileSync(binaryPath).subarray(0,4);
  if(!prefix.equals(Buffer.from([127,69,76,70]))) throw new Error('Native Linux ELF executable is required');
  // Tauri resolves ../lib/<PackageInfo.name>; productName overrides Cargo's name.
@@ -14,7 +17,8 @@ export function stageLinuxNative({tauriRoot,resources,outputRoot,binaryPath,pack
   const from=resolve(tauriRoot,source);
   if(!existsSync(from))throw new Error(`Required desktop resource missing: ${from}`);
   const to=resolve(libraryRoot,destination);
-  if(isAbsolute(destination)||!to.startsWith(resolve(libraryRoot)+'/'))throw new Error(`Invalid resource destination: ${destination}`);
+  const inside=relative(resolve(libraryRoot),to);
+  if(isAbsolute(destination)||!inside||inside==='..'||inside.startsWith('..'+sep)||isAbsolute(inside))throw new Error(`Invalid resource destination: ${destination}`);
  }
  mkdirSync(binaryRoot,{recursive:true});mkdirSync(libraryRoot,{recursive:true});
  copyFileSync(binaryPath,join(binaryRoot,'pet-manager-tauri'));chmodSync(join(binaryRoot,'pet-manager-tauri'),0o755);

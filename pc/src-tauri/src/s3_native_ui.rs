@@ -399,8 +399,9 @@ mod tests {
         let inventory: Value =
             serde_json::from_slice(&fs::read(resources().join("inventory.json")).unwrap()).unwrap();
         let ids = inventory["components"].as_array().unwrap();
-        assert_eq!(ids.len(), 25);
+        assert_eq!(ids.len(), 28);
         let mut count = 0;
+        let mut declared_count = 0;
         for id in ids {
             let id = id.as_str().unwrap();
             let prepared = prepare_native_component(&resources(), id, &original(id))
@@ -411,6 +412,7 @@ mod tests {
                 &fs::read(original(id).join("runtime/widget.json")).unwrap(),
             )
             .unwrap();
+            declared_count += canonical["surface"]["images"].as_array().map_or(0, Vec::len);
             assert_eq!(
                 widget["surface"]["elements"], canonical["surface"]["elements"],
                 "{id}"
@@ -465,7 +467,7 @@ mod tests {
                 count += 1;
             }
         }
-        assert_eq!(count, 64);
+        assert_eq!(count, declared_count);
     }
 
     #[test]

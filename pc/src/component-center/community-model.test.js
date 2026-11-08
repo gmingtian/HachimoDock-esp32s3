@@ -48,3 +48,10 @@ test("pending and rejected changes are not shown as published", () => {
   );
   assert.equal(publicationStatus({ status: "rejected" }), "需修改");
 });
+
+test("current catalog favorites remain visible without rewriting storage", () => {
+  const saved='[{"id":"city-radio","name":"cached package"}]';
+  let writes=0;const storage={getItem:()=>saved,setItem:()=>writes++};
+  assert.deepEqual(readFavorites(storage).map(item=>item.id),["city-radio"]);
+  assert.equal(writes,0);
+});

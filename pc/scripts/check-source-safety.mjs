@@ -18,7 +18,7 @@ const problems = [];
 for (const file of new Set(paths)) {
   // These two hand-written fixtures emulate the upstream package layout, not build output.
   const testFixture = /^pc\/src-tauri\/bridge\/packages\/agent-session-bus\/test\/fixtures\/fake-openclaw\/dist\/(?:index|plugin-sdk\/agent-runtime)\.js$/.test(file);
-  if (!testFixture && /(?:^|\/)(?:node_modules|dist|target|generated-runtime|\.runtime-cache|\.pio|managed_components|legacy|\.claude|\.codex)(?:\/|$)/.test(file)
+  if (!testFixture && /(?:^|\/)(?:node_modules|dist|target|generated-runtime|\.runtime-cache|\.vite|\.pio|managed_components|legacy|\.claude|\.codex)(?:\/|$)/.test(file)
       || /(?:\.internal-build-|bundle-secrets\.env|\.p12$|\.pfx$|\.pem$|\.key$|\.log$|\.dmg$|\.exe$|\.msi$|\.jsonl$)/i.test(file)
       || /(?:^|\/)\.env(?:\.|$)/.test(file) && !file.endsWith('.env.example')) problems.push(`${file}: forbidden publication input`);
   const absolute = resolve(root, file);
@@ -27,21 +27,32 @@ for (const file of new Set(paths)) {
   if (/\.(?:png|jpe?g|webp|gif)$/i.test(file) && BLOCKED_PUBLICATION_MEDIA.has(createHash('sha256').update(bytes).digest('hex'))) {
     problems.push(`${file}: previously removed unredacted media`);
   }
-  // A public checkout may contain either LFS pointers or resolved binary assets.
-  if (bytes.includes(0)) continue;
+  // Scan ASCII credential markers in binary assets as well as source text.
+  // Null bytes in a generated firmware image must not bypass this check.
   const text = bytes.toString();
+  // This reviewed S3 image includes mbedTLS's NUL-terminated PEM parser labels,
+  // with no key body. Scope the exception to its exact path AND image digest;
+  // tokens, personal paths and every other check still inspect the whole image.
+  const reviewedS3 = file === 'pc/src-tauri/firmware/esp32-s3/firmware.bin'
+    && createHash('sha256').update(bytes).digest('hex') === '07ffa6be00feb6cb90ddd747099d20d3fa79ffbcf7bac4cbacdd8057e4496efb';
+  const pemText = reviewedS3
+    ? text.replace(/-----BEGIN (?:RSA |EC )?PRIVATE KEY-----(?:\r?\n)?\0/g, '')
+    : text;
+  if (/-----BEGIN (?:RSA |EC |OPENSSH |DSA )?PRIVATE KEY-----/.test(pemText)
+      || /\b(?:ark-[a-f0-9-]{25,}|sk-[A-Za-z0-9_-]{24,}|gh[pousr]_[A-Za-z0-9]{24,}|AKIA[0-9A-Z]{16}|ASIA[0-9A-Z]{16}|glpat-[A-Za-z0-9_-]{20,}|AIza[0-9A-Za-z_-]{30,})/.test(text)) {
+    problems.push(`${file}: potential credential; value redacted`);
+  }
+  if (text.includes(`${homedir()}/`)) problems.push(`${file}: personal build path`);
+  if (/\bgit\.n\.[a-z0-9.-]+\b/i.test(text)) problems.push(`${file}: private repository endpoint`);
+  // Text-only policy checks do not apply to resolved binary assets.
+  if (bytes.includes(0)) continue;
   if ((/^pc\/docs\//.test(file) || /^(?:README(?:\.en)?\.md|firmware\/README\.md)$/.test(file)) && /\.md$/.test(file)
-      && /内部版本有意保留|保留明确授权的内部凭据\/CA|内部版批准的凭据\/CA|本机正式库已移动到私有|本机证据在工作区同级|内部 Windows 包：|当前内部构建/.test(text)) {
+      && /内部版本有意保留|保留明确授权的内部凭据\/CA|内部版批准的凭据\/CA|本机正式库已移动到私有|本机证据在工作区同级|内部 Windows 包：|当前内部构建|两项已授权 Key|两张企业 CA|仅限内部流转/.test(text)) {
     problems.push(`${file}: private delivery or local acceptance notes`);
   }
   if (text.startsWith('version https://git-lfs.github.com/spec/v1\n')) {
     problems.push(`${file}: unresolved LFS pointer; public resources must be available in ordinary Git`);
   }
-  if (/-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/.test(text)
-      || /\b(?:ark-[a-f0-9-]{25,}|sk-[A-Za-z0-9_-]{24,}|gh[pousr]_[A-Za-z0-9]{24,}|AKIA[0-9A-Z]{16})/.test(text)) {
-    problems.push(`${file}: potential credential; value redacted`);
-  }
-  if (text.includes(`${homedir()}/`)) problems.push(`${file}: personal build path`);
 }
 if (problems.length) { console.error(problems.join('\n')); process.exit(1); }
 console.log(`Source publication checks passed for ${paths.length} paths.`);

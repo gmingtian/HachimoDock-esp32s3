@@ -52,7 +52,18 @@
  * [Sync] If this file changes, update `pc/.folder.md`.
  */
 
+mod startup_policy;
+mod startup_supervision;
+mod dsh_approval;
+mod dsh_auth;
+mod dsh_desktop;
+mod dsh_windows_acl;
 mod clawpkg;
+mod json_canonical;
+mod app_shell;
+mod app_data_rows;
+mod app_longtext;
+mod widget_notify;
 mod widget_data;
 mod stock_quotes;
 mod todos;
@@ -60,16 +71,36 @@ mod local_tools;
 mod music_player;
 mod component_extension;
 mod surface_image;
+mod app_graphics;
 mod component_media;
+mod component_capability_ext;
 mod app_services;
+mod service_bridge;
+mod pc_fetch;
 mod knowledge_library;
 mod app_text_flow;
 mod component_calendar;
 mod component_news;
 mod knowledge_narration;
 mod app_weather;
+mod shared_location;
 mod location_profile;
 mod component_app;
+mod component_composition;
+mod component_collection;
+mod app_host_collection;
+mod app_component_program;
+mod app_variable_owners;
+mod app_program_background;
+mod app_catalog;
+mod program_autostart;
+// Default-closed building block; no production connector/journal or JSON route.
+#[allow(dead_code)]
+mod component_external_outcome;
+mod component_runtime_lifecycle;
+mod component_expr;
+mod component_ledger;
+mod side_scene;
 mod component_service_settings;
 mod component_notes;
 mod component_todos;
@@ -80,6 +111,8 @@ mod media_catalog;
 mod media_dns;
 mod media_codec;
 mod local_widget_data;
+mod hotkeys;
+mod auth_provider;
 mod codex_composer;
 mod codex_import;
 mod component_library;
@@ -98,17 +131,25 @@ mod smart_home;
 mod smart_home_credentials;
 mod llm_network;
 mod generation_diagnostics;
+mod generation_http;
 #[cfg(test)]
 mod generation_probe_tests;
 mod service_credentials;
 mod voice_draft;
 mod realtime_chat;
+#[cfg(test)]
+mod acoustic_acceptance;
+#[cfg(test)]
+mod graphics_acceptance;
+#[cfg(test)]
+mod background_acceptance;
 mod desktop_agent;
 #[cfg(target_os = "macos")]
 mod realtime_audio_macos;
 mod reference_image;
 mod realtime_chat_log;
 mod usb_audio;
+mod device_voice_lifecycle;
 mod usb_serial;
 mod wifi_transport;
 mod wifi_devices;
@@ -117,6 +158,7 @@ mod wifi_commands;
 mod connection_policy;
 mod s3_components;
 mod s3_native_ui;
+mod appearance_recovery_ipc;
 mod voice_chat_settings;
 mod volcengine_asr;
 
@@ -551,6 +593,10 @@ fn default_true() -> bool {
 #[serde(rename_all = "camelCase")]
 struct SetP4SessionBindingInput {
     board_device_id: String,
+    #[serde(default)]
+    expected_connection_id: String,
+    #[serde(default)]
+    expected_boot_id: String,
     agent_id: String,
     session_id: String,
     #[serde(default)]
@@ -612,7 +658,7 @@ fn validate_p4_session_transition_metadata(
     }
     let terminal = matches!(
         state,
-        "done" | "error" | "failed" | "complete" | "completed"
+        "done" | "reply_complete" | "error" | "failed" | "complete" | "completed"
     );
     if terminal_remaining_ms > 0 && !terminal {
         return Err("非终态设备会话不能携带终态保留时间".to_string());
@@ -644,13 +690,13 @@ fn p4_session_target_is_unique(
 }
 
 fn agent_uses_visible_composer(agent_id: &str) -> bool {
-    matches!(agent_id, "codex" | "claude-code" | "workbuddy")
+    matches!(agent_id, "codex" | "claude-code" | "workbuddy" | "deepseek-harness")
 }
 
 fn agent_streams_voice_draft(agent_id: &str) -> bool {
-    // WorkBuddy's rich-text editor requires native paste. Send one final result
-    // rather than repeatedly selecting/pasting every ASR hypothesis.
-    agent_uses_visible_composer(agent_id) && agent_id != "workbuddy"
+    // Rich-text desktop editors use one final insertion, preserving the same
+    // draft and selection rather than pasting every ASR hypothesis.
+    agent_uses_visible_composer(agent_id) && !matches!(agent_id, "workbuddy" | "deepseek-harness")
 }
 
 fn device_voice_platform_block_reason(agent_id: &str, is_macos: bool) -> Option<&'static str> {
@@ -662,6 +708,8 @@ fn device_voice_platform_block_reason(agent_id: &str, is_macos: bool) -> Option<
 fn visible_composer_agent_label(agent_id: &str) -> &'static str {
     if agent_id == "workbuddy" {
         "WorkBuddy"
+    } else if agent_id == "deepseek-harness" {
+        "DeepSeek"
     } else if agent_id == "claude-code" {
         "Claude"
     } else {
@@ -693,12 +741,45 @@ fn check_codex_accessibility_permission() -> serde_json::Value {
 }
 
 #[tauri::command]
+async fn dsh_connection_status(session_id: String) -> Result<serde_json::Value, String> {
+    tauri::async_runtime::spawn_blocking(move || dsh_desktop::status(&session_id))
+        .await.map_err(|_| "DeepSeek 状态检查未完成".to_string())?
+}
+
+#[tauri::command]
+async fn connect_dsh_desktop(app: tauri::AppHandle) -> Result<serde_json::Value, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let resource = app.path().resource_dir().map_err(|_| "DeepSeek 安装资源不可用")?.join("dsh-bridge/managed-install.js");
+        let node = resolve_node_path(&app)?;
+        let output = command_for_host(&node).arg(resource).arg("--install")
+            .env_remove("NODE_OPTIONS").env_remove("NODE_PATH")
+            .stdin(std::process::Stdio::null()).stderr(std::process::Stdio::null())
+            .output().map_err(|_| "DeepSeek 本地安装未完成")?;
+        if output.stdout.len() > 4096 { return Err("DeepSeek 安装回执无效".to_string()); }
+        let receipt: serde_json::Value = serde_json::from_slice(&output.stdout).map_err(|_| "DeepSeek 安装回执无效")?;
+        if output.status.success() && receipt["ok"] == true { Ok(receipt) }
+        else {
+            let code = receipt["code"].as_str().filter(|s| s.len() <= 80 && s.bytes().all(|b| b.is_ascii_lowercase() || b == b'-')).unwrap_or("local-install-unavailable");
+            Err(format!("DeepSeek 本地连接未启用：{code}"))
+        }
+    }).await.map_err(|_| "DeepSeek 本地连接未完成".to_string())?
+}
+
+#[tauri::command]
+async fn dsh_pair_session(session_id: String) -> Result<serde_json::Value, String> {
+    tauri::async_runtime::spawn_blocking(move || dsh_desktop::pair(&session_id))
+        .await.map_err(|_| "DeepSeek 配对未完成".to_string())?
+}
+
+#[tauri::command]
 async fn check_voice_composer_readiness(agent_id: String) -> Result<serde_json::Value, String> {
     tauri::async_runtime::spawn_blocking(move || {
         let _gate = desktop_agent::composer_gate()?;
         let active = active_device_voice_context().try_lock()
             .map_err(|_| "请先结束本次语音输入，再检查定位".to_string())?;
         if active.is_some() { return Err("请先结束本次语音输入，再检查定位；未修改草稿".into()); }
+        drop(active);
+        ensure_pending_voice_writer_released()?;
         // Check/focus only: no recording, draft update, submit, Agent request,
         // session navigation or API-key access is part of this command.
         codex_composer::diagnose_current_composer(&agent_id)
@@ -706,20 +787,78 @@ async fn check_voice_composer_readiness(agent_id: String) -> Result<serde_json::
 }
 
 #[tauri::command]
-async fn write_workbuddy_voice_test_draft(text: String) -> Result<(), String> {
+async fn write_workbuddy_voice_test_draft(text: String, app: tauri::AppHandle) -> Result<(), String> {
     if text.trim().is_empty() || text.chars().count() > 2048 {
         return Err("请输入 1–2048 字的测试文本".into());
     }
     tauri::async_runtime::spawn_blocking(move || {
         // Serialize against recording startup. This diagnostic only exercises
         // the production draft writer; never send Enter, call an Agent or ASR.
+        let _gate = desktop_agent::composer_gate()?;
         let active = active_device_voice_context().try_lock()
             .map_err(|_| "请先结束设备语音输入再测试".to_string())?;
         if active.is_some() { return Err("请先停止语音监听，再测试草稿写入".into()); }
-        let bridge = codex_composer::CodexComposerBridge::start_current("workbuddy", |_| {})?;
-        let result = bridge.update_confirmed(1, &text);
-        // Preserve the user's original draft even if readback is uncertain.
-        let released = bridge.preserve_draft();
+        drop(active);
+        ensure_pending_voice_writer_released()?;
+        let emitter = &app;
+        let id = uuid::Uuid::new_v4().to_string();
+        let board_device_id = "";
+        let utterance_id = id.as_str();
+        let capture_id = id.as_str();
+        let connection_id = "";
+        let boot_id = "";
+        let target = P4SessionBinding { agent_id: "workbuddy".into(), ..P4SessionBinding::default() };
+        let session_queue_empty_at_start = true;
+        let use_current_visible_session = true;
+    let context = Arc::new(DeviceVoiceContext {
+        emitter: emitter.clone(),
+        utterance_id: utterance_id.to_string(),
+        board_device_id: board_device_id.to_string(),
+        capture_id: capture_id.to_string(),
+        connection_id: connection_id.to_string(),
+        boot_id: boot_id.to_string(),
+        target,
+        session_queue_empty_at_start,
+        use_current_visible_session: AtomicBool::new(use_current_visible_session),
+        final_requested: AtomicBool::new(false),
+        pending_final: Mutex::new(None),
+        final_handled: AtomicBool::new(false),
+        draft_ready: AtomicBool::new(false),
+        draft_submit_requested: AtomicBool::new(false),
+        confirm_on_ready: AtomicBool::new(false),
+        cancelled: AtomicBool::new(false),
+        cleanup_started: AtomicBool::new(false),
+        lifecycle: Arc::new(device_voice_lifecycle::DeviceVoiceLifecycle::new()),
+        latest_revision: AtomicU64::new(0),
+        latest_text: Mutex::new(String::new()),
+        latest_confidence: Mutex::new(None),
+        streaming_error: Mutex::new(String::new()),
+        composer_error: Mutex::new(String::new()),
+        composer_visible: AtomicBool::new(false),
+        recognizer: Mutex::new(DeviceVoiceInput::default()),
+        composer: Mutex::new(None),
+        dsh_voice_binding: Mutex::new(None),
+        composer_startup_complete: Mutex::new(false),
+        composer_startup_ready: Condvar::new(),
+        started_at: Instant::now(),
+        #[cfg(target_os = "macos")]
+        focused_text_target: Mutex::new(None),
+    });
+        {
+            let mut pending = pending_voice_writer().lock().map_err(|_| "旧语音屏障不可用")?;
+            if pending.is_some() { return Err("上一段语音writer尚未释放".into()); }
+            *pending = Some(context.clone());
+        }
+        let startup = context.lifecycle.begin_startup()?;
+        let bridge = match codex_composer::CodexComposerBridge::start_current("workbuddy", |_| {}) {
+            Ok(bridge) => bridge,
+            Err(error) => { drop(startup); return Err(error); }
+        };
+        *context.composer.lock().map_err(|_| "诊断writer状态不可用")? = Some(bridge);
+        startup.finish_startup(device_voice_lifecycle::WriterState::Ready)?;
+        let result = context.composer.lock().map_err(|_| "诊断writer状态不可用")?
+            .as_ref().ok_or("诊断writer缺失")?.update_confirmed(1, &text);
+        let released = ensure_device_voice_writer_released(&context);
         result.and(released)
     }).await.map_err(|_| "WorkBuddy 草稿测试线程异常".to_string())?
 }
@@ -751,27 +890,59 @@ struct PcAudioRecognitionJob {
     capture_id: u64,
 }
 
+// At 16 kHz / signed 16-bit mono this holds at most ten seconds of the
+// current utterance while local scoped-composer capture is pending. It has
+// never been forwarded; it is not retry/replay storage.
+const DSH_PENDING_PCM_BYTES: usize = 320_000;
+const DSH_PENDING_PCM_CHUNKS: usize = 512;
+
+#[derive(Default)]
+struct DeviceVoiceInput {
+    recognizer: Option<pc_audio::StreamingSpeechRecognizer>,
+    pending_pcm: Vec<Vec<u8>>,
+    pending_bytes: usize,
+    next_sequence: u64,
+    finish_sent: bool,
+    closed: bool,
+}
+
+impl DeviceVoiceInput {
+    fn discard(&mut self) {
+        self.closed = true;
+        self.pending_pcm.clear();
+        self.pending_bytes = 0;
+        if let Some(recognizer) = self.recognizer.take() { recognizer.cancel(); }
+    }
+}
+
 struct DeviceVoiceContext {
     emitter: tauri::AppHandle,
     utterance_id: String,
     board_device_id: String,
+    capture_id: String,
+    connection_id: String,
+    boot_id: String,
     target: P4SessionBinding,
     session_queue_empty_at_start: bool,
     use_current_visible_session: AtomicBool,
     final_requested: AtomicBool,
+    pending_final: Mutex<Option<(u64, String, Option<f64>)>>,
     final_handled: AtomicBool,
     draft_ready: AtomicBool,
     draft_submit_requested: AtomicBool,
     confirm_on_ready: AtomicBool,
     cancelled: AtomicBool,
+    cleanup_started: AtomicBool,
+    lifecycle: Arc<device_voice_lifecycle::DeviceVoiceLifecycle>,
     latest_revision: AtomicU64,
     latest_text: Mutex<String>,
     latest_confidence: Mutex<Option<f64>>,
     streaming_error: Mutex<String>,
     composer_error: Mutex<String>,
     composer_visible: AtomicBool,
-    recognizer: Mutex<Option<pc_audio::StreamingSpeechRecognizer>>,
+    recognizer: Mutex<DeviceVoiceInput>,
     composer: Mutex<Option<codex_composer::CodexComposerBridge>>,
+    dsh_voice_binding: Mutex<Option<serde_json::Value>>,
     composer_startup_complete: Mutex<bool>,
     composer_startup_ready: Condvar,
     started_at: Instant,
@@ -810,7 +981,8 @@ fn classify_visible_composer_submit(
     match result {
         Ok(Ok(_)) => VisibleComposerSubmitOutcome::Submitted,
         Ok(Err(error))
-            if error.starts_with("CODEX_SUBMIT_UNCONFIRMED:")
+            if error.starts_with("COMPOSER_SUBMIT_UNCONFIRMED:")
+                || error.starts_with("CODEX_SUBMIT_UNCONFIRMED:")
                 || error.contains("提交结果未确认") || error.contains("无法安全确认发送结果")
                 || error.contains("Codex 已执行一次发送") =>
         {
@@ -845,6 +1017,13 @@ fn pc_audio_board_binding() -> &'static Mutex<PcAudioBoardBinding> {
     BINDING.get_or_init(|| Mutex::new(PcAudioBoardBinding::default()))
 }
 
+// Worker-only transaction gate: follow changes and session updates share one
+// order. Never acquire this gate from a USB reader, ASR callback or heartbeat.
+fn p4_session_update_gate() -> &'static Mutex<()> {
+    static GATE: OnceLock<Mutex<()>> = OnceLock::new();
+    GATE.get_or_init(|| Mutex::new(()))
+}
+
 fn p4_session_binding() -> &'static Mutex<P4SessionBinding> {
     static BINDING: OnceLock<Mutex<P4SessionBinding>> = OnceLock::new();
     BINDING.get_or_init(|| Mutex::new(P4SessionBinding::default()))
@@ -853,6 +1032,78 @@ fn p4_session_binding() -> &'static Mutex<P4SessionBinding> {
 fn active_device_voice_context() -> &'static Mutex<Option<Arc<DeviceVoiceContext>>> {
     static CONTEXT: OnceLock<Mutex<Option<Arc<DeviceVoiceContext>>>> = OnceLock::new();
     CONTEXT.get_or_init(|| Mutex::new(None))
+}
+
+// Independent of active: a failed newer round must not erase an old Unknown writer.
+fn pending_voice_writer() -> &'static Mutex<Option<Arc<DeviceVoiceContext>>> {
+    static WRITER: OnceLock<Mutex<Option<Arc<DeviceVoiceContext>>>> = OnceLock::new();
+    WRITER.get_or_init(|| Mutex::new(None))
+}
+
+fn clear_pending_voice_writer(context: &Arc<DeviceVoiceContext>) {
+    if !matches!(context.lifecycle.release_result(), Ok(Some(Ok(())))) { return; }
+    if let Ok(mut pending) = pending_voice_writer().lock() {
+        if pending.as_ref().is_some_and(|old| Arc::ptr_eq(old, context)) { *pending = None; }
+    }
+}
+
+// Worker-only: no USB/ASR/heartbeat caller waits for UI release here.
+fn ensure_device_voice_writer_released(context: &Arc<DeviceVoiceContext>) -> Result<(), String> {
+    use device_voice_lifecycle::{ReleaseRole, WriterState};
+    #[cfg(any(windows, target_os = "macos"))]
+    if matches!(context.lifecycle.release_result(), Ok(Some(Err(_)))) {
+        // Read-only observation of the exact retained Bridge. Do not retry
+        // preserve/confirm/cancel after an unknown result.
+        let writer = context.composer.lock().map_err(|_| "旧语音writer状态不可用".to_string())?;
+        #[cfg(target_os = "macos")]
+        let proof = writer.as_ref().map(|w| w.writer_termination_proof()).transpose()?.flatten();
+        #[cfg(windows)]
+        let proof = writer.as_ref().map(|w| w.reap_owned_writer(VISIBLE_COMPOSER_PREPARE_WAIT)).transpose()?.flatten();
+        if let Some(proof) = proof {
+            context.lifecycle.observe_terminated_writer(&proof)?;
+        }
+    }
+    let result = match context.lifecycle.release()? {
+        ReleaseRole::Waiter(waiter) => waiter.wait(VISIBLE_COMPOSER_PREPARE_WAIT + VISIBLE_COMPOSER_SUBMIT_TIMEOUT),
+        ReleaseRole::Owner(mut owner) => {
+            let result = (|| -> Result<(), String> {
+                match owner.wait_startup(VISIBLE_COMPOSER_PREPARE_WAIT)? {
+                    WriterState::NoWriter => Ok(()),
+                    WriterState::Ready => {
+                        let writer = context.composer.lock().map_err(|_| "旧语音写入通道不可用，释放未确认".to_string())?;
+                        writer.as_ref().ok_or_else(|| "旧语音writer缺失，释放未确认".to_string())?.preserve_draft()
+                    }
+                }
+            })();
+            owner.finish(result)
+        }
+    };
+    if result.is_ok() { clear_pending_voice_writer(context); }
+    result
+}
+
+// Caller holds composer_gate, so a newer startup cannot enter during this check.
+fn ensure_pending_voice_writer_released() -> Result<(), String> {
+    let old = pending_voice_writer().lock().map_err(|_| "旧语音屏障不可用".to_string())?.clone();
+    if let Some(old) = old { ensure_device_voice_writer_released(&old)?; }
+    Ok(())
+}
+
+fn register_device_voice_writer_startup(context: &Arc<DeviceVoiceContext>)
+    -> Result<device_voice_lifecycle::StartupPermit, String>
+{
+    let _gate = desktop_agent::composer_gate()?;
+    if !device_voice_target_is_current(context)
+        || !active_device_voice_context().lock().map_err(|_| "语音owner不可用")?
+            .as_ref().is_some_and(|active| Arc::ptr_eq(active, context)) {
+        return Err("当前语音已退役，未启动writer".into());
+    }
+    let mut pending = pending_voice_writer().lock().map_err(|_| "旧语音屏障不可用")?;
+    if pending.as_ref().is_some_and(|old| !Arc::ptr_eq(old, context)) {
+        return Err("上一段语音writer尚未确认释放".into());
+    }
+    *pending = Some(context.clone()); // Register BEFORE admission/spawn/native factory.
+    context.lifecycle.begin_startup()
 }
 
 fn device_voice_target_snapshot(board_device_id: &str) -> P4SessionBinding {
@@ -892,7 +1143,7 @@ fn should_use_current_visible_session(
     agent_id: &str,
 ) -> bool {
     agent_uses_visible_composer(agent_id)
-        && (agent_is_frontmost || session_queue_empty || matches!(agent_id, "workbuddy" | "codex"))
+        && (agent_is_frontmost || session_queue_empty || matches!(agent_id, "workbuddy" | "codex" | "deepseek-harness"))
 }
 
 fn voice_needs_current_composer(target: &P4SessionBinding, frontmost: bool, empty_queue: bool) -> bool {
@@ -912,7 +1163,7 @@ fn device_voice_bound_target_is_addressable(
     session_queue_empty: bool,
     target: &P4SessionBinding,
 ) -> bool {
-    target.agent_id != "workbuddy"
+    !matches!(target.agent_id.as_str(), "workbuddy" | "deepseek-harness")
         && !session_queue_empty
         && !target.session_id.is_empty()
         && !target.session_title.is_empty()
@@ -948,8 +1199,18 @@ fn should_preserve_exact_auto_binding(
 }
 
 fn device_voice_target_is_current(context: &DeviceVoiceContext) -> bool {
-    if context.cancelled.load(Ordering::SeqCst) {
+    if context.cancelled.load(Ordering::SeqCst) || !context.lifecycle.admission_open() {
         return false;
+    }
+    if !context.connection_id.is_empty() {
+        let manager = context.emitter.state::<usb_serial::UsbSerialManager>();
+        let status = manager.status();
+        if !status.connected || status.board_device_id != context.board_device_id
+            || status.connection_id != context.connection_id || status.boot_id != context.boot_id
+            || !manager.session_follow_target_is_current(&context.board_device_id, &context.connection_id, &context.target.agent_id)
+        {
+            return false;
+        }
     }
     if device_voice_uses_current_visible_session(context) {
         if let Ok(binding) = p4_session_binding().lock() {
@@ -1078,8 +1339,11 @@ fn emit_device_voice_transcript(
         .lock()
         .map(|value| *value)
         .unwrap_or(None);
-    let event = serde_json::json!({
+    let mut event = serde_json::json!({
         "utteranceId": context.utterance_id,
+        "captureId": context.capture_id,
+        "connectionId": context.connection_id,
+        "bootId": context.boot_id,
         "boardDeviceId": context.board_device_id,
         "agentId": context.target.agent_id,
         "sessionId": device_voice_session_id(context),
@@ -1094,18 +1358,39 @@ fn emit_device_voice_transcript(
         "composerError": composer_error,
         "error": error,
     });
+    if matches!(context.lifecycle.stop_reason(), Ok(Some(device_voice_lifecycle::StopReason::DeliveryError(_)))) {
+        event["failureDomain"] = serde_json::json!("delivery");
+    }
     let _ = context.emitter.emit("voice-transcript", event.clone());
     let _ = context.emitter.emit("usb-audio-stream", event);
 }
 
 fn complete_device_voice_context(context: &Arc<DeviceVoiceContext>) {
+    retire_device_voice_input(context);
+    schedule_device_voice_cleanup(context, "");
+}
+
+fn clear_active_device_voice_context(context: &Arc<DeviceVoiceContext>) {
+    if let Ok(mut input) = context.recognizer.lock() { input.discard(); }
     if let Ok(mut active) = active_device_voice_context().lock() {
-        if active
-            .as_ref()
-            .is_some_and(|current| Arc::ptr_eq(current, context))
-        {
-            *active = None;
-        }
+        if active.as_ref().is_some_and(|current| Arc::ptr_eq(current, context)) { *active = None; }
+    }
+}
+
+fn retire_changed_device_voice_transport(manager: &usb_serial::UsbSerialManager) {
+    let context = active_device_voice_context().try_lock().ok()
+        .and_then(|active| active.clone());
+    let Some(context) = context else { return; };
+    if context.connection_id.is_empty() || context.final_handled.load(Ordering::SeqCst)
+        || context.cancelled.load(Ordering::SeqCst) { return; }
+    // Read after capturing the owner: an old status poll has no authority to
+    // retire a newly connected recording. Failure retirement is UUID-bound.
+    let status = manager.status();
+    if !status.connected || status.board_device_id != context.board_device_id
+        || status.connection_id != context.connection_id || status.boot_id != context.boot_id
+    {
+        fail_device_voice_context(&context,
+            "USB 设备已断开或重新连接，本段录音已停止；连接就绪后请重新按住说话");
     }
 }
 
@@ -1130,42 +1415,43 @@ fn wait_for_visible_composer_startup(context: &DeviceVoiceContext) {
     );
 }
 
+fn retire_device_voice_input(context: &Arc<DeviceVoiceContext>) -> bool {
+    let _ = context.lifecycle.close_admission();
+    let first = !context.cancelled.swap(true, Ordering::SeqCst);
+    context.composer_startup_ready.notify_all();
+    if let Ok(mut input) = context.recognizer.lock() { input.discard(); }
+    if let Ok(mut pending) = context.pending_final.lock() { pending.take(); }
+    first
+}
+
+fn finish_stopping_device_voice_context(
+    context: &Arc<DeviceVoiceContext>, reason: &str, emit_cancelled: bool,
+) -> Result<(), String> {
+    if emit_cancelled { cancel_device_voice_context(context, reason); }
+    let result = ensure_device_voice_writer_released(context);
+    if result.is_ok() { clear_active_device_voice_context(context); }
+    result
+}
+
 fn stop_device_voice_context(
     context: &Arc<DeviceVoiceContext>,
     reason: &str,
     emit_cancelled: bool,
 ) -> Result<(), String> {
-    if context.cancelled.swap(true, Ordering::SeqCst) {
-        return Ok(());
-    }
-    context.composer_startup_ready.notify_all();
-    if let Ok(recognizer) = context.recognizer.lock() {
-        if let Some(recognizer) = recognizer.as_ref() {
-            recognizer.cancel();
-        }
-    }
-    let mut released = Ok(());
-    if let Ok(composer) = context.composer.lock() {
-        if let Some(composer) = composer.as_ref() {
-            if emit_cancelled { composer.cancel(); }
-            else { released = composer.preserve_draft(); }
-        }
-    }
-    if emit_cancelled {
-        let revision = context.latest_revision.load(Ordering::SeqCst);
-        let text = context
-            .latest_text
-            .lock()
-            .map(|value| value.clone())
-            .unwrap_or_default();
-        emit_device_voice_transcript(context, "cancelled", revision, &text, false, false, reason);
-    }
-    complete_device_voice_context(context);
-    released
+    retire_device_voice_input(context);
+    finish_stopping_device_voice_context(context, reason, emit_cancelled)
 }
 
 fn cancel_device_voice_context(context: &Arc<DeviceVoiceContext>, reason: &str) {
-    let _ = stop_device_voice_context(context, reason, true);
+    let won = context.lifecycle.stop_once(device_voice_lifecycle::StopReason::Cancelled(reason.into()));
+    retire_device_voice_input(context);
+    if matches!(won, Ok(true)) {
+        context.final_handled.store(true, Ordering::SeqCst);
+        let revision = context.latest_revision.load(Ordering::SeqCst);
+        let text = context.latest_text.lock().map(|value| value.clone()).unwrap_or_default();
+        emit_device_voice_transcript(context, "cancelled", revision, &text, false, false, reason);
+    }
+    schedule_device_voice_cleanup(context, reason);
 }
 
 fn supersede_device_voice_context(context: &Arc<DeviceVoiceContext>) -> Result<(), String> {
@@ -1182,7 +1468,9 @@ fn completed_voice_can_yield_to_task(same_board: bool, final_handled: bool, draf
 fn release_completed_voice_for_desktop_task(board: &str) -> Result<(), &'static str> {
     let context = active_device_voice_context().lock()
         .map_err(|_| "voice_busy")?.clone();
-    let Some(context) = context else { return Ok(()); };
+    let Some(context) = context else {
+        return ensure_pending_voice_writer_released().map_err(|_| "voice_release_failed");
+    };
     if !completed_voice_can_yield_to_task(
         context.board_device_id == board,
         context.final_handled.load(Ordering::SeqCst),
@@ -1194,7 +1482,44 @@ fn release_completed_voice_for_desktop_task(board: &str) -> Result<(), &'static 
     context.draft_submit_requested.compare_exchange(false, true, Ordering::SeqCst, Ordering::SeqCst)
         .map_err(|_| "voice_busy")?;
     // Preserve the text exactly; task preflight still rejects a nonempty draft.
-    supersede_device_voice_context(&context).map_err(|_| "voice_release_failed")
+    supersede_device_voice_context(&context).map_err(|_| "voice_release_failed")?;
+    ensure_pending_voice_writer_released().map_err(|_| "voice_release_failed")
+}
+
+static DSH_VOICE_BEGIN_BUSY: AtomicBool = AtomicBool::new(false);
+struct DshVoiceBeginPermit;
+impl Drop for DshVoiceBeginPermit { fn drop(&mut self) { DSH_VOICE_BEGIN_BUSY.store(false, Ordering::Release); } }
+
+fn dsh_voice_post(path: &str, body: &serde_json::Value) -> Result<serde_json::Value, String> {
+    let cap = dsh_auth::load("voice")?;
+    let receipt = dsh_auth::post(&cap, path, body)?;
+    if path.starts_with("/voice/") && (receipt["epoch"] != cap.epoch || receipt["sessionId"] != body["sessionId"] || receipt["utteranceId"] != body["utteranceId"]) {
+        return Err("DSH voice receipt binding mismatch".into());
+    }
+    Ok(receipt)
+}
+fn insert_dsh_voice_draft(context: &DeviceVoiceContext, revision: u64, text: &str) -> Result<(), String> {
+    let mut body = context.dsh_voice_binding.lock().map_err(|_| "DSH binding unavailable")?
+        .as_ref().cloned().ok_or("DSH voice begin was not acknowledged")?;
+    body["revision"] = serde_json::json!(revision); body["text"] = serde_json::json!(text);
+    let result = dsh_voice_post("/voice/draft", &body)?;
+    if result["status"] != "inserted" || result["utteranceId"] != context.utterance_id { return Err("DSH insertion not acknowledged".into()); }
+    body.as_object_mut().map(|o| o.remove("text"));
+    if !device_voice_target_is_current(context) { return Err("DSH target changed during insertion".into()); }
+    *context.dsh_voice_binding.lock().map_err(|_| "DSH binding unavailable")? = Some(body);
+    Ok(())
+}
+fn submit_dsh_voice_composer(context: &DeviceVoiceContext) -> Result<(), String> {
+    let body = context.dsh_voice_binding.lock().map_err(|_| "DSH binding unavailable")?
+        .as_ref().cloned().ok_or("DSH insertion unavailable")?;
+    let result = dsh_voice_post("/voice/submit", &body)?;
+    if result["status"] != "submit-requested" || result["utteranceId"] != context.utterance_id { return Err("DSH submit receipt mismatch".into()); }
+    Ok(())
+}
+fn interrupt_dsh_session(session_id: &str) -> Result<(), String> {
+    let receipt = dsh_voice_post("/interrupt", &serde_json::json!({ "sessionId": session_id }))?;
+    if receipt["sessionId"] != session_id { return Err("DSH cancel receipt mismatch".into()); }
+    Ok(())
 }
 
 fn submit_device_voice_via_agent_bus(context: Arc<DeviceVoiceContext>, text: String) {
@@ -1228,10 +1553,17 @@ fn report_device_voice_delivery_failure(
     message: &str,
     code: &str,
 ) {
+    let won = context.lifecycle.stop_once(device_voice_lifecycle::StopReason::DeliveryError(error.into()));
+    retire_device_voice_input(context);
+    if !matches!(won, Ok(true)) { schedule_device_voice_cleanup(context, error); return; }
+
     if let Ok(mut composer_error) = context.composer_error.lock() {
         *composer_error = error.to_string();
     }
-    emit_device_voice_transcript(context, "error", revision, text, true, false, error);
+    // Business uncertainty is terminal and must not be presented as a known
+    // rejection. Ownership cleanup below remains identical: no submit replay.
+    let phase = if code == "VISIBLE_COMPOSER_UNCONFIRMED" { "submit_unknown" } else { "error" };
+    emit_device_voice_transcript(context, phase, revision, text, true, false, error);
     let _ = context.emitter.emit(
         "usb-input-action-result",
         serde_json::json!({
@@ -1249,10 +1581,49 @@ fn report_device_voice_delivery_failure(
             "composerError": error,
         }),
     );
-    complete_device_voice_context(context);
+    schedule_device_voice_cleanup(context, error);
 }
 
 fn stage_device_voice_final(
+    context: Arc<DeviceVoiceContext>, revision: u64, text: String, confidence: Option<f64>,
+) {
+    if context.cancelled.load(Ordering::SeqCst) || !context.lifecycle.admission_open() { return; }
+    // Same context/capture owns this cache. A provider Final is not a physical
+    // End: keep validating USB PCM until the actual scoped End is received.
+    let cached = (|| -> Result<bool, String> {
+        let mut pending = context.pending_final.lock().map_err(|_| "语音Final缓存不可用".to_string())?;
+        if !context.final_requested.load(Ordering::SeqCst) {
+            if pending.is_none() { *pending = Some((revision, text.clone(), confidence)); }
+            return Ok(true);
+        }
+        Ok(false)
+    })();
+    match cached {
+        Ok(true) => return,
+        Err(error) => { fail_device_voice_context(&context, &error); return; }
+        Ok(false) => {}
+    }
+    if !claim_device_voice_final(&context.final_handled) { return; }
+    let final_context = context.clone();
+    if thread::Builder::new().name("pet-device-voice-finalize".into()).spawn(move || {
+        finalize_device_voice_final(final_context, revision, text, confidence);
+    }).is_err() {
+        report_device_voice_delivery_failure(&context, revision, "", "无法启动本段语音草稿处理", "草稿未写入或发送", "VOICE_FINALIZE_UNAVAILABLE");
+    }
+}
+
+// A stopped local round is not evidence that its route changed. Recheck
+// admission before publishing cancellation because startup can fail concurrently.
+fn device_voice_finalization_target_is_current(context: &Arc<DeviceVoiceContext>, reason: &str) -> bool {
+    if context.cancelled.load(Ordering::SeqCst) || !context.lifecycle.admission_open() { return false; }
+    if device_voice_target_is_current(context) { return true; }
+    if !context.cancelled.load(Ordering::SeqCst) && context.lifecycle.admission_open() {
+        cancel_device_voice_context(context, reason);
+    }
+    false
+}
+
+fn finalize_device_voice_final(
     context: Arc<DeviceVoiceContext>,
     revision: u64,
     text: String,
@@ -1262,11 +1633,7 @@ fn stage_device_voice_final(
     if text.is_empty() || !context.final_requested.load(Ordering::SeqCst) {
         return;
     }
-    if !device_voice_target_is_current(&context) {
-        cancel_device_voice_context(&context, "voice target changed during recognition");
-        return;
-    }
-    if !claim_device_voice_final(&context.final_handled) {
+    if !device_voice_finalization_target_is_current(&context, "voice target changed during recognition") {
         return;
     }
     context.latest_revision.store(revision, Ordering::SeqCst);
@@ -1362,11 +1729,7 @@ fn stage_device_voice_final(
     if agent_uses_visible_composer(&context.target.agent_id) {
         wait_for_visible_composer_startup(&context);
         record_device_voice_timing(&context, "composer_wait_done", true);
-        if !device_voice_target_is_current(&context) {
-            cancel_device_voice_context(
-                &context,
-                "voice target changed while preparing the visible composer",
-            );
+        if !device_voice_finalization_target_is_current(&context, "voice target changed while preparing the visible composer") {
             return;
         }
     }
@@ -1426,8 +1789,24 @@ fn stage_device_voice_final(
                 "VISIBLE_COMPOSER_UNAVAILABLE",
             );
         } else {
+            if context.target.agent_id == "deepseek-harness" {
+                if let Err(error) = insert_dsh_voice_draft(&context, revision, &text) {
+                    report_device_voice_delivery_failure(
+                        &context,
+                        revision,
+                        &text,
+                        &error,
+                        "DSH 输入框草稿插入失败",
+                        "DSH_COMPOSER_DRAFT_FAILED",
+                    );
+                    return;
+                }
+            }
             context.draft_ready.store(true, Ordering::SeqCst);
             emit_device_voice_transcript(&context, "draft_ready", revision, &text, true, true, "");
+            if context.target.agent_id == "deepseek-harness" && context.confirm_on_ready.swap(false, Ordering::SeqCst) {
+                confirm_pending_device_voice_draft("input/event", &serde_json::json!({"action":"page_enter","handledLocally":false,"boardDeviceId":context.board_device_id,"voiceUtteranceId":context.utterance_id}));
+            }
         }
         return;
     };
@@ -1608,6 +1987,47 @@ fn confirm_pending_device_voice_draft(topic: &str, payload: &serde_json::Value) 
     }
 
     if !agent_uses_visible_composer(&context.target.agent_id) {
+        if context.target.agent_id == "deepseek-harness" {
+            if !device_voice_target_is_current(&context) {
+                cancel_device_voice_context(&context, "DSH voice target changed before submit");
+                return true;
+            }
+            let submit_context = context.clone();
+            if thread::Builder::new().name("pet-dsh-voice-submit".into()).spawn(move || {
+                let context = submit_context;
+                if !device_voice_target_is_current(&context) { return; }
+                if let Err(error) = submit_dsh_voice_composer(&context) {
+                    report_device_voice_delivery_failure(
+                        &context,
+                        revision,
+                        &text,
+                        &error,
+                        "DSH 输入框提交失败，语音文字未发送",
+                        "DSH_COMPOSER_SUBMIT_FAILED",
+                    );
+                    return;
+                }
+                emit_device_voice_transcript(&context, "submitted", revision, &text, true, true, "");
+                let _ = context.emitter.emit(
+                    "usb-input-action-result",
+                    serde_json::json!({
+                        "ok": true,
+                        "pending": false,
+                        "view": "voice_input",
+                        "utteranceId": context.utterance_id,
+                        "text": text,
+                        "agentId": context.target.agent_id,
+                        "sessionId": device_voice_session_id(&context),
+                        "message": "已请求提交 DSH 语音草稿（非送达回执）",
+                        "composerMode": "dsh-composer",
+                        "composerError": "",
+                    }),
+                );
+                complete_device_voice_context(&context);
+
+            }).is_err() { fail_device_voice_context(&context, "无法启动 DSH 草稿提交；未自动重发"); }
+            return true;
+        }
         submit_device_voice_via_agent_bus(context, text);
         return true;
     }
@@ -1701,32 +2121,85 @@ fn confirm_pending_device_voice_draft(topic: &str, payload: &serde_json::Value) 
     true
 }
 
-fn fail_device_voice_context(context: &Arc<DeviceVoiceContext>, error: &str) {
-    if !claim_device_voice_final(&context.final_handled) {
+fn schedule_device_voice_cleanup(context: &Arc<DeviceVoiceContext>, _error: &str) {
+    if context.cleanup_started.swap(true, Ordering::SeqCst) { return; }
+    let cleanup_context = context.clone();
+    if thread::Builder::new().name("pet-device-voice-cleanup".into()).spawn(move || {
+        let cause = cleanup_context.lifecycle.stop_reason().ok().flatten();
+        if let Some(cause) = cause {
+            let (error, delivery_failure) = match cause {
+                device_voice_lifecycle::StopReason::DeliveryError(error) => (error, true),
+                device_voice_lifecycle::StopReason::Error(error)
+                | device_voice_lifecycle::StopReason::Cancelled(error) => (error, false),
+            };
+            let terminal = usb_audio_relay().lock().ok().and_then(|mut relay|
+                relay.terminate_capture(&cleanup_context.capture_id, &error));
+            if let Some(mut terminal) = terminal {
+                // Keep the actual first cause and cleanup; only its presentation
+                // domain differs. A delivery error is not a failed microphone.
+                if delivery_failure { terminal["failureDomain"] = serde_json::json!("delivery"); }
+                let _ = cleanup_context.emitter.emit("usb-audio-stream", terminal.clone());
+                let _ = cleanup_context.emitter.emit("usb-audio-result", terminal);
+            }
+        }
+        // Queued cancel/closed flags never count as release evidence.
+        match ensure_device_voice_writer_released(&cleanup_context) {
+            Ok(()) => clear_active_device_voice_context(&cleanup_context),
+            Err(_) => record_device_voice_timing(&cleanup_context, "writer_release_unconfirmed", false),
+        }
+    }).is_err() {
+        // Do not clear active or pending on spawn failure. A later startup
+        // can claim the still-unclaimed release; no synchronous UI fallback.
+        record_device_voice_timing(context, "cleanup_spawn_failed", false);
+    }
+}
+
+// Startup lookup failure is not a scope-change receipt. Publish its first
+// lifecycle cause before closing admission/waking Final, even if Final already
+// claimed final_handled. Cleanup still needs the real retained writer release.
+fn visible_composer_startup_is_target_changed(error: &str) -> bool {
+    let error = error.trim();
+    error == "DESKTOP_TASK_TARGET_CHANGED" || error.starts_with("DESKTOP_TASK_TARGET_CHANGED:")
+}
+
+fn fail_visible_composer_startup(context: &Arc<DeviceVoiceContext>, error: &str) {
+    if visible_composer_startup_is_target_changed(error) {
+        cancel_device_voice_context(context, error);
         return;
     }
-    if let Ok(composer) = context.composer.lock() {
-        if let Some(composer) = composer.as_ref() {
-            composer.cancel();
-        }
+    let won = context.lifecycle.stop_once(device_voice_lifecycle::StopReason::DeliveryError(error.into()));
+    retire_device_voice_input(context);
+    if matches!(won, Ok(true)) {
+        context.final_handled.store(true, Ordering::SeqCst);
+        if let Ok(mut composer_error) = context.composer_error.lock() { *composer_error = error.into(); }
+        let revision = context.latest_revision.fetch_add(1, Ordering::SeqCst) + 1;
+        let text = context.latest_text.lock().map(|value| value.clone()).unwrap_or_default();
+        emit_device_voice_transcript(context, "error", revision, &text, false, false, error);
     }
-    let revision = context.latest_revision.fetch_add(1, Ordering::SeqCst) + 1;
-    let text = context
-        .latest_text
-        .lock()
-        .map(|value| value.clone())
-        .unwrap_or_default();
-    emit_device_voice_transcript(context, "error", revision, &text, false, false, error);
-    complete_device_voice_context(context);
+    schedule_device_voice_cleanup(context, error);
+}
+
+fn fail_device_voice_context(context: &Arc<DeviceVoiceContext>, error: &str) {
+    if !claim_device_voice_final(&context.final_handled) { return; }
+    let won = context.lifecycle.stop_once(device_voice_lifecycle::StopReason::Error(error.into()));
+    retire_device_voice_input(context);
+    if matches!(won, Ok(true)) {
+        let revision = context.latest_revision.fetch_add(1, Ordering::SeqCst) + 1;
+        let text = context.latest_text.lock().map(|value| value.clone()).unwrap_or_default();
+        emit_device_voice_transcript(context, "error", revision, &text, false, false, error);
+    }
+    schedule_device_voice_cleanup(context, error);
 }
 
 fn start_device_voice_context(
     emitter: &tauri::AppHandle,
     board_device_id: &str,
     utterance_id: &str,
+    capture_id: &str,
+    connection_id: &str,
+    boot_id: &str,
     session_queue_empty_at_start: bool,
 ) {
-    let Ok(composer_gate)=desktop_agent::composer_gate() else {return;};
     let target = device_voice_target_snapshot(board_device_id);
     let agent_is_frontmost =
         codex_composer::CodexComposerBridge::is_agent_frontmost(&target.agent_id);
@@ -1737,29 +2210,42 @@ fn start_device_voice_context(
         emitter: emitter.clone(),
         utterance_id: utterance_id.to_string(),
         board_device_id: board_device_id.to_string(),
+        capture_id: capture_id.to_string(),
+        connection_id: connection_id.to_string(),
+        boot_id: boot_id.to_string(),
         target,
         session_queue_empty_at_start,
         use_current_visible_session: AtomicBool::new(use_current_visible_session),
         final_requested: AtomicBool::new(false),
+        pending_final: Mutex::new(None),
         final_handled: AtomicBool::new(false),
         draft_ready: AtomicBool::new(false),
         draft_submit_requested: AtomicBool::new(false),
         confirm_on_ready: AtomicBool::new(false),
         cancelled: AtomicBool::new(false),
+        cleanup_started: AtomicBool::new(false),
+        lifecycle: Arc::new(device_voice_lifecycle::DeviceVoiceLifecycle::new()),
         latest_revision: AtomicU64::new(0),
         latest_text: Mutex::new(String::new()),
         latest_confidence: Mutex::new(None),
         streaming_error: Mutex::new(String::new()),
         composer_error: Mutex::new(String::new()),
         composer_visible: AtomicBool::new(false),
-        recognizer: Mutex::new(None),
+        recognizer: Mutex::new(DeviceVoiceInput::default()),
         composer: Mutex::new(None),
+        dsh_voice_binding: Mutex::new(None),
         composer_startup_complete: Mutex::new(false),
         composer_startup_ready: Condvar::new(),
         started_at: Instant::now(),
         #[cfg(target_os = "macos")]
         focused_text_target: Mutex::new(None),
     });
+    // The desktop task gate can include a slow release acknowledgement.
+    // A USB receive callback must reject this new capture rather than wait.
+    let composer_gate = match desktop_agent::try_composer_gate() {
+        Ok(gate) => gate,
+        Err(error) => { fail_device_voice_context(&context, &error); return; }
+    };
     if desktop_agent::composer_busy() {
         drop(composer_gate);
         fail_device_voice_context(&context,"Codex 桌面任务正在发送，请稍后再使用按键语音输入");
@@ -1772,21 +2258,82 @@ fn start_device_voice_context(
         .ok()
         .and_then(|mut active| active.replace(context.clone()));
     drop(composer_gate);
-    if let Some(previous) = previous {
-        eprintln!(
-            "[device-voice] superseding utterance={} with utterance={}",
-            previous.utterance_id, context.utterance_id
-        );
-        if let Err(error) = supersede_device_voice_context(&previous) {
-            fail_device_voice_context(&context, &format!("上一段语音仍在写入，原草稿已保留，请稍后重试：{error}"));
-            return;
-        }
-    }
+    // Stop old cloud input immediately, but never wait for a desktop release
+    // acknowledgement on the USB reader (Windows may take up to 8 seconds).
+    let previous = previous.map(|previous| {
+        // Even an already cancelled context can still own an unresolved UI
+        // write. Keep its release barrier until the new startup verifies it.
+        retire_device_voice_input(&previous);
+        previous
+    });
 
     if let Some(reason) = device_voice_platform_block_reason(&context.target.agent_id, cfg!(target_os = "macos")) {
         fail_device_voice_context(&context, reason);
         return;
     }
+    // Credential access and desktop preparation may be slow on Windows. The
+    // serial reader must keep draining verified PCM while they run; this
+    // capture's bounded pending prefix is drained once by ASR installation.
+    let startup_context = context.clone();
+    if thread::Builder::new().name("pet-device-voice-startup".into())
+        .spawn(move || {
+            let pending = (|| -> Result<Option<Arc<DeviceVoiceContext>>, String> {
+                let _gate = desktop_agent::composer_gate()?;
+                if !device_voice_round_is_current(&startup_context) { return Err("当前语音owner已变化".into()); }
+                Ok(pending_voice_writer().lock().map_err(|_| "旧语音屏障不可用")?.clone())
+            })();
+            let released = pending.and_then(|pending| {
+                if let Some(old) = pending { ensure_device_voice_writer_released(&old)?; }
+                Ok(())
+            });
+            if released.is_err() {
+                fail_device_voice_context(&startup_context, "上一段语音写入释放未确认，未启动新writer");
+                return;
+            }
+            if let Some(previous) = previous {
+                if let Err(error) = finish_stopping_device_voice_context(
+                    &previous, "superseded by a new device recording", false)
+                {
+                    fail_device_voice_context(&startup_context,
+                        &format!("上一段语音仍在写入，原草稿已保留，请稍后重试：{error}"));
+                    return;
+                }
+            }
+            continue_device_voice_context_start(startup_context, agent_is_frontmost);
+        })
+        .is_err()
+    {
+        fail_device_voice_context(&context, "无法启动本次录音处理；未重试或发送音频");
+    }
+}
+
+fn device_voice_round_is_current(context: &Arc<DeviceVoiceContext>) -> bool {
+    !context.cancelled.load(Ordering::SeqCst)
+        && !context.final_handled.load(Ordering::SeqCst)
+        && active_device_voice_context().lock().is_ok_and(|active|
+            active.as_ref().is_some_and(|current| Arc::ptr_eq(current, context)))
+        && device_voice_target_is_current(context)
+}
+
+fn arm_device_voice_finish_timeout(context: &Arc<DeviceVoiceContext>) {
+    let timeout_context = context.clone();
+    thread::spawn(move || {
+        thread::sleep(Duration::from_secs(9));
+        if !timeout_context.final_handled.load(Ordering::SeqCst)
+            && !timeout_context.cancelled.load(Ordering::SeqCst)
+        {
+            fail_device_voice_context(&timeout_context, "等待火山引擎云端识别最终文本超时");
+        }
+    });
+}
+
+fn continue_device_voice_context_start(context: Arc<DeviceVoiceContext>, agent_is_frontmost: bool) {
+    if context.cancelled.load(Ordering::SeqCst) || context.final_handled.load(Ordering::SeqCst) { return; }
+    if !device_voice_round_is_current(&context) {
+        cancel_device_voice_context(&context, "voice target changed before ASR");
+        return;
+    }
+    let session_queue_empty_at_start = context.session_queue_empty_at_start;
     emit_device_voice_transcript(&context, "listening", 0, "", false, true, "");
 
     #[cfg(target_os = "macos")]
@@ -1821,16 +2368,40 @@ fn start_device_voice_context(
     let visible_target_is_addressable =
         device_voice_uses_current_visible_session(&context) || bound_target_is_addressable;
     if agent_uses_visible_composer(&context.target.agent_id) && visible_target_is_addressable {
+        let startup_permit = match register_device_voice_writer_startup(&context) {
+            Ok(permit) => permit,
+            Err(error) => { fail_device_voice_context(&context, &error); return; }
+        };
         let startup_context = context.clone();
+        // Keep the permit in the parent until the thread actually enters. If
+        // spawning fails, dropping its closure must not turn no factory into Unknown.
+        let startup_permit = Arc::new(Mutex::new(Some(startup_permit)));
+        let worker_startup_permit = startup_permit.clone();
         if let Err(error) = thread::Builder::new()
             .name("pet-visible-composer-startup".to_string())
             .spawn(move || {
+                let startup_permit = match worker_startup_permit.lock() {
+                    Ok(mut slot) => match slot.take() { Some(permit) => permit, None => return },
+                    Err(_) => return,
+                };
+                if !startup_context.lifecycle.admission_open() {
+                    let _ = startup_permit.finish_startup(device_voice_lifecycle::WriterState::NoWriter);
+                    mark_visible_composer_startup_complete(&startup_context);
+                    return;
+                }
                 let composer_context = Arc::downgrade(&startup_context);
                 let callback_agent_id = startup_context.target.agent_id.clone();
                 let callback = Arc::new(move |event: codex_composer::CodexComposerEvent| {
                     let Some(context) = composer_context.upgrade() else {
                         return;
                     };
+                    // Late readiness/error events cannot reopen a retired round
+                    // or replace its first cause while real release drains.
+                    if !context.lifecycle.admission_open() { return; }
+                    if !event.ok && event.phase == "begin" {
+                        fail_visible_composer_startup(&context, &event.error);
+                        return;
+                    }
                     if event.ok && matches!(event.phase.as_str(), "ready" | "updated" | "submitted")
                     {
                         context.composer_visible.store(true, Ordering::SeqCst);
@@ -1874,8 +2445,8 @@ fn start_device_voice_context(
                 let start_bound = |callback: Arc<
                     dyn Fn(codex_composer::CodexComposerEvent) + Send + Sync,
                 >| {
-                    if startup_context.target.agent_id == "workbuddy" {
-                        Err("请打开 WorkBuddy 的目标对话后再开始语音输入".to_string())
+                    if matches!(startup_context.target.agent_id.as_str(), "workbuddy" | "deepseek-harness") {
+                        Err(format!("请打开 {} 的目标对话后再开始语音输入", visible_composer_agent_label(&startup_context.target.agent_id)))
                     } else if startup_context.target.agent_id == "claude-code" {
                         codex_composer::CodexComposerBridge::start_claude(
                             &startup_context.target.session_id,
@@ -1892,13 +2463,32 @@ fn start_device_voice_context(
                         )
                     }
                 };
+                #[cfg(any(windows, target_os = "macos"))]
+                let mut current_startup_error: Option<String> = None;
+                #[cfg(not(any(windows, target_os = "macos")))]
+                let current_startup_error: Option<String> = None;
+                #[cfg(any(windows, target_os = "macos"))] let mut current_no_writer_proven = false;
+                #[cfg(not(any(windows, target_os = "macos")))] let current_no_writer_proven = false;
                 let composer_result = if device_voice_uses_current_visible_session(&startup_context)
                 {
                     let current_callback = callback.clone();
-                    match codex_composer::CodexComposerBridge::start_current(
-                        &startup_context.target.agent_id,
-                        move |event| current_callback(event),
-                    ) {
+                    #[cfg(target_os = "macos")]
+                    let current_result = codex_composer::CodexComposerBridge::start_current_retained(
+                        &startup_context.target.agent_id, move |event| current_callback(event),
+                    ).map(|startup| {
+                        current_startup_error = startup.readiness.err();
+                        startup.bridge
+                    }).map_err(|error| { current_no_writer_proven=true; error.into_message() });
+                    #[cfg(windows)]
+                    let current_result = codex_composer::CodexComposerBridge::start_current_retained(
+                        &startup_context.target.agent_id, move |event| current_callback(event),
+                    ).map(|startup| { current_startup_error=startup.readiness.err(); startup.bridge })
+                    .map_err(|error| { current_no_writer_proven=true; error.into_message() });
+                    #[cfg(not(any(windows, target_os = "macos")))]
+                    let current_result = codex_composer::CodexComposerBridge::start_current(
+                        &startup_context.target.agent_id, move |event| current_callback(event),
+                    );
+                    match current_result {
                         Ok(composer) => Ok(composer),
                         Err(current_error) if bound_target_is_addressable && startup_context.target.agent_id != "codex" => {
                             eprintln!(
@@ -1907,6 +2497,7 @@ fn start_device_voice_context(
                             startup_context
                                 .use_current_visible_session
                                 .store(false, Ordering::SeqCst);
+                            #[cfg(any(windows, target_os = "macos"))] { current_no_writer_proven=false; }
                             start_bound(callback.clone()).map_err(|bound_error| {
                                 format!(
                                     "当前会话输入框不可用: {current_error}; 设备气泡会话定位也失败: {bound_error}"
@@ -1918,38 +2509,59 @@ fn start_device_voice_context(
                 } else {
                     start_bound(callback.clone())
                 };
-                record_device_voice_timing(&startup_context, "composer_ready", composer_result.is_ok());
+                record_device_voice_timing(&startup_context, "composer_ready", composer_result.is_ok() && current_startup_error.is_none());
                 match composer_result {
-                    Ok(composer) if startup_context.cancelled.load(Ordering::SeqCst) => {
-                        composer.cancel();
-                    }
                     Ok(composer) => {
-                        if let Ok(mut slot) = startup_context.composer.lock() {
+                        // Even a terminal/late Bridge belongs to this pending
+                        // context. Publish the slot BEFORE Ready, never cancel/drop it.
+                        let stored = if let Ok(mut slot) = startup_context.composer.lock() {
                             *slot = Some(composer);
-                            // ASR may beat window setup. Flush its latest
-                            // hypothesis now; don't wait for a later chunk.
-                            if agent_streams_voice_draft(&startup_context.target.agent_id)
-                                && !startup_context.final_handled.load(Ordering::SeqCst) {
-                                if let Ok(text) = startup_context.latest_text.lock() {
-                                    if !text.trim().is_empty() {
-                                        let _ = slot.as_ref().unwrap().update(startup_context.latest_revision.load(Ordering::SeqCst), &text);
+                            true
+                        } else { false };
+                        // Claim the real startup cause before Ready publication.
+                        // This atomically closes ordinary admission without letting
+                        // an early Final relabel lookup failure as target change.
+                        if let Some(error) = current_startup_error.as_deref() {
+                            fail_visible_composer_startup(&startup_context, error);
+                        }
+                        if stored {
+                            let admitted = startup_permit.finish_startup(device_voice_lifecycle::WriterState::Ready);
+                            if matches!(admitted, Ok(true)) && !startup_context.final_handled.load(Ordering::SeqCst) {
+                                let latest = startup_context.latest_text.lock().map(|text| text.clone()).unwrap_or_default();
+                                if agent_streams_voice_draft(&startup_context.target.agent_id) && !latest.trim().is_empty() {
+                                    if let Ok(slot) = startup_context.composer.try_lock() {
+                                        if startup_context.lifecycle.admission_open() {
+                                            if let Some(bridge) = slot.as_ref() { let _ = bridge.update(startup_context.latest_revision.load(Ordering::SeqCst), &latest); }
+                                        }
                                     }
                                 }
+                            } else if !startup_context.lifecycle.admission_open()
+                                && current_startup_error.is_none() {
+                                schedule_device_voice_cleanup(&startup_context, "");
                             }
                         }
+                        // A poisoned slot leaves the permit Unknown and the
+                        // global barrier retained; it is never NoWriter.
                     }
                     Err(error) => {
-                        if let Ok(mut composer_error) = startup_context.composer_error.lock() {
-                            *composer_error = error;
-                        }
+                        // Factory failure can follow a spawned native worker.
+                        // Without an actual join/release ACK, absence of a
+                        // returned Bridge is Unknown, never NoWriter success.
+                        if current_no_writer_proven {
+                            let _=startup_permit.finish_startup(device_voice_lifecycle::WriterState::NoWriter);
+                        } else { drop(startup_permit); }
+                        fail_visible_composer_startup(&startup_context, &error);
                     }
                 }
                 mark_visible_composer_startup_complete(&startup_context);
             })
         {
-            if let Ok(mut composer_error) = context.composer_error.lock() {
-                *composer_error = format!("无法启动前台输入准备线程: {error}");
+            if let Ok(mut slot) = startup_permit.lock() {
+                if let Some(permit) = slot.take() {
+                    let _ = permit.finish_startup(device_voice_lifecycle::WriterState::NoWriter);
+                }
             }
+            fail_visible_composer_startup(&context, &format!("无法启动前台输入准备线程: {error}"));
             mark_visible_composer_startup_complete(&context);
         }
     } else if agent_uses_visible_composer(&context.target.agent_id) {
@@ -1998,8 +2610,8 @@ fn start_device_voice_context(
                     *latest_confidence = confidence;
                 }
                 if agent_streams_voice_draft(&context.target.agent_id) {
-                    if let Ok(composer) = context.composer.lock() {
-                        if let Some(composer) = composer.as_ref() {
+                    if let Ok(composer) = context.composer.try_lock() {
+                        if let Some(composer) = composer.as_ref().filter(|_| context.lifecycle.admission_open()) {
                             if let Err(error) = composer.update(revision, &text) {
                                 context.composer_visible.store(false, Ordering::SeqCst);
                                 if let Ok(mut composer_error) = context.composer_error.lock() {
@@ -2032,8 +2644,40 @@ fn start_device_voice_context(
         }
     }) {
         Ok(recognizer) => {
-            if let Ok(mut slot) = context.recognizer.lock() {
-                *slot = Some(recognizer);
+            if context.target.agent_id == "deepseek-harness" && !device_voice_round_is_current(&context) {
+                recognizer.cancel();
+                if !context.final_handled.load(Ordering::SeqCst) && !context.cancelled.load(Ordering::SeqCst) {
+                    cancel_device_voice_context(&context, "DeepSeek voice target changed during ASR setup");
+                }
+                return;
+            }
+            let installed = (|| -> Result<bool, String> {
+                let mut input = context.recognizer.lock().map_err(|_| "语音输入队列不可用".to_string())?;
+                if input.closed || context.cancelled.load(Ordering::SeqCst)
+                    || context.final_handled.load(Ordering::SeqCst) {
+                    recognizer.cancel();
+                    return Ok(false);
+                }
+                input.recognizer = Some(recognizer);
+                // Publishing and draining use the same mutex as live pushes
+                // and Finish. No live chunk can pass the pending prefix.
+                let pending = std::mem::take(&mut input.pending_pcm);
+                input.pending_bytes = 0;
+                for pcm in pending {
+                    if context.cancelled.load(Ordering::SeqCst) { input.discard(); return Ok(false); }
+                    input.recognizer.as_ref().unwrap().push_pcm(&pcm)?;
+                }
+                if context.final_requested.load(Ordering::SeqCst) && !input.finish_sent {
+                    input.recognizer.as_ref().unwrap().finish()?;
+                    input.finish_sent = true;
+                    return Ok(true);
+                }
+                Ok(false)
+            })();
+            match installed {
+                Ok(true) => arm_device_voice_finish_timeout(&context),
+                Ok(false) => {}
+                Err(error) => fail_device_voice_context(&context, &error),
             }
         }
         Err(error) => {
@@ -2055,15 +2699,42 @@ fn push_device_voice_chunk(chunk: usb_audio::ValidatedUsbAudioChunk) {
     };
     if context.utterance_id != chunk.session_id
         || context.board_device_id != chunk.board_device_id
+        || context.capture_id != chunk.capture_id
+        || context.connection_id != chunk.connection_id
+        || context.boot_id != chunk.boot_id
         || context.cancelled.load(Ordering::SeqCst)
     {
         return;
     }
-    let push_error = context.recognizer.lock().ok().and_then(|recognizer| {
-        recognizer
-            .as_ref()
-            .and_then(|recognizer| recognizer.push_pcm(&chunk.pcm).err())
-    });
+    if context.final_handled.load(Ordering::SeqCst) { return; }
+    let dsh = context.target.agent_id == "deepseek-harness";
+    if dsh && !device_voice_round_is_current(&context) {
+        cancel_device_voice_context(&context, "DeepSeek voice target changed while buffering");
+        return;
+    }
+    let pushed = (|| -> Result<(), String> {
+        let mut input = context.recognizer.lock().map_err(|_| "语音输入队列不可用".to_string())?;
+        if input.closed || context.cancelled.load(Ordering::SeqCst)
+            || context.final_handled.load(Ordering::SeqCst)
+            || context.final_requested.load(Ordering::SeqCst) { return Ok(()); }
+        if chunk.sequence != input.next_sequence {
+            input.discard();
+            return Err("当前语音分片顺序不一致；本段已丢弃，请重新按住说话".into());
+        }
+        input.next_sequence += 1;
+        if let Some(recognizer) = input.recognizer.as_ref() {
+            return recognizer.push_pcm(&chunk.pcm);
+        }
+        if input.pending_bytes.saturating_add(chunk.pcm.len()) > DSH_PENDING_PCM_BYTES
+            || input.pending_pcm.len() >= DSH_PENDING_PCM_CHUNKS {
+            input.discard();
+            return Err("输入准备超过当前语音缓冲上限；本段已丢弃，请重新按住说话".into());
+        }
+        input.pending_bytes += chunk.pcm.len();
+        input.pending_pcm.push(chunk.pcm);
+        Ok(())
+    })();
+    let push_error = pushed.err();
     if let Some(error) = push_error {
         let error = format!("云端音频分片 {} 发送失败: {error}", chunk.sequence);
         if let Ok(mut streaming_error) = context.streaming_error.lock() {
@@ -2083,41 +2754,55 @@ fn finish_device_voice_context(completed: usb_audio::CompletedUsbAudio) {
     };
     if context.utterance_id != completed.session_id
         || context.board_device_id != completed.board_device_id
+        || context.capture_id != completed.capture_id
+        || context.connection_id != completed.connection_id
+        || context.boot_id != completed.boot_id
     {
-        cancel_device_voice_context(&context, "completed audio did not match active utterance");
+        // A late completion has no authority over a newer active capture.
         return;
     }
+    // A normal early Final/draft must survive a later audio/end. Likewise a
+    // prior Error/Cancelled remains this round's first terminal cause.
+    if context.final_handled.load(Ordering::SeqCst) || context.cancelled.load(Ordering::SeqCst) { return; }
     record_device_voice_timing(&context, "audio_end", !completed.pcm.is_empty());
     if completed.pcm.is_empty() {
         fail_device_voice_context(&context, "设备没有返回可识别的麦克风音频");
         return;
     }
-    context.final_requested.store(true, Ordering::SeqCst);
-    let finish_result = context
-        .recognizer
-        .lock()
-        .ok()
-        .and_then(|recognizer| recognizer.as_ref().map(|recognizer| recognizer.finish()));
-    match finish_result {
-        Some(Ok(())) => {}
-        Some(Err(error)) => {
-            fail_device_voice_context(&context, &error);
-            return;
+    if context.target.agent_id == "deepseek-harness" && !device_voice_round_is_current(&context) {
+        cancel_device_voice_context(&context, "DeepSeek voice target changed before audio end");
+        return;
+    }
+    let finished = (|| -> Result<bool, String> {
+        let mut input = context.recognizer.lock().map_err(|_| "语音输入队列不可用".to_string())?;
+        if input.closed || context.final_handled.load(Ordering::SeqCst)
+            || context.cancelled.load(Ordering::SeqCst) { return Ok(false); }
+        if context.final_requested.swap(true, Ordering::SeqCst) { return Ok(false); }
+        match input.recognizer.as_ref() {
+            Some(recognizer) => {
+                recognizer.finish()?;
+                input.finish_sent = true;
+                Ok(true)
+            }
+            None => {
+                // A short utterance may finish before local capture/ASR setup.
+                // Keep its already validated bounded PCM; installation drains
+                // it and sends Finish once, in that order, for this round only.
+                Ok(false)
+            }
         }
-        None => {
-            fail_device_voice_context(&context, "火山引擎云端识别器未启动");
-            return;
+    })();
+    if finished.is_ok() && context.final_requested.load(Ordering::SeqCst) {
+        let pending_final = context.pending_final.lock().ok().and_then(|mut pending| pending.take());
+        if let Some((revision, text, confidence)) = pending_final {
+            stage_device_voice_final(context.clone(), revision, text, confidence);
         }
     }
-    let timeout_context = context.clone();
-    thread::spawn(move || {
-        thread::sleep(Duration::from_secs(9));
-        if !timeout_context.final_handled.load(Ordering::SeqCst)
-            && !timeout_context.cancelled.load(Ordering::SeqCst)
-        {
-            fail_device_voice_context(&timeout_context, "等待火山引擎云端识别最终文本超时");
-        }
-    });
+    match finished {
+        Ok(true) => arm_device_voice_finish_timeout(&context),
+        Ok(false) => {}
+        Err(error) => fail_device_voice_context(&context, &error),
+    }
 }
 
 fn p4_session_binding_for_board(board_device_id: &str) -> Option<P4SessionBinding> {
@@ -2152,7 +2837,12 @@ fn usb_session_binding_allows(
 
 fn resolve_usb_inject_target(board_device_id: &str) -> (String, String) {
     if let Some(binding) = p4_session_binding_for_board(board_device_id) {
-        return (binding.agent_id, binding.session_id);
+        // A board connection can publish a binding row before the agent sync
+        // fills agentId. An empty agent here used to produce an untargeted
+        // device-voice context, so fall back to the selected bridge agent.
+        if !binding.agent_id.trim().is_empty() {
+            return (binding.agent_id, binding.session_id);
+        }
     }
     (resolve_usb_inject_agent_id(), "auto".to_string())
 }
@@ -2543,7 +3233,13 @@ fn handle_incoming_usb_message(
     payload: serde_json::Value,
 ) {
     resolve_button_config_ack(&topic, &payload);
+    if topic == "approval/decision" {
+        dsh_approval::handle_device_decision(&payload);
+        return;
+    }
     if topic=="app/event"{component_app::device_event(&payload);return;}
+    if topic=="widget/notify"{widget_notify::device_event(emitter,&payload);return;}
+    if topic=="widget/data/refresh"{component_app::data_refresh_event(&payload);return;}
     music_player::observe_capture(&topic,&payload);
     component_media::observe_capture(&topic,&payload);
     component_audio::observe(&topic,&payload);
@@ -2563,7 +3259,15 @@ fn handle_incoming_usb_message(
     if topic.starts_with("audio/") {
         let (relay_event, validated_chunk, completed_audio) = match usb_audio_relay().lock() {
             Ok(mut relay) => {
-                let event = relay.handle(&topic, &payload);
+                let scope = &payload["_nativeUsbScope"];
+                let event = if scope["runtime"] == "esp-p4" {
+                    relay.handle_scoped(&topic, &payload,
+                        scope["boardDeviceId"].as_str().unwrap_or_default(),
+                        scope["connectionId"].as_str().unwrap_or_default(),
+                        scope["bootId"].as_str().unwrap_or_default())
+                } else {
+                    relay.handle(&topic, &payload)
+                };
                 let chunk = relay.take_validated_chunk();
                 let completed = relay.take_completed();
                 (event, chunk, completed)
@@ -2578,6 +3282,13 @@ fn handle_incoming_usb_message(
                 None,
             ),
         };
+        if relay_event.as_ref().is_some_and(|event|
+            event["terminalAlreadyReported"] == true || event["staleCapture"] == true)
+        {
+            // Already retired packets are drained, never presented as a new
+            // outcome or allowed to affect a newer recording.
+            return;
+        }
         if topic != "audio/chunk" {
             let _ = emitter.emit(
                 "usb-message",
@@ -2585,14 +3296,21 @@ fn handle_incoming_usb_message(
             );
         }
         if let Some(event) = relay_event {
+            // Publish the admitted capture before startup can synchronously
+            // reject it. Otherwise a fast Error can race ahead of Begin and
+            // be mistaken by the UI for a stale recording.
+            let terminal = matches!(event["phase"].as_str(), Some("end" | "error"))
+                || event["ok"] == false;
+            let _ = emitter.emit("usb-audio-stream", event.clone());
+            if terminal { let _ = emitter.emit("usb-audio-result", event.clone()); }
             if topic == "audio/begin"
                 && event.get("ok").and_then(|value| value.as_bool()) == Some(true)
                 && event.get("duplicate").and_then(|value| value.as_bool()) != Some(true)
             {
-                eprintln!("[device-voice] audio/begin payload={payload}");
+                eprintln!("[device-voice] validated audio capture began");
                 start_device_voice_context(
                     emitter,
-                    payload
+                    event
                         .get("boardDeviceId")
                         .and_then(|value| value.as_str())
                         .unwrap_or_default(),
@@ -2600,30 +3318,28 @@ fn handle_incoming_usb_message(
                         .get("sessionId")
                         .and_then(|value| value.as_str())
                         .unwrap_or_default(),
+                    event["captureId"].as_str().unwrap_or_default(),
+                    event["connectionId"].as_str().unwrap_or_default(),
+                    event["bootId"].as_str().unwrap_or_default(),
                     audio_begin_session_queue_empty(&payload),
                 );
-            } else if topic == "audio/error" {
+            } else if event["ok"] == false {
                 let active = active_device_voice_context()
                     .lock()
                     .ok()
                     .and_then(|active| active.clone());
-                if let Some(active) = active {
-                    cancel_device_voice_context(
+                if let Some(active) = active.filter(|active|
+                    !active.capture_id.is_empty()
+                        && event["captureId"].as_str() == Some(active.capture_id.as_str()))
+                {
+                    fail_device_voice_context(
                         &active,
-                        payload
+                        event
                             .get("error")
                             .and_then(|value| value.as_str())
                             .unwrap_or("device microphone reported an error"),
                     );
                 }
-            }
-            let terminal = matches!(
-                event.get("phase").and_then(|value| value.as_str()),
-                Some("end") | Some("error")
-            ) || event.get("ok").and_then(|value| value.as_bool()) == Some(false);
-            let _ = emitter.emit("usb-audio-stream", event.clone());
-            if terminal {
-                let _ = emitter.emit("usb-audio-result", event);
             }
         }
         if let Some(chunk) = validated_chunk {
@@ -2668,10 +3384,11 @@ fn handle_incoming_usb_message(
                 let _ = emitter.emit("usb-audio-result", event);
             }
         } else {
-            let result = pc_audio_capture()
-                .lock()
-                .ok()
-                .and_then(|mut capture| capture.stop_with_pcm());
+            // Bind this release before taking the recorder lock. An older
+            // queued stop must not end a recording installed in the meantime.
+            let result = binding_snapshot.active_capture_id.and_then(|capture_id|
+                pc_audio_capture().lock().ok().and_then(|mut capture|
+                    capture.stop_with_pcm_for_capture(capture_id)));
             if let Some(result) = result {
                 if let Some(binding) = take_pc_audio_binding_for_capture(result.capture_id) {
                     process_pc_audio_capture_result(emitter, result, binding);
@@ -2722,6 +3439,66 @@ fn handle_incoming_usb_message(
 
     if topic == "input/action" || topic == "input/event" {
         if realtime_chat::handle_input_event(emitter, &payload) {
+            return;
+        }
+        if payload.get("action").and_then(|value| value.as_str()) == Some("dsh_interrupt")
+            && payload
+                .get("handledLocally")
+                .and_then(|value| value.as_bool())
+                != Some(true)
+        {
+            let board_device_id = payload
+                .get("boardDeviceId")
+                .and_then(|value| value.as_str())
+                .unwrap_or_default()
+                .to_string();
+            let (agent_id, session_id) = resolve_usb_inject_target(&board_device_id);
+            if agent_id != "deepseek-harness" {
+                let _ = emitter.emit(
+                    "usb-input-action-result",
+                    serde_json::json!({
+                        "ok": false,
+                        "pending": false,
+                        "actionType": "dsh_interrupt",
+                        "agentId": agent_id,
+                        "sessionId": session_id,
+                        "message": "打断 DSH 任务仅在跟随 DeepSeek Harness 时可用",
+                    }),
+                );
+                return;
+            }
+            let emitter = emitter.clone();
+            thread::spawn(move || {
+                match interrupt_dsh_session(&session_id) {
+                    Ok(()) => {
+                        let _ = emitter.emit(
+                            "usb-input-action-result",
+                            serde_json::json!({
+                                "ok": true,
+                                "pending": false,
+                                "actionType": "dsh_interrupt",
+                                "agentId": "deepseek-harness",
+                                "sessionId": session_id,
+                                "message": "已发送打断请求",
+                            }),
+                        );
+                    }
+                    Err(error) => {
+                        let _ = emitter.emit(
+                            "usb-input-action-result",
+                            serde_json::json!({
+                                "ok": false,
+                                "pending": false,
+                                "actionType": "dsh_interrupt",
+                                "agentId": "deepseek-harness",
+                                "sessionId": session_id,
+                                "message": "打断 DSH 任务失败",
+                                "error": error,
+                            }),
+                        );
+                    }
+                }
+            });
             return;
         }
         let Some(agent_input) = extract_usb_agent_input(&topic, &payload) else {
@@ -2886,7 +3663,14 @@ const BRIDGE_LAUNCH_AGENT_LABEL: &str = "com.petmanager.status-bridge";
 const BRIDGE_WINDOWS_STARTUP_SCRIPT_NAME: &str = "Pet Manager Status Bridge.cmd";
 const USB_STATE_MAX_AGE_MS: u64 = 10 * 60 * 1000;
 const USB_BRIDGE_SCAN_MAX_FILES: usize = 64;
-const KNOWN_USB_STATE_SOURCES: [&str; 5] = ["claude-code", "codex", "openclaw", "mimocode", "workbuddy"];
+const KNOWN_USB_STATE_SOURCES: [&str; 6] = [
+    "claude-code",
+    "codex",
+    "openclaw",
+    "mimocode",
+    "deepseek-harness",
+    "workbuddy",
+];
 #[cfg(windows)]
 const CREATE_NO_WINDOW_FLAG: u32 = 0x08000000;
 
@@ -2973,6 +3757,7 @@ struct BridgeProfileFile {
     pet_channel_id: String,
     enabled_agents: Vec<String>,
     selected_agent_id: String,
+    dsh_approval_timeout_ms: Option<u64>,
 }
 
 #[derive(Debug, Clone, Deserialize, Default)]
@@ -3374,6 +4159,9 @@ async fn device_poll_pairing_result() -> Result<PairingStateResponse, String> {
 struct DispatchRemoteCliBindingInput {
     #[serde(default)]
     board_device_id: String,
+    expected_connection_id: String,
+    #[serde(default)]
+    expected_boot_id: String,
     #[serde(default)]
     target_device_id: String,
     #[serde(default)]
@@ -3405,6 +4193,34 @@ struct HttpTextResponse {
     diagnostic: generation_diagnostics::Record,
 }
 
+// Pure scope admission: an IPC queued on generation A cannot become a fresh
+// follow intent merely because the same board reconnects as generation B.
+fn follow_connection_generation(
+    status: &usb_serial::UsbConnectionStatus, board: &str, expected_connection: &str, expected_boot: &str,
+) -> Result<u64, String> {
+    let generation = expected_connection.parse::<u64>().ok().filter(|n| *n > 0)
+        .ok_or_else(|| "follow connection identity missing; not submitted".to_string())?;
+    if !status.connected || status.board_device_id != board
+        || status.connection_id != generation.to_string() || status.boot_id != expected_boot
+        || (status.runtime.eq_ignore_ascii_case("esp-p4") && expected_boot.is_empty())
+    { return Err("follow USB scope changed; not submitted".into()); }
+    Ok(generation)
+}
+
+// The caller holds only the worker transaction gate. Clone metadata before IO;
+// RX/ASR callbacks must still be able to read the current binding during a send.
+fn reset_p4_session_binding_after_send(
+    binding: &Mutex<P4SessionBinding>, board: &str, source: &str,
+    send: impl FnOnce() -> Result<(), String>,
+) -> Result<bool, String> {
+    let mut next = binding.lock().map_err(|error| error.to_string())?.clone();
+    if !p4_session_agent_switch_required(&next, board, source) { return Ok(false); }
+    send()?;
+    let changed = reset_p4_session_binding_for_agent(&mut next, board, source);
+    *binding.lock().map_err(|error| error.to_string())? = next;
+    Ok(changed)
+}
+
 #[tauri::command]
 async fn dispatch_remote_cli_binding(
     input: DispatchRemoteCliBindingInput,
@@ -3412,6 +4228,7 @@ async fn dispatch_remote_cli_binding(
 ) -> Result<DispatchRemoteCliBindingResponse, String> {
     let usb_manager = usb_manager.inner().clone();
     tauri::async_runtime::spawn_blocking(move || {
+        let _session_gate = p4_session_update_gate().lock().map_err(|_| "session update gate unavailable".to_string())?;
         let namespace = normalize_topic_segment(
             input
                 .mqtt_namespace
@@ -3434,7 +4251,7 @@ async fn dispatch_remote_cli_binding(
         if !usb_status.connected {
             return Err("切换跟随需要 USB 连接，请连接设备后重试。".to_string());
         }
-        let board_device_id = normalize_topic_segment(usb_status.board_device_id, "");
+        let board_device_id = normalize_topic_segment(usb_status.board_device_id.clone(), "");
         if board_device_id.is_empty() {
             return Err("当前 USB 设备身份尚未确认，请稍后重试。".to_string());
         }
@@ -3445,6 +4262,9 @@ async fn dispatch_remote_cli_binding(
                 "USB 设备已变化：当前连接的是 {board_device_id}，不是目标设备 {requested_board_device_id}。"
             ));
         }
+
+        let connection_generation = follow_connection_generation(
+            &usb_status, &board_device_id, &input.expected_connection_id, &input.expected_boot_id)?;
 
         let payload = serde_json::json!({
             "command": "remote_cli_binding.update",
@@ -3461,58 +4281,50 @@ async fn dispatch_remote_cli_binding(
             let disabled_payload = build_disabled_usb_state_payload(&previous_source);
             let disabled_topic = format!("state/{previous_source}");
             if let Err(error) =
-                usb_manager.send_to_board(&board_device_id, &disabled_topic, &disabled_payload)
+                usb_manager.send_follow_change_for_connection(&board_device_id, connection_generation, &disabled_topic, &disabled_payload)
             {
                 warning = Some(format!("USB 清理旧渠道失败: {error}"));
             }
         }
         usb_manager
-            .send_to_board(
+            .send_follow_change_for_connection(
                 &board_device_id,
+                connection_generation,
                 "control/remote-cli-binding",
                 &payload,
             )
             .map_err(|error| format!("USB 下发渠道切换失败: {error}"))?;
 
+        // Establish the new lifecycle before clearing its session queue. Old
+        // DSH lifecycle/event labels must not survive an otherwise idle follow.
+        // This is one fresh status update, never an asset mutation replay.
+        usb_manager.send_follow_change_for_connection(&board_device_id, connection_generation, &format!("state/{target_source}"), &serde_json::json!({
+            "source": &target_source,
+            "state": "idle",
+            "event": "source.follow_changed",
+            "reason": "source.follow_changed",
+            "tsMs": current_timestamp_ms(),
+        })).map_err(|_| "跟随已提交，但新渠道状态尚未确认；请检查连接，不要重复发送。".to_string())?;
+
         let mut sessions_reset = false;
-        if matches!(usb_status.runtime.as_str(), "esp-p4" | "esp-s3") {
-            let mut session_binding = p4_session_binding()
-                .lock()
-                .map_err(|error| error.to_string())?;
-            if p4_session_agent_switch_required(
-                &session_binding,
-                &board_device_id,
-                &target_source,
-            ) {
-                usb_manager
-                    .send_to_board(
-                        &board_device_id,
-                        "session/current",
+        if matches!(usb_status.runtime.as_str(),"esp-p4"|"esp-s3") {
+            sessions_reset = reset_p4_session_binding_after_send(
+                p4_session_binding(), &board_device_id, &target_source, || {
+                    usb_manager.send_session_current_for_connection(
+                        &board_device_id, connection_generation,
                         &serde_json::json!({
-                            "sessionId": "auto",
-                            "title": "",
-                            "index": 0,
-                            "count": 0,
-                            "sessions": [],
-                            "agentId": &target_source,
-                            "activeSessionIds": [],
-                            "displayEnabled": true,
-                            "notice": "",
+                            "sessionId": "auto", "title": "", "index": 0, "count": 0,
+                            "sessions": [], "agentId": &target_source, "activeSessionIds": [],
+                            "displayEnabled": true, "notice": "",
                         }),
-                    )
-                    .map_err(|error| format!("USB 清理旧 Agent 会话失败: {error}"))?;
-                sessions_reset = reset_p4_session_binding_for_agent(
-                    &mut session_binding,
-                    &board_device_id,
-                    &target_source,
-                );
-                if sessions_reset {
-                    if let Ok(mut audio_binding) = pc_audio_board_binding().lock() {
-                        if audio_binding.board_device_id == board_device_id {
-                            audio_binding.generation =
-                                audio_binding.generation.wrapping_add(1).max(1);
-                            audio_binding.active_capture_id = None;
-                        }
+                    ).map_err(|error| format!("USB 清理旧 Agent 会话失败: {error}"))
+                },
+            )?;
+            if sessions_reset {
+                if let Ok(mut audio_binding) = pc_audio_board_binding().lock() {
+                    if audio_binding.board_device_id == board_device_id {
+                        audio_binding.generation = audio_binding.generation.wrapping_add(1).max(1);
+                        audio_binding.active_capture_id = None;
                     }
                 }
             }
@@ -3605,6 +4417,7 @@ fn save_device_binding(binding: DeviceBinding) -> Result<Vec<DeviceBinding>, Str
 
     // Auto-create bridge profile if it doesn't exist, so ensure_bridge_runtime
     // can start the bridge without manual setup.
+    let _profile_gate = bridge_profile_write_gate().lock().map_err(|_| "profile update unavailable".to_string())?;
     let config_path = get_bridge_profile_path()?;
     if !config_path.exists() {
         let profile = BridgeProfileFile {
@@ -3618,6 +4431,7 @@ fn save_device_binding(binding: DeviceBinding) -> Result<Vec<DeviceBinding>, Str
             pet_channel_id: DEFAULT_PET_CHANNEL_ID.to_string(),
             enabled_agents: Vec::new(),
             selected_agent_id: String::new(),
+            dsh_approval_timeout_ms: None,
         };
         let profile_payload = serde_json::to_vec_pretty(&profile).map_err(|e| e.to_string())?;
         write_private_file(&config_path, &profile_payload)?;
@@ -3741,13 +4555,14 @@ async fn audio_bridge_signal(
     captureDev: Option<String>,
     playDev: Option<String>,
     voiceButton: Option<String>,
+    expectedConnectionId: Option<String>,
     usb_manager: tauri::State<'_, usb_serial::UsbSerialManager>,
 ) -> Result<serde_json::Value, String> {
     let manager = usb_manager.inner().clone();
     tauri::async_runtime::spawn_blocking(move || {
         audio_bridge_signal_blocking(
             boardDeviceId, action, pcIp, pcPort, listenPort, captureDev, playDev,
-            voiceButton, manager,
+            voiceButton, expectedConnectionId, manager,
         )
     })
     .await
@@ -3764,6 +4579,7 @@ fn audio_bridge_signal_blocking(
     captureDev: Option<String>,
     playDev: Option<String>,
     voiceButton: Option<String>,
+    expectedConnectionId: Option<String>,
     usb_manager: usb_serial::UsbSerialManager,
 ) -> Result<serde_json::Value, String> {
     let action = action.trim().to_lowercase();
@@ -3776,6 +4592,14 @@ fn audio_bridge_signal_blocking(
         return Err("pcPort must be between 1 and 65535".to_string());
     }
     let usb_status = usb_manager.status();
+    if expectedConnectionId.as_ref().is_some_and(|expected|
+        expected.is_empty() || *expected != usb_status.connection_id)
+    {
+        return Err("设备连接已变化，未提交旧连接的麦克风配置。".into());
+    }
+    let connection_generation = usb_status.connection_id.parse::<u64>()
+        .ok().filter(|generation| *generation != 0)
+        .ok_or("设备尚未完成连接确认，未提交麦克风配置。")?;
     let p4_usb_connected =
         usb_status.connected && matches!(usb_status.runtime.as_str(), "esp-p4" | "esp-s3");
 
@@ -3820,24 +4644,54 @@ fn audio_bridge_signal_blocking(
     let command_payload = serde_json::Value::Object(obj.clone());
     let mut usb_sent = false;
     let mut usb_error: Option<String> = None;
-    if usb_status.connected {
-        match usb_manager.send_to_board(&boardDeviceId, "control/command", &command_payload) {
-            Ok(()) => usb_sent = true,
-            Err(error) => usb_error = Some(error),
+    if !usb_status.connected || usb_status.board_device_id != boardDeviceId {
+        return Err("目标 USB 设备未连接，未提交麦克风配置。".into());
+    }
+    // Own the receive transition before the one control write. A begin frame
+    // cannot overtake relay preparation, and an identical re-arm preserves
+    // its current capture instead of discarding the PCM stream.
+    let mut relay = usb_audio_relay().lock()
+        .map_err(|error| format!("USB audio relay lock failed: {error}"))?;
+    let usb_audio_relay_status = if p4_usb_connected {
+        relay.configure_scoped(action == "start", pcm_relay_port, false,
+            &boardDeviceId, &usb_status.connection_id, &usb_status.boot_id)
+    } else {
+        relay.configure(action == "start", pcm_relay_port, true)
+    };
+    if usb_audio_relay_status["ok"] != true {
+        return Err(usb_audio_relay_status["error"].as_str()
+            .unwrap_or("麦克风接收通道未准备完成").to_string());
+    }
+    match usb_manager.send_audio_bridge_command_for_connection(
+        &boardDeviceId, connection_generation, &command_payload)
+    {
+        Ok(()) => usb_sent = true,
+        Err(error) => usb_error = Some(error),
+    }
+    let mut terminated_capture = usb_audio_relay_status["terminatedCapture"].clone();
+    if !usb_sent {
+        let stopped = if p4_usb_connected {
+            relay.configure_scoped(false, pcm_relay_port, false,
+                &boardDeviceId, &usb_status.connection_id, &usb_status.boot_id)
+        } else {
+            relay.configure(false, pcm_relay_port, true)
+        };
+        if terminated_capture.is_null() { terminated_capture = stopped["terminatedCapture"].clone(); }
+    }
+    drop(relay);
+    if !terminated_capture.is_null() {
+        let active = active_device_voice_context().lock().ok()
+            .and_then(|active| active.clone());
+        if let Some(active) = active.filter(|active|
+            terminated_capture["captureId"].as_str() == Some(active.capture_id.as_str()))
+        {
+            cancel_device_voice_context(&active, if action == "stop" {
+                "device microphone listening explicitly stopped"
+            } else { "device microphone transport changed or control write failed" });
         }
     }
-    let mut usb_audio_relay_status = serde_json::Value::Null;
     let mut pc_audio_capture_status = serde_json::Value::Null;
-    if action == "stop" || usb_sent {
-        match usb_audio_relay().lock() {
-            Ok(mut relay) => {
-                usb_audio_relay_status =
-                    relay.configure(action == "start", pcm_relay_port, !p4_usb_connected);
-            }
-            Err(error) => {
-                usb_error = Some(format!("USB audio relay lock failed: {error}"));
-            }
-        }
+    if (action == "stop" || usb_sent) && usb_audio_relay_status["idempotent"] != true {
         match pc_audio_capture().lock() {
             Ok(mut capture) => {
                 let pc_microphone_enabled = action == "start" && !p4_usb_connected;
@@ -3916,6 +4770,7 @@ fn is_allowed_button_config_action(action: &str) -> bool {
             | "session_next"
             | "session_previous"
             | "session_clear"
+            | "dsh_interrupt"
             | "miniapp_screen_tap"
             | "miniapp_screen_long_press"
             | "component_center"
@@ -3944,6 +4799,7 @@ fn set_p4_session_binding_blocking(
     input: SetP4SessionBindingInput,
     usb_manager: usb_serial::UsbSerialManager,
 ) -> Result<P4SessionBinding, String> {
+    let _session_gate = p4_session_update_gate().lock().map_err(|_| "session update gate unavailable".to_string())?;
     let board_device_id = input.board_device_id.trim().to_string();
     let agent_id = normalize_agent_id(&input.agent_id)
         .ok_or_else(|| "请选择一个受支持的 Agent".to_string())?;
@@ -4039,9 +4895,13 @@ fn set_p4_session_binding_blocking(
         }));
     }
 
+    // Validate authoritative native follow ownership BEFORE any UI navigation
+    // or PC voice-target changes. The same generation also owns the wire write.
+    let connection_id = usb_manager.check_session_follow_target(
+        &board_device_id, &agent_id, &input.expected_connection_id, &input.expected_boot_id)?;
     let mut binding = p4_session_binding()
         .lock()
-        .map_err(|error| error.to_string())?;
+        .map_err(|error| error.to_string())?.clone();
     if should_preserve_exact_auto_binding(
         &binding,
         &board_device_id,
@@ -4082,24 +4942,12 @@ fn set_p4_session_binding_blocking(
         binding.desktop_location_error.clear();
     }
 
-    // A changed target must not let an already-recorded PC microphone capture
-    // inject into the previously selected session.
-    if target_changed {
-        if let Ok(mut audio_binding) = pc_audio_board_binding().lock() {
-            if !board_device_id.is_empty() && audio_binding.board_device_id == board_device_id {
-                audio_binding.generation = audio_binding.generation.wrapping_add(1).max(1);
-                audio_binding.active_capture_id = None;
-            }
-        }
-    }
-    let navigation_generation = binding.generation;
     let navigation_agent = binding.agent_id.clone();
     let navigation_id = binding.session_id.clone();
     let navigation_title = binding.session_title.clone();
     let navigation_cwd = binding.session_cwd.clone();
     #[cfg(not(target_os = "macos"))]
     let navigation_title_unique = binding.session_title_unique;
-    drop(binding);
 
     if navigation_requested {
         let navigation_is_claude = navigation_agent == "claude-code";
@@ -4137,34 +4985,25 @@ fn set_p4_session_binding_blocking(
                 &navigation_cwd,
             )
         };
-        if let Ok(mut current) = p4_session_binding().lock() {
-            if current.generation == navigation_generation {
-                match navigation_result {
-                    Ok(()) => {
-                        current.desktop_location = "located".to_string();
-                        current.desktop_location_error.clear();
-                    }
-                    Err(error) => {
-                        eprintln!("[p4-session] desktop location failed: {error}");
-                        current.desktop_location = "failed".to_string();
-                        current.desktop_location_error = error;
-                    }
-                }
+        match navigation_result {
+            Ok(()) => {
+                binding.desktop_location = "located".to_string();
+                binding.desktop_location_error.clear();
+            }
+            Err(error) => {
+                eprintln!("[p4-session] desktop location failed: {error}");
+                binding.desktop_location = "failed".to_string();
+                binding.desktop_location_error = error;
             }
         }
     }
-
-    let result = p4_session_binding()
-        .lock()
-        .map_err(|error| error.to_string())?
-        .clone();
-
-    if navigation_requested && result.generation != navigation_generation {
-        return Ok(result);
-    }
+    let result = binding;
 
     let status = usb_manager.status();
-    if status.connected && status.board_device_id == board_device_id {
+    if !status.connected || status.board_device_id != board_device_id || status.connection_id != connection_id.to_string() {
+        return Err("USB session scope changed; binding not committed".into());
+    }
+    {
         let displayed_session_id = if result.session_id.is_empty() {
             "auto"
         } else {
@@ -4177,9 +5016,9 @@ fn set_p4_session_binding_blocking(
         } else {
             "会话已切换，客户端定位失败".to_string()
         };
-        usb_manager.send_to_board(
+        usb_manager.send_session_current_for_connection(
             &board_device_id,
-            "session/current",
+            connection_id,
             &serde_json::json!({
                 "sessionId": displayed_session_id,
                 "title": device_title,
@@ -4194,6 +5033,18 @@ fn set_p4_session_binding_blocking(
                 "desktopLocationError": &result.desktop_location_error,
             }),
         )?;
+    }
+
+    *p4_session_binding().lock().map_err(|error| error.to_string())? = result.clone();
+    // A changed target must not let an already-recorded PC microphone capture
+    // inject into the previously selected session.
+    if target_changed {
+        if let Ok(mut audio_binding) = pc_audio_board_binding().lock() {
+            if !board_device_id.is_empty() && audio_binding.board_device_id == board_device_id {
+                audio_binding.generation = audio_binding.generation.wrapping_add(1).max(1);
+                audio_binding.active_capture_id = None;
+            }
+        }
     }
 
     Ok(result)
@@ -4245,7 +5096,7 @@ fn send_button_config_and_wait_for_ack(
 #[tauri::command]
 #[allow(non_snake_case)]
 async fn button_config_signal(
-    app_handle: tauri::AppHandle,
+    _app_handle: tauri::AppHandle,
     boardDeviceId: String,
     bindings: Vec<ButtonConfigBinding>,
     requestId: Option<String>,
@@ -4293,7 +5144,7 @@ async fn button_config_signal(
         .map(str::to_string)
         .unwrap_or_else(|| format!("button-config-{}", current_timestamp_ms()));
 
-    let command_payload = serde_json::json!({
+    let mut command_payload = serde_json::json!({
         "type": "button_config",
         "version": 1,
         "request_id": request_id.clone(),
@@ -4303,8 +5154,11 @@ async fn button_config_signal(
         "bindings": normalized_bindings,
     });
 
+    if usb_status.runtime=="esp-s3" {
+        if normalized_bindings.len()!=16 {return Err("A4 按钮与摇杆必须下发完整的 16 项绑定，请更新客户端".into());}
+        command_payload["inputModel"]="s3-a4-buttons-joystick-v1".into();
+    }
     let manager = usb_manager.inner().clone();
-    let wait_app_handle = app_handle.clone();
     let wait_board_device_id = boardDeviceId.clone();
     let wait_request_id = request_id.clone();
     let wait_command_payload = command_payload.clone();
@@ -4321,15 +5175,7 @@ async fn button_config_signal(
             ) {
                 Ok(result) => Ok(result),
                 Err(error) if error == BUTTON_CONFIG_ACK_TIMEOUT_MESSAGE => {
-                    reconnect_usb_serial_for_command(&wait_app_handle, &manager)?;
-                    send_button_config_and_wait_for_ack(
-                        &manager,
-                        &wait_board_device_id,
-                        command_topic,
-                        &wait_request_id,
-                        &wait_command_payload,
-                        fallback_binding_count,
-                    )
+                    Err(format!("{error}；结果未确认，未自动重发或重连，请先读取设备配置核对。"))
                 }
                 Err(error) => Err(error),
             }
@@ -4704,11 +5550,20 @@ fn merge_bridge_profile_input(
         selected_agent_id: input
             .selected_agent_id
             .unwrap_or(existing.selected_agent_id),
+        dsh_approval_timeout_ms: existing.dsh_approval_timeout_ms,
     })
+}
+
+// Serialize read/modify/write across every owner of this shared profile.
+// Private file permissions remain enforced by the existing writer.
+fn bridge_profile_write_gate() -> &'static Mutex<()> {
+    static GATE: OnceLock<Mutex<()>> = OnceLock::new();
+    GATE.get_or_init(|| Mutex::new(()))
 }
 
 #[tauri::command]
 fn save_bridge_profile(input: BridgeProfileInput) -> Result<BridgeProfileResponse, String> {
+    let _profile_gate = bridge_profile_write_gate().lock().map_err(|_| "profile update unavailable".to_string())?;
     let config_path = get_bridge_profile_path()?;
     let existing = read_bridge_profile(&config_path)?.unwrap_or_default();
     let profile = merge_bridge_profile_input(existing, input);
@@ -4731,6 +5586,41 @@ fn save_bridge_profile(input: BridgeProfileInput) -> Result<BridgeProfileRespons
     Ok(build_bridge_profile_response(&config_path, profile))
 }
 
+const DEFAULT_DSH_APPROVAL_TIMEOUT_MS: u64 = 30_000;
+const MAX_DSH_APPROVAL_TIMEOUT_MS: u64 = 3_600_000;
+const DSH_APPROVAL_NEVER_TIMEOUT_MS: u64 = 99_999;
+
+#[tauri::command]
+fn load_dsh_approval_timeout() -> Result<u64, String> {
+    let config_path = get_bridge_profile_path()?;
+    let profile = read_bridge_profile(&config_path)?.unwrap_or_default();
+    Ok(match profile.dsh_approval_timeout_ms {
+        Some(value) if value > 0 => value,
+        _ => DEFAULT_DSH_APPROVAL_TIMEOUT_MS,
+    })
+}
+
+#[tauri::command]
+fn save_dsh_approval_timeout(timeout_ms: u64) -> Result<u64, String> {
+    let _profile_gate = bridge_profile_write_gate().lock().map_err(|_| "profile update unavailable".to_string())?;
+    if timeout_ms != DSH_APPROVAL_NEVER_TIMEOUT_MS
+        && (!(5_000..=MAX_DSH_APPROVAL_TIMEOUT_MS).contains(&timeout_ms))
+    {
+        return Err("审批超时必须在 5 秒到 1 小时之间，或选择永不超时。".to_string());
+    }
+    let config_path = get_bridge_profile_path()?;
+    let mut profile = read_bridge_profile(&config_path)?.unwrap_or_default();
+    profile.version = 1;
+    profile.updated_at = current_timestamp_ms();
+    profile.dsh_approval_timeout_ms = Some(timeout_ms);
+    if let Some(parent_dir) = config_path.parent() {
+        ensure_private_directory(parent_dir)?;
+    }
+    let payload = serde_json::to_vec_pretty(&profile).map_err(|error| error.to_string())?;
+    write_private_file(&config_path, &payload)?;
+    Ok(timeout_ms)
+}
+
 #[tauri::command]
 fn clear_bridge_profile() -> Result<BridgeProfileResponse, String> {
     let config_path = get_bridge_profile_path()?;
@@ -4739,6 +5629,7 @@ fn clear_bridge_profile() -> Result<BridgeProfileResponse, String> {
     stop_managed_bridge(&runtime_paths.pid_path);
     thread::sleep(Duration::from_millis(180));
 
+    let _profile_gate = bridge_profile_write_gate().lock().map_err(|_| "profile update unavailable".to_string())?;
     if config_path.exists() {
         fs::remove_file(&config_path).map_err(|error| error.to_string())?;
     }
@@ -4766,6 +5657,7 @@ fn load_agent_selection() -> Result<AgentSelectionResponse, String> {
 
 #[tauri::command]
 fn save_agent_selection(input: AgentSelectionInput) -> Result<AgentSelectionResponse, String> {
+    let _profile_gate = bridge_profile_write_gate().lock().map_err(|_| "profile update unavailable".to_string())?;
     let config_path = get_bridge_profile_path()?;
     let mut profile = read_bridge_profile(&config_path)?.unwrap_or_default();
     profile.version = 1;
@@ -4817,6 +5709,7 @@ fn ensure_bridge_runtime_blocking(
         .map_err(|_| "Bridge 生命周期锁异常，请重启 Pet Manager 后重试。".to_string())?;
     let force_restart = input.unwrap_or_default().force_restart;
     let lifecycle_started = Instant::now();
+    let _profile_gate = bridge_profile_write_gate().lock().map_err(|_| "profile update unavailable".to_string())?;
     let config_path = get_bridge_profile_path()?;
     let raw_profile = read_bridge_profile(&config_path)?.unwrap_or_default();
     // Check if the profile was explicitly saved (has a real desktop_device_id),
@@ -4847,6 +5740,7 @@ fn ensure_bridge_runtime_blocking(
                 pet_channel_id: DEFAULT_PET_CHANNEL_ID.to_string(),
                 enabled_agents: Vec::new(),
                 selected_agent_id: String::new(),
+                dsh_approval_timeout_ms: None,
             }));
             let payload = serde_json::to_vec_pretty(&profile).map_err(|e| e.to_string())?;
             let _ = write_private_file(&config_path, &payload);
@@ -4862,6 +5756,8 @@ fn ensure_bridge_runtime_blocking(
             ));
         }
     }
+
+    drop(_profile_gate); // Never hold a file transaction during process startup or shutdown.
 
     let bridge_assets = resolve_bridge_assets(&app_handle)?;
     let node_path = resolve_node_path(&app_handle)?;
@@ -5993,6 +6889,41 @@ fn detect_codex() -> DetectedAgent {
     }
 }
 
+/// Decide the OpenClaw discovery state from a real CLI entry and the local
+/// status-bridge identity file.
+///
+/// `~/.status-bridge/openclaw-device.json` is created by the bundled status
+/// bridge on first launch (it is only a local MQTT device identity), so its
+/// presence must never be reported as an installed OpenClaw CLI/Gateway.
+fn openclaw_detection(
+    cli_path: Option<&str>,
+    has_status_bridge_identity: bool,
+) -> (bool, &'static str, String) {
+    match (cli_path, has_status_bridge_identity) {
+        (Some(path), true) => (
+            true,
+            "ready",
+            format!("已检测到 OpenClaw CLI 与本地状态桥身份: {}", path),
+        ),
+        (Some(path), false) => (
+            true,
+            "ready",
+            format!("已检测到 OpenClaw CLI（等待 Gateway 配置）: {}", path),
+        ),
+        (None, true) => (
+            false,
+            "not_found",
+            "仅检测到 HachimoDock 本地状态桥身份文件（客户端自动生成），未安装 OpenClaw CLI"
+                .to_string(),
+        ),
+        (None, false) => (
+            false,
+            "not_found",
+            "未检测到 OpenClaw CLI 或 Gateway".to_string(),
+        ),
+    }
+}
+
 fn detect_openclaw() -> DetectedAgent {
     let home = get_home_dir().ok();
     let cli_path = find_agent_executable(
@@ -6010,37 +6941,18 @@ fn detect_openclaw() -> DetectedAgent {
                 .to_string()
         })
         .unwrap_or_default();
-    let has_config = !config_path.is_empty() && Path::new(&config_path).exists();
+    let has_status_bridge_identity =
+        !config_path.is_empty() && Path::new(&config_path).exists();
 
-    let (detected, status, detail) = match (&cli_path, has_config) {
-        (Some(path), true) => (
-            true,
-            "ready".to_string(),
-            format!("已检测到 OpenClaw CLI 与 Gateway: {}", path),
-        ),
-        (Some(path), false) => (
-            true,
-            "ready".to_string(),
-            format!("已检测到 OpenClaw CLI（等待 Gateway 配置）: {}", path),
-        ),
-        (None, true) => (
-            true,
-            "ready".to_string(),
-            "OpenClaw Gateway 已配置（未发现 CLI 入口）".to_string(),
-        ),
-        (None, false) => (
-            false,
-            "not_found".to_string(),
-            "未检测到 OpenClaw CLI 或 Gateway".to_string(),
-        ),
-    };
+    let (detected, status, detail) =
+        openclaw_detection(cli_path.as_deref(), has_status_bridge_identity);
 
     DetectedAgent {
         id: "openclaw".to_string(),
         label: "OpenClaw".to_string(),
         detected,
         ready: status == "ready",
-        status,
+        status: status.to_string(),
         detail,
         command_path: cli_path.unwrap_or_default(),
         config_path,
@@ -6151,6 +7063,198 @@ fn detect_workbuddy() -> DetectedAgent {
     }
 }
 
+// ── DeepSeek Harness (DSH) ──
+
+#[cfg(target_os = "macos")]
+const DSH_APP_BUNDLE_NAME: &str = "DeepSeek Harness.app";
+#[cfg(target_os = "macos")]
+const DSH_BUNDLE_IDENTIFIER: &str = "com.deepseek.dsh";
+const DSH_BUNDLED_CLI_RELATIVE_PATH: &str = "Contents/Resources/runtime/cli/bin/dsh";
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct DshDetection {
+    detected: bool,
+    ready: bool,
+    status: String,
+    detail: String,
+}
+
+/// Location of the CLI shipped inside the macOS application bundle.
+fn dsh_bundled_cli_path(app_path: &Path) -> PathBuf {
+    DSH_BUNDLED_CLI_RELATIVE_PATH
+        .split('/')
+        .fold(app_path.to_path_buf(), |path, segment| path.join(segment))
+}
+
+/// Classify an already-probed DSH install. All detected locations are injected
+/// so present/absent cases stay unit-testable without touching the real host.
+fn classify_dsh_detection(
+    app_path: Option<&Path>,
+    cli_path: Option<&Path>,
+    profile_path: Option<&Path>,
+    version: Option<&str>,
+) -> DshDetection {
+    let detected = app_path.is_some() || cli_path.is_some() || profile_path.is_some();
+    if !detected {
+        return DshDetection {
+            detected: false,
+            ready: false,
+            status: "not_found".to_string(),
+            detail: "未检测到 DeepSeek Harness 应用、CLI 或桌面配置".to_string(),
+        };
+    }
+
+    let mut sources = Vec::new();
+    if let Some(path) = app_path {
+        sources.push(format!("应用 {}", path.display()));
+    }
+    if let Some(path) = cli_path {
+        sources.push(format!("CLI {}", path.display()));
+    }
+    if let Some(path) = profile_path {
+        sources.push(format!("配置 {}", path.display()));
+    }
+    let version = version
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+        .map(|value| format!(" v{value}"))
+        .unwrap_or_default();
+
+    DshDetection {
+        detected: true,
+        ready: true,
+        status: "ready".to_string(),
+        detail: format!(
+            "已检测到 DeepSeek Harness{version}（{}）",
+            sources.join("；")
+        ),
+    }
+}
+
+/// Cheap version lookup: read CFBundleShortVersionString out of the bundle's
+/// text Info.plist instead of spawning the Electron-backed CLI. Binary plists
+/// simply fail the UTF-8 read and fall back to no version.
+fn parse_dsh_plist_version(plist: &str) -> Option<String> {
+    let key_index = plist.find("CFBundleShortVersionString")?;
+    let after_key = &plist[key_index..];
+    let value_start = after_key.find("<string>")? + "<string>".len();
+    let value_end = after_key[value_start..].find("</string>")? + value_start;
+    let version = after_key[value_start..value_end].trim();
+    (!version.is_empty()).then(|| version.to_string())
+}
+
+fn read_dsh_bundle_version(app_path: Option<&Path>) -> Option<String> {
+    let plist_path = app_path?.join("Contents").join("Info.plist");
+    parse_dsh_plist_version(&fs::read_to_string(plist_path).ok()?)
+}
+
+fn find_dsh_app_bundle(home: Option<&Path>) -> Option<PathBuf> {
+    #[cfg(not(target_os = "macos"))]
+    let _ = home;
+
+    #[cfg(target_os = "macos")]
+    {
+        for candidate in macos_app_bundle_candidates(
+            home,
+            &[DSH_APP_BUNDLE_NAME],
+            &[DSH_BUNDLE_IDENTIFIER],
+        ) {
+            if candidate.is_dir() {
+                return Some(candidate);
+            }
+        }
+    }
+
+    #[cfg(windows)]
+    {
+        let mut candidates = Vec::new();
+        if let Some(local_app_data) = env::var_os("LOCALAPPDATA") {
+            push_unique_path(
+                &mut candidates,
+                PathBuf::from(local_app_data)
+                    .join("Programs")
+                    .join("DeepSeek Harness")
+                    .join("DeepSeek Harness.exe"),
+            );
+        }
+        if let Some(program_files) = env::var_os("ProgramFiles") {
+            push_unique_path(
+                &mut candidates,
+                PathBuf::from(program_files)
+                    .join("DeepSeek Harness")
+                    .join("DeepSeek Harness.exe"),
+            );
+        }
+        for candidate in candidates {
+            if candidate.is_file() {
+                return Some(candidate);
+            }
+        }
+    }
+
+    None
+}
+
+fn find_dsh_cli(home: Option<&Path>, app_path: Option<&Path>) -> Option<PathBuf> {
+    if let Some(app_path) = app_path {
+        let bundled = dsh_bundled_cli_path(app_path);
+        if bundled.is_file() {
+            return Some(bundled);
+        }
+    }
+    find_agent_executable(
+        "dsh",
+        home,
+        &[".dsh/bin/dsh", ".local/bin/dsh"],
+        "dsh.exe",
+    )
+    .map(PathBuf::from)
+}
+
+fn find_dsh_profile_dir(home: Option<&Path>) -> Option<PathBuf> {
+    let profile = home?.join(".dsh").join("profiles").join("desktop");
+    profile.is_dir().then_some(profile)
+}
+
+fn detect_dsh() -> DetectedAgent {
+    detect_dsh_with_home(get_home_dir().ok().as_deref())
+}
+
+fn detect_dsh_with_home(home: Option<&Path>) -> DetectedAgent {
+    let app_path = find_dsh_app_bundle(home);
+    let cli_path = find_dsh_cli(home, app_path.as_deref());
+    let profile_path = find_dsh_profile_dir(home);
+    let version = read_dsh_bundle_version(app_path.as_deref());
+    let detection = classify_dsh_detection(
+        app_path.as_deref(),
+        cli_path.as_deref(),
+        profile_path.as_deref(),
+        version.as_deref(),
+    );
+
+    DetectedAgent {
+        id: "deepseek-harness".to_string(),
+        label: "DeepSeek Harness".to_string(),
+        detected: detection.detected,
+        ready: detection.ready,
+        status: detection.status,
+        detail: detection.detail,
+        command_path: cli_path
+            .as_deref()
+            .map(|path| path.to_string_lossy().into_owned())
+            .unwrap_or_default(),
+        config_path: profile_path
+            .as_deref()
+            .map(|path| path.to_string_lossy().into_owned())
+            .unwrap_or_default(),
+        activity_path: app_path
+            .as_deref()
+            .map(|path| path.to_string_lossy().into_owned())
+            .unwrap_or_default(),
+        can_sync_hook: false,
+    }
+}
+
 fn detect_local_agents_inner() -> Result<AgentDiscoveryResponse, String> {
     let now = SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -6162,6 +7266,7 @@ fn detect_local_agents_inner() -> Result<AgentDiscoveryResponse, String> {
         detect_codex(),
         detect_openclaw(),
         detect_mimocode(),
+        detect_dsh(),
         detect_workbuddy(),
     ];
 
@@ -6183,12 +7288,13 @@ async fn detect_local_agents() -> Result<AgentDiscoveryResponse, String> {
 /// server returns header values containing bytes > 0xFF (e.g. non-ASCII
 /// `Content-Disposition` filenames from Volcano TOS CDN).
 #[tauri::command]
-async fn download_bytes(url: String) -> Result<Vec<u8>, String> {
+async fn download_bytes(url: String, timeout_ms: Option<u64>, max_bytes: Option<u64>) -> Result<Vec<u8>, String> {
     eprintln!("[download_bytes] GET");
     let started = std::time::Instant::now();
-    let mut diagnostic = generation_diagnostics::Record::new("download", 120_000);
+    let timeout_ms = timeout_ms.unwrap_or(120_000).clamp(1, 120_000);
+    let mut diagnostic = generation_diagnostics::Record::new("download", timeout_ms);
     let result = async {
-        let client = llm_network::download_client(Duration::from_secs(120))?;
+        let client = llm_network::download_client(Duration::from_millis(timeout_ms))?;
         diagnostic.phase = "request_wait".into();
         let response = client
             .get(&url)
@@ -6203,10 +7309,15 @@ async fn download_bytes(url: String) -> Result<Vec<u8>, String> {
                 status.as_u16()
             ));
         }
-        let bytes = response.bytes().await.map_err(|e| diagnostic.transport_error(&e))?;
+        let bytes = if let Some(limit) = max_bytes {
+            generation_http::read_image_bytes_bounded(response, &mut diagnostic,
+                limit.clamp(1, generation_http::MAX_RESPONSE_BYTES as u64) as usize).await?
+        } else {
+            response.bytes().await.map_err(|e| diagnostic.transport_error(&e))?.to_vec()
+        };
         diagnostic.phase = "complete".into();
         diagnostic.outcome = "success".into();
-        Ok(bytes.to_vec())
+        Ok(bytes)
     }.await;
     if diagnostic.outcome == "pending" { diagnostic.outcome = "configuration_error".into(); }
     diagnostic.elapsed_ms = started.elapsed().as_millis() as u64;
@@ -6256,7 +7367,7 @@ async fn http_request_text(
     // Never log URLs: provider/CDN queries can carry signed credentials.
     eprintln!("[http_request_text] request");
     let started = std::time::Instant::now();
-    let timeout_ms = timeout_ms.unwrap_or(120_000).max(1);
+    let timeout_ms = generation_http::request_timeout_ms(timeout_ms, diagnostic_stage.as_deref(), &method);
     let mut diagnostic = generation_diagnostics::Record::new(diagnostic_stage.as_deref().unwrap_or("other"), timeout_ms);
     let result: Result<HttpTextResponse, String> = async {
         let client = llm_network::client(Duration::from_millis(timeout_ms))?;
@@ -6277,9 +7388,7 @@ async fn http_request_text(
         let response = request.send().await.map_err(|e| diagnostic.transport_error(&e))?;
         let status = response.status();
         diagnostic.headers(&response);
-        let body = response
-            .text().await
-            .map_err(|e| diagnostic.transport_error(&e))?;
+        let body = generation_http::read_text_bounded(response, &mut diagnostic).await?;
         diagnostic.phase = "complete".into();
         if !status.is_success() { diagnostic.error_body_id(&body); }
         diagnostic.finish(started, if status.is_success() { "success" } else { "http_error" });
@@ -6372,6 +7481,7 @@ async fn usb_connect(
         wifi_commands::release_current(&manager)?;
         let emitter=app_handle.clone();
         manager.connect(&port_name,move|topic,payload|handle_incoming_usb_message(&emitter,topic,payload))?;
+        program_autostart::native::connected(&manager);
         wifi_commands::remember_usb(&app_handle,&manager.status().board_device_id)?;
         Ok(manager.status())
     }).await.map_err(|_|"USB 连接失败")?
@@ -6438,6 +7548,46 @@ async fn usb_send_speech(
 }
 
 #[tauri::command]
+fn usb_bubble_pixels_ready(
+    window: tauri::WebviewWindow,
+    usb_manager: tauri::State<'_, usb_serial::UsbSerialManager>,
+    ready: bool,
+    instance: String,
+) -> Result<(), String> {
+    if window.label() != "main" {
+        return Err("Bubble renderer belongs to main window".into());
+    }
+    let sink = if ready {
+        Some(Arc::new(move |event: serde_json::Value| {
+            let _ = window.emit("usb-bubble-render", event);
+        }) as Arc<dyn Fn(serde_json::Value) + Send + Sync>)
+    } else {
+        None
+    };
+    let changed = usb_manager.set_bubble_renderer(&instance, sink);
+    if ready && !changed { return Err("Invalid bubble renderer instance".into()); }
+    Ok(())
+}
+#[tauri::command]
+async fn usb_send_bubble_pixels(
+    window: tauri::WebviewWindow,
+    usb_manager: tauri::State<'_, usb_serial::UsbSerialManager>,
+    frame: usb_serial::BubbleFrame,
+) -> Result<(), String> {
+    if window.label() != "main" {
+        return Err("Bubble renderer belongs to main window".into());
+    }
+    let manager = usb_manager.inner().clone();
+    let lease = manager.reserve_bubble_worker(&frame)?;
+    tauri::async_runtime::spawn_blocking(move || {
+        let _lease = lease;
+        manager.send_bubble_pixels(frame)
+    })
+    .await
+    .map_err(|_| "BUBBLE_FALLBACK: worker stopped".to_string())?
+}
+
+#[tauri::command]
 async fn usb_send_command(
     usb_manager: tauri::State<'_, usb_serial::UsbSerialManager>,
     command: String,
@@ -6472,6 +7622,22 @@ async fn usb_get_status(
     Ok(usb_manager.status())
 }
 
+/// Query or set the board's master volume. Any uncertain result requires a
+/// fresh query; this command never replays a set on timeout or reconnect.
+#[tauri::command]
+async fn usb_device_volume(
+    usb_manager: tauri::State<'_, usb_serial::UsbSerialManager>,
+    expected_board_device_id: String,
+    volume: Option<u8>,
+) -> Result<serde_json::Value, String> {
+    let manager = usb_manager.inner().clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        manager.device_volume(&expected_board_device_id, volume)
+    })
+    .await
+    .map_err(|_| "audio_volume_result_unknown_refresh_required: worker failed".to_string())?
+}
+
 /// Remote-set the device's screen page (main | app). Forwards via USB serial
 /// as topic "control/screen-page" with {"page": "<value>"}. Used as both a
 /// recovery hatch (when widget OTA leaves the device stuck on app) and a
@@ -6484,6 +7650,28 @@ async fn usb_set_screen_page(
 ) -> Result<(), String> {
     let payload = serde_json::json!({ "page": page });
     usb_manager.send("control/screen-page", &payload)
+}
+
+#[tauri::command]
+async fn usb_activate_installed_widget(usb_manager:tauri::State<'_,usb_serial::UsbSerialManager>,expected_board_device_id:String,component_id:String,show:bool)->Result<serde_json::Value,String>{
+    let manager=usb_manager.inner().clone();
+    tauri::async_runtime::spawn_blocking(move||manager.activate_installed_widget(&expected_board_device_id,&component_id,show)).await.map_err(|e|e.to_string())?
+}
+
+#[tauri::command]
+async fn usb_get_background_programs(usb_manager:tauri::State<'_,usb_serial::UsbSerialManager>,expected_board_device_id:String)->Result<app_program_background::Snapshot,String>{
+    let manager=usb_manager.inner().clone();
+    tauri::async_runtime::spawn_blocking(move||manager.query_background_programs(&expected_board_device_id)).await.map_err(|e|e.to_string())?
+}
+#[tauri::command]
+async fn usb_start_background_program(usb_manager:tauri::State<'_,usb_serial::UsbSerialManager>,expected_board_device_id:String,component_id:String)->Result<app_program_background::Outcome,String>{
+    let manager=usb_manager.inner().clone();
+    tauri::async_runtime::spawn_blocking(move||manager.start_background_program(&expected_board_device_id,&component_id)).await.map_err(|e|e.to_string())?
+}
+#[tauri::command]
+async fn usb_stop_background_program(usb_manager:tauri::State<'_,usb_serial::UsbSerialManager>,expected_board_device_id:String,component_id:String,boot_id:String,registration:String)->Result<app_program_background::Outcome,String>{
+    let manager=usb_manager.inner().clone();
+    tauri::async_runtime::spawn_blocking(move||manager.stop_background_program(&expected_board_device_id,&component_id,&boot_id,&registration)).await.map_err(|e|e.to_string())?
 }
 
 #[tauri::command]
@@ -6500,9 +7688,14 @@ async fn usb_apply_wifi(
 async fn usb_get_diagnostics(
     usb_manager: tauri::State<'_, usb_serial::UsbSerialManager>,
     expected_board_device_id: String,
+    component_sync: Option<bool>,
 ) -> Result<serde_json::Value, String> {
     let manager = usb_manager.inner().clone();
     let mut report = tauri::async_runtime::spawn_blocking(move || {
+        if component_sync == Some(true) {
+            return manager.component_sync_audio_status(&expected_board_device_id)
+                .map(|audio| serde_json::json!({"syncAudio":audio}));
+        }
         manager.query_diagnostics(&expected_board_device_id)
     })
     .await
@@ -6566,15 +7759,55 @@ fn parse_firmware_version(value: &str) -> Option<Vec<u64>> {
     Some(parts)
 }
 
+/// Build revision `-rNNN` of a P4 label (`0.7.103-p4-r144`, `0.7.103-p4-r142-framework`).
+/// Labels without one count as revision 0, so a revisioned build of the same numeric
+/// core is newer than an unrevisioned one. Mirrors `pc/src/lib/firmware-version.js`.
+fn parse_firmware_revision(value: &str) -> Result<(u64, u8), String> {
+    let mut key = None;
+    for segment in value.trim().split('-').skip(1) {
+        let bytes = segment.as_bytes();
+        if bytes.is_empty() || !bytes[0].eq_ignore_ascii_case(&b'r') {
+            continue;
+        }
+        let digits = bytes[1..].iter().take_while(|b| b.is_ascii_digit()).count();
+        let tail = &bytes[1+digits..];
+        if key.is_some() || digits == 0 || digits > 6 || tail.len() > 1 || tail.first().is_some_and(|b| !b.is_ascii_alphabetic()) {
+            return Err(format!("unrecognized firmware revision: {value}"));
+        }
+        let revision = segment[1..1+digits].parse::<u64>().map_err(|_| format!("invalid firmware revision: {value}"))?;
+        let suffix = tail.first().map_or(0, |b| b.to_ascii_lowercase()-b'a'+1);
+        key = Some((revision, suffix));
+    }
+    Ok(key.unwrap_or((0,0)))
+}
+
 fn compare_firmware_versions(left: &str, right: &str) -> Result<VersionOrdering, String> {
-    let mut left = parse_firmware_version(left)
+    let mut left_parts = parse_firmware_version(left)
         .ok_or_else(|| format!("invalid device firmware version: {left}"))?;
-    let mut right = parse_firmware_version(right)
+    let mut right_parts = parse_firmware_version(right)
         .ok_or_else(|| format!("invalid bundled firmware version: {right}"))?;
-    let width = left.len().max(right.len());
-    left.resize(width, 0);
-    right.resize(width, 0);
-    Ok(left.cmp(&right))
+    let left_revision = parse_firmware_revision(left)?;
+    let right_revision = parse_firmware_revision(right)?;
+    let width = left_parts.len().max(right_parts.len());
+    left_parts.resize(width, 0);
+    right_parts.resize(width, 0);
+    Ok(left_parts
+        .cmp(&right_parts)
+        .then_with(|| left_revision.cmp(&right_revision)))
+}
+
+fn ensure_bundled_firmware_update_allowed(current: &str, bundled: &str) -> Result<(), String> {
+    if compare_firmware_versions(current, bundled)? != VersionOrdering::Less {
+        return Err(format!("device firmware {current} is already newer than or equal to bundled firmware {bundled}"));
+    }
+    let current_markers: Vec<_> = current.split('-').collect();
+    let bundled_markers: Vec<_> = bundled.split('-').collect();
+    if current_markers.contains(&"s3") && ["80m", "l320"].iter().any(|marker|
+        current_markers.contains(marker) && !bundled_markers.contains(marker)
+    ) {
+        return Err("当前使用 ESP32-S3 适配固件，内置固件的版本适配标记不匹配，已阻止自动覆盖，请使用配套固件".into());
+    }
+    Ok(())
 }
 
 fn bundled_p4_firmware_path(app_handle: &tauri::AppHandle, resource: &str) -> Result<PathBuf, String> {
@@ -6618,15 +7851,17 @@ async fn run_usb_firmware_update(
     manager: usb_serial::UsbSerialManager,
     firmware_path: PathBuf,
     expected_board_device_id: String,
+    bundled_only: bool,
 ) -> Result<usb_serial::FirmwareUpdateResult, String> {
     let emitter = app_handle.clone();
     let reconnect_manager = manager.clone();
     let reconnect_app = app_handle.clone();
     let reconnect_board_device_id = expected_board_device_id.clone();
     tauri::async_runtime::spawn_blocking(move || {
-        manager.update_firmware(
+        manager.update_firmware_with_policy(
             &firmware_path,
             &expected_board_device_id,
+            bundled_only,
             |bytes_sent, bytes_total, stage| {
                 let percent = if bytes_total == 0 {
                     0
@@ -6680,6 +7915,7 @@ async fn usb_update_firmware(
         usb_manager.inner().clone(),
         path,
         expected_board_device_id,
+        false,
     )
     .await
 }
@@ -6705,14 +7941,8 @@ async fn usb_update_bundled_firmware(
     if !matches!(status.runtime.as_str(), "esp-p4" | "esp-s3") {
         return Err("bundled firmware update is only supported by ESP32-P4 / ESP32-S3".to_string());
     }
-    if compare_firmware_versions(&status.firmware, &firmware_info.version)? != VersionOrdering::Less
-    {
-        return Err(format!(
-            "device firmware {} is already newer than or equal to bundled firmware {}",
-            status.firmware, firmware_info.version
-        ));
-    }
-    run_usb_firmware_update(app_handle, manager, firmware_path, expected_board_device_id).await
+    ensure_bundled_firmware_update_allowed(&status.firmware, &firmware_info.version)?;
+    run_usb_firmware_update(app_handle, manager, firmware_path, expected_board_device_id, true).await
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -6778,6 +8008,14 @@ fn validate_appearance_id(appearance_id: &str) -> Result<&str, String> {
         return Err("invalid appearance id".to_string());
     }
     Ok(appearance_id)
+}
+
+// Following a protected built-in selects the device slot. Local cue edits
+// belong to the explicit audio-only route, never a replacement video upload.
+fn prefer_device_builtin_for_follow(
+    appearance_id: &str, is_p4: bool, serial_connected: bool, builtin_protected: bool,
+) -> bool {
+    appearance_id == "builtin-terrier" && is_p4 && (!serial_connected || builtin_protected)
 }
 
 fn builtin_terrier_has_audio_overrides(local_dir: &Path) -> Result<bool, String> {
@@ -7015,6 +8253,7 @@ async fn usb_sync_appearance(
     usb_manager: tauri::State<'_, usb_serial::UsbSerialManager>,
     appearance_id: String,
     board_device_id: Option<String>,
+    audio_only: Option<bool>,
 ) -> Result<UsbSyncAppearanceResult, String> {
     let status = usb_manager.status();
     let native_usb_available = usb_serial::p4_native_usb_available();
@@ -7041,27 +8280,48 @@ async fn usb_sync_appearance(
     };
 
     let appearance_id = validate_appearance_id(&appearance_id)?.to_string();
+    // Explicit audio scope is dispatched BEFORE full profile inspection,
+    // builtin video preparation, cached activation and Full/video capacity gates.
+    if audio_only.unwrap_or(false) {
+        if !matches!(sync_runtime, UsbAppearanceSyncRuntime::EspP4) {
+            return Err("当前设备不支持独立音效更新，请升级设备固件；未自动同步完整形象。".into());
+        }
+        let dir = app_local_data_dir.join("custom-appearances").join(&appearance_id);
+        let builtin = appearance_id == "builtin-terrier";
+        usb_manager.begin_appearance_sync()?;
+        let manager = usb_manager.inner().clone();
+        let worker = manager.clone();
+        let result = tauri::async_runtime::spawn_blocking(move || {
+            worker.sync_appearance_audio_only_p4(&dir, &app_local_data_dir,
+                &expected_board_device_id, builtin, |current, total, sent, bytes| {
+                    let _ = app_handle.emit("usb-sync-progress", serde_json::json!({
+                        "currentFile":current,"totalFiles":total,"bytesSent":sent,"bytesTotal":bytes,
+                    }));
+                }).map(|(file_count,byte_count,reused_slot)| UsbSyncAppearanceResult {
+                    ok:true,file_count,byte_count,reused_slot,error:None,
+                })
+        }).await;
+        manager.finish_appearance_sync();
+        return result.map_err(|error| error.to_string())?;
+    }
     let resource_dir = app_handle
         .path()
         .resource_dir()
         .map_err(|error| format!("无法解析 resource 目录: {error}"))?;
     let clips_dir = resource_dir.join("terrier-clips");
-    let appearance_dir = if appearance_id == "builtin-terrier" {
+    let protected_builtin = prefer_device_builtin_for_follow(
+        &appearance_id, matches!(sync_runtime, UsbAppearanceSyncRuntime::EspP4),
+        serial_connected, status.capabilities["appearance"]["builtinProtected"] == true,
+    );
+    let appearance_dir = if protected_builtin {
+        clips_dir.clone()
+    } else if appearance_id == "builtin-terrier" {
         let local_dir = app_local_data_dir
             .join("custom-appearances")
             .join("builtin-terrier");
-        let has_overrides = builtin_terrier_has_audio_overrides(&local_dir)?;
         match sync_runtime {
             UsbAppearanceSyncRuntime::EspP4 if status.runtime == "esp-s3" => {
                 ensure_builtin_terrier_source(&app_local_data_dir, &clips_dir, true)?
-            }
-            UsbAppearanceSyncRuntime::EspP4
-                if has_overrides && usb_serial::inspect_prepared_p4_appearance(&local_dir).is_ok() =>
-            {
-                local_dir
-            }
-            UsbAppearanceSyncRuntime::EspP4 if has_overrides => {
-                return Err("专属音效素材尚未准备好，请重新保存音效后再切换。".into());
             }
             UsbAppearanceSyncRuntime::EspP4 => clips_dir.clone(),
             UsbAppearanceSyncRuntime::Linux => {
@@ -7483,6 +8743,11 @@ struct InstallClawpkgResult {
 struct RemoveWidgetInput {
     component_id: String,
     transport: String,
+    /// Omission preserves device saves. Clearing requires a second explicit flag.
+    #[serde(default)]
+    preserve_save: Option<bool>,
+    #[serde(default)]
+    clear_device_save_confirmed: bool,
     #[serde(default)]
     board_device_id: String,
     #[serde(default)]
@@ -8004,6 +9269,15 @@ async fn install_clawpkg_over_usb(
     }
     if input.expected_board_device_id.as_deref().is_some_and(|id|id!=status.board_device_id){return Err("设备已切换，请重新确认安装目标".into());}
 
+    // Recheck immediately before any transaction. UI preflight alone is not a grant.
+    let manager = usb_manager.inner().clone();
+    let board = status.board_device_id.clone();
+    let audio = tauri::async_runtime::spawn_blocking(move || manager.component_sync_audio_status(&board))
+        .await.map_err(|e|e.to_string())??;
+    if audio["blocked"] == true {
+        return Err(audio["message"].as_str().unwrap_or("请先停止播放或结束语音，再重新检查并同步。").into());
+    }
+
     /* validate */
     let path = std::path::PathBuf::from(&input.clawpkg_path);
     let validation = crate::clawpkg::validate_clawpkg_at_path(&path)?;
@@ -8149,7 +9423,8 @@ async fn install_clawpkg_over_ssh(
         .ok_or_else(|| "manifest 缺失".to_string())?;
     let widget_id = manifest.id.clone();
 
-    let ssh_host = input.ssh_host.clone();
+    let ssh_host = normalize_widget_ssh_host(&input.ssh_host)?
+        .ok_or_else(|| "SSH 目标不能为空".to_string())?;
     let overrides = input.binding_overrides.clone();
     let src = src_path.clone();
     let tar_bin = require_host_command("tar", "SSH 下发组件需要本机 tar 命令")?;
@@ -8429,7 +9704,12 @@ async fn remove_widget_from_device(
     }
 
     let transport = input.transport.trim().to_ascii_lowercase();
+    let preserve_save = input.preserve_save.unwrap_or(true);
+    if !preserve_save && !input.clear_device_save_confirmed {
+        return Err("清除设备存档需要明确确认；未删除组件。".into());
+    }
     if transport == "ssh" {
+        if preserve_save { return Err("此 SSH 删除入口不能确认保留设备存档；未删除。请使用支持保留存档的 USB 设备，或明确选择清除设备存档。".into()); }
         let ssh_host = normalize_widget_ssh_host(&input.ssh_host)?
             .ok_or_else(|| "SSH 删除必须指定安装时的目标主机。".to_string())?;
         if !input.board_device_id.trim().is_empty() {
@@ -8507,7 +9787,7 @@ async fn remove_widget_from_device(
     let widget_id = component_id.clone();
     let board_device_id = expected_board_device_id;
     tauri::async_runtime::spawn_blocking(move || {
-        manager.remove_widget(&board_device_id, &widget_id)
+        manager.remove_widget_with_save_policy(&board_device_id, &widget_id, preserve_save)
     })
     .await
     .map_err(|error| error.to_string())??;
@@ -8834,6 +10114,7 @@ fn normalize_agent_id(value: &str) -> Option<String> {
         "claude" | "claude-code" => Some("claude-code".to_string()),
         "openclaw" => Some("openclaw".to_string()),
         "mimo" | "mimo-code" | "mimocode" => Some("mimocode".to_string()),
+        "deepseek-harness" | "deepseek" | "dsh" => Some("deepseek-harness".to_string()),
         "workbuddy" | "work-buddy" => Some("workbuddy".to_string()),
         "copilot" | "copilot-cli" => Some("copilot-cli".to_string()),
         "gemini" | "gemini-cli" => Some("gemini-cli".to_string()),
@@ -9101,9 +10382,41 @@ fn build_ssh_fallback_debug_json(
     .to_string()
 }
 
+fn build_ssh_state_fallback_command(target: &SshStateFallbackTarget) -> Result<Command, String> {
+    let ssh_host = normalize_widget_ssh_host(&target.host)?
+        .ok_or_else(|| "SSH 目标不能为空".to_string())?;
+    let mut command = if target.password.is_empty() {
+        let mut command = command_for_host("ssh");
+        command.arg("-o").arg("BatchMode=yes");
+        command
+    } else {
+        let mut command = command_for_host("sshpass");
+        command.arg("-e").arg("ssh");
+        command.env("SSHPASS", &target.password);
+        command
+    };
+    // Keep OpenSSH's persistent known_hosts policy: trust on first use, reject
+    // changed host keys. Never discard host identity to make password auth work.
+    command
+        .arg("-o")
+        .arg("StrictHostKeyChecking=accept-new")
+        .arg("-o")
+        .arg("ConnectTimeout=2");
+    if let Some(port) = target.port {
+        command.arg("-p").arg(port.to_string());
+    }
+    command.arg(ssh_host);
+    Ok(command)
+}
+
+#[cfg(test)]
+#[path = "ssh_security_tests.rs"]
+mod ssh_security_tests;
+
 fn send_state_via_ssh_fallback(source: &str, payload: &serde_json::Value) -> Result<(), String> {
     let target = resolve_ssh_state_fallback_target()
         .ok_or_else(|| "未配置 SSH 状态 fallback 目标。".to_string())?;
+    let mut command = build_ssh_state_fallback_command(&target)?;
     let state = normalize_state_for_board(
         payload
             .get("state")
@@ -9125,28 +10438,7 @@ fn send_state_via_ssh_fallback(source: &str, payload: &serde_json::Value) -> Res
         debug_json = shell_quote(&debug_json),
     );
 
-    let mut command = if target.password.is_empty() {
-        let mut command = command_for_host("ssh");
-        command.arg("-o").arg("BatchMode=yes");
-        command
-    } else {
-        let mut command = command_for_host("sshpass");
-        command.arg("-e").arg("ssh");
-        command.env("SSHPASS", &target.password);
-        command
-    };
-    command
-        .arg("-o")
-        .arg("StrictHostKeyChecking=no")
-        .arg("-o")
-        .arg("UserKnownHostsFile=/dev/null")
-        .arg("-o")
-        .arg("ConnectTimeout=2");
-    if let Some(port) = target.port {
-        command.arg("-p").arg(port.to_string());
-    }
     let output = command
-        .arg(&target.host)
         .arg(script)
         .output()
         .map_err(|error| format!("SSH fallback 启动失败: {error}"))?;
@@ -9301,7 +10593,12 @@ fn score_usb_state(state: &str) -> i32 {
 
 fn score_usb_source(source: &str) -> i32 {
     match source {
+        // Codex keeps the long-standing top slot. DeepSeek Harness is a
+        // first-class local agent routed through the same session bus, so it
+        // sits just below Codex and above the other integrations; this only
+        // breaks exact state/ts ties between sources.
         "codex" => 30,
+        "deepseek-harness" => 25,
         "claude-code" => 20,
         "mimocode" => 15,
         "workbuddy" => 15,
@@ -9356,6 +10653,7 @@ fn usb_source_display_name(source: &str) -> String {
         "claude" | "claude-code" => "Claude".to_string(),
         "openclaw" => "OpenClaw".to_string(),
         "mimo" | "mimo-code" | "mimocode" => "MiMoCode".to_string(),
+        "deepseek-harness" | "deepseek" | "dsh" => "DeepSeek Harness".to_string(),
         "workbuddy" | "work-buddy" => "WorkBuddy".to_string(),
         other if !other.is_empty() => other.to_string(),
         _ => "桌宠".to_string(),
@@ -9364,7 +10662,7 @@ fn usb_source_display_name(source: &str) -> String {
 
 fn usb_state_display_text(state: &str) -> Option<&'static str> {
     match state {
-        "idle" => Some("待机中"),
+        "idle" => Some("休息中"),
         "working" | "thinking" | "tool_running" => Some("工作中"),
         "speaking" => Some("回复中"),
         "waiting_user" => Some("等待操作"),
@@ -9384,8 +10682,6 @@ fn build_usb_restore_speech_text(source: &str, payload: &serde_json::Value) -> O
             "speech_text",
             "displayContent",
             "display_content",
-            "statusText",
-            "status_text",
             "content",
             "text",
             "message",
@@ -9407,8 +10703,7 @@ fn build_usb_restore_speech_text(source: &str, payload: &serde_json::Value) -> O
         .trim()
         .to_ascii_lowercase();
     let state_text = usb_state_display_text(&state)?;
-    let source_name = usb_source_display_name(source);
-    Some(format!("{} {}", source_name, state_text))
+    Some(state_text.to_string())
 }
 
 fn build_usb_speech_payload_from_state(
@@ -9711,6 +11006,7 @@ fn forward_usb_speech_updates(
 fn start_usb_host_heartbeat(usb_manager: usb_serial::UsbSerialManager) {
     thread::spawn(move || loop {
         thread::sleep(Duration::from_secs(2));
+        retire_changed_device_voice_transport(&usb_manager);
         if !usb_manager.status().connected {
             continue;
         }
@@ -10150,6 +11446,7 @@ fn start_usb_auto_connect(usb_manager: usb_serial::UsbSerialManager, app_handle:
                     match result {
                         Ok(_) => {
                             failed_probes.remove(&probe_key);
+                            program_autostart::native::connected(&usb_manager);
                             let verified = usb_manager.status();
                             eprintln!(
                                 "[usb-auto] connected to {} runtime={} board={}",
@@ -10182,6 +11479,10 @@ fn start_usb_auto_connect(usb_manager: usb_serial::UsbSerialManager, app_handle:
                             failed_probes
                                 .insert(probe_key, (failure_count, Instant::now() + retry_delay));
                             eprintln!("[usb-auto] rejected {}: {}", port_name, e);
+                            // connect_for_auto retires its own previous generation
+                            // under connect_guard before probing and cannot return
+                            // Err after publishing a connection. A later unscoped
+                            // disconnect could retire a fresh manual connection.
                         }
                     }
                 }
@@ -10192,6 +11493,17 @@ fn start_usb_auto_connect(usb_manager: usb_serial::UsbSerialManager, app_handle:
     });
 }
 
+#[tauri::command]
+fn frontend_startup_generation(window: tauri::WebviewWindow, supervisor: tauri::State<'_,startup_supervision::Supervisor>) -> Result<serde_json::Value,String> {
+    if window.label()!="main" {return Err("startup window not allowed".into());}
+    supervisor.challenge()
+}
+#[tauri::command]
+fn frontend_startup_ready(window: tauri::WebviewWindow, supervisor: tauri::State<'_,startup_supervision::Supervisor>, generation:u64, token:String) -> Result<bool,String> {
+    if window.label()!="main" || token.len()>64 {return Err("startup confirmation invalid".into());}
+    Ok(supervisor.ready(generation,&token))
+}
+
 pub fn run() {
     let usb_manager = usb_serial::UsbSerialManager::new();
     if !cfg!(feature = "composer-diagnostic") {
@@ -10200,20 +11512,51 @@ pub fn run() {
     }
     start_usb_host_heartbeat(usb_manager.clone());
     start_usb_state_forwarder(usb_manager.clone());
+    dsh_approval::start(usb_manager.clone());
     }
 
     let usb_for_auto = usb_manager.clone();
 
     let app = tauri::Builder::default()
+        .manage(startup_supervision::Supervisor::default())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_http::init())
         .plugin(tauri_plugin_dialog::init())
+        .on_page_load(|webview, payload| {
+            if webview.label()=="main" && matches!(payload.event(),tauri::webview::PageLoadEvent::Started) {
+                if let Some(supervisor)=webview.app_handle().try_state::<startup_supervision::Supervisor>() {
+                    supervisor.navigate();
+                }
+            }
+            // Only application-owned asset URL structure; no query, fragment or user paths.
+            let url = payload.url();
+            let path = url.path();
+            let safe_path = if path == "/" || path == "/index.html" { path }
+                else if path.starts_with("/assets/") && path.bytes().all(|b|b.is_ascii_alphanumeric()||b"/._-".contains(&b)) { path }
+                else { "/<redacted>" };
+            let safe_host = match url.host_str() { Some("localhost")=>"localhost", Some("tauri.localhost")=>"tauri.localhost", _=>"<redacted>" };
+            let port = url.port().map(|port|format!(":{port}")).unwrap_or_default();
+            eprintln!("[webview-load] window={} phase={:?} url={}://{}{}{}",
+                if webview.label()=="main" {"main"} else {"other"}, payload.event(),
+                url.scheme(), safe_host, port, safe_path);
+        })
         .setup(move |app| {
             if cfg!(feature = "composer-diagnostic") {
+                app.manage(program_autostart::ProgramAutostartState::unavailable());
                 // No auto-connect, no credential reads/migrations, no audio,
                 // no bridge and no persistent settings in the diagnostic app.
                 if let Some(window) = app.get_webview_window("main") { window.show()?; }
                 return Ok(());
+            }
+            app.state::<startup_supervision::Supervisor>().start(app.handle().clone())?;
+            #[cfg(target_os="macos")]
+            if let Err(error)=desktop_window::route_macos_quit(app.handle()){
+                eprintln!("[desktop-menu] guarded Quit unavailable: {}",error);
+            }
+            // The tray is optional: shell/icon failures must not prevent the
+            // foreground app from starting. Without a tray, Close still exits.
+            if let Err(error)=desktop_window::init_tray(app.handle()){
+                eprintln!("[desktop-tray] unavailable; keeping foreground close/exit behavior: {}",error);
             }
             desktop_window::fit(app.handle(),true);
             let native_ui = app.path().resource_dir()?.join("s3-landscape-ui");
@@ -10226,6 +11569,13 @@ pub fn run() {
             #[cfg(debug_assertions)]
             let bundled=if bundled.is_dir(){bundled}else{PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../builtin-clawpkgs")};
             component_library::configure_bundled_host(get_home_dir().map_err(std::io::Error::other)?,bundled);
+            // Optional PC-online policy must never propagate a storage/lock/host
+            // failure into setup. Always manage the availability wrapper.
+            let autostart=match (app.path().app_data_dir(),get_home_dir()){
+                (Ok(dir),Ok(home))=>program_autostart::native::configure(&dir.join("program-autostart"),home,usb_for_auto.clone()),
+                _=>program_autostart::ProgramAutostartState::unavailable(),
+            };
+            app.manage(autostart);
             let usb_transfer_log =
                 usb_serial::configure_transfer_logging(&app.path().app_local_data_dir()?)
                     .map_err(std::io::Error::other)?;
@@ -10246,6 +11596,8 @@ pub fn run() {
             }
             stock_quotes::start(usb_for_auto.clone());
             todos::configure(app.path().app_data_dir()?);
+            auth_provider::configure(app.path().app_data_dir()?);
+            shared_location::configure(app.path().app_local_data_dir()?);
             local_widget_data::start(usb_for_auto.clone());
             music_player::configure(app.path().app_data_dir()?,usb_for_auto.clone());
             component_media::configure(app.path().app_data_dir()?,usb_for_auto.clone());
@@ -10292,6 +11644,7 @@ pub fn run() {
         })
         .manage(usb_manager)
         .invoke_handler(tauri::generate_handler![
+            appearance_recovery_ipc::usb_reconcile_appearance_unknown,
             reference_image::reference_image_mount,
             reference_image::reference_image_action,
             desktop_window::set_exit_reasons,
@@ -10304,6 +11657,14 @@ pub fn run() {
             component_voice::component_speech_set_pet_voice,
             music_player::music_player_import,
             local_widget_data::local_widget_snapshot,
+            shared_location::shared_location_status,
+            shared_location::shared_location_suggest,
+            shared_location::shared_location_configure,
+            auth_provider::auth_provider_status,
+            auth_provider::auth_provider_configure,
+            auth_provider::auth_provider_begin,
+            auth_provider::auth_provider_poll,
+            auth_provider::auth_provider_forget,
             stock_quotes::stock_watchlist_save,
             stock_quotes::stock_watchlist_refresh,
             stock_quotes::stock_quote_lookup,
@@ -10342,11 +11703,16 @@ pub fn run() {
             check_codex_accessibility_permission,
             write_workbuddy_voice_test_draft,
             check_voice_composer_readiness,
+            dsh_connection_status,
+            connect_dsh_desktop,
+            dsh_pair_session,
             request_codex_accessibility_permission,
             set_p4_session_binding,
             dispatch_remote_cli_binding,
             load_bridge_profile,
             save_bridge_profile,
+            load_dsh_approval_timeout,
+            save_dsh_approval_timeout,
             clear_bridge_profile,
             load_agent_selection,
             save_agent_selection,
@@ -10380,12 +11746,31 @@ pub fn run() {
             usb_disconnect,
             usb_send_state,
             usb_send_speech,
+            usb_bubble_pixels_ready,
+            usb_send_bubble_pixels,
             usb_send_command,
             usb_audio_capture_control,
             usb_get_status,
+            usb_device_volume,
             usb_set_screen_page,
+            usb_activate_installed_widget,
+            usb_get_background_programs,
+            usb_start_background_program,
+            usb_stop_background_program,
+            app_catalog::usb_catalog_inspect,
+            app_catalog::usb_catalog_reconcile,
+            program_autostart::program_autostart_get,
+            program_autostart::program_autostart_inspect,
+            program_autostart::program_autostart_enable,
+            program_autostart::program_autostart_disable,
+            program_autostart::program_autostart_observe,
+            program_autostart::program_autostart_suppress_boot,
+            program_autostart::program_autostart_component_changed,
+            program_autostart::program_autostart_device_changed,
             usb_apply_wifi,
             usb_get_diagnostics,
+            frontend_startup_generation,
+            frontend_startup_ready,
             usb_get_button_config,
             usb_reset_input_config,
             usb_reboot_device,
@@ -10421,14 +11806,21 @@ pub fn run() {
         // stop the user's regular Pet Manager or its voice/USB connection.
         if cfg!(feature = "composer-diagnostic") { return; }
         match event {
-            RunEvent::WindowEvent { event: tauri::WindowEvent::CloseRequested { api, .. }, .. } => {
-                if desktop_window::request_exit(app_handle){api.prevent_close();}
+            RunEvent::WindowEvent { label, event: tauri::WindowEvent::CloseRequested { api, .. }, .. } => {
+                if label=="main" && desktop_window::hide_main(app_handle){
+                    api.prevent_close();
+                }else if desktop_window::request_exit(app_handle){api.prevent_close();}
             },
+            #[cfg(target_os = "macos")]
+            RunEvent::Reopen { .. } => desktop_window::show_main(app_handle),
             RunEvent::WindowEvent { event: tauri::WindowEvent::ScaleFactorChanged { .. }, .. } => desktop_window::fit(app_handle,false),
             RunEvent::ExitRequested { api, .. } => {
                 if desktop_window::request_exit(app_handle){api.prevent_exit();}
             },
-            RunEvent::Exit => stop_background_runtimes_on_exit(),
+            RunEvent::Exit => {
+                app_handle.state::<startup_supervision::Supervisor>().close();
+                stop_background_runtimes_on_exit();
+            },
             _ => {},
         }
     });
@@ -10470,6 +11862,7 @@ fn stop_background_runtimes_on_exit() {
     if STOPPED.swap(true, Ordering::SeqCst) {
         return;
     }
+    pc_fetch::host::shutdown();
 
     #[cfg(windows)]
     {
@@ -10687,6 +12080,7 @@ fn selected_agent_to_channel_id(value: &str) -> String {
         "codex" => "codex".to_string(),
         "openclaw" => "openclaw".to_string(),
         "mimocode" => "mimocode".to_string(),
+        "deepseek-harness" => "deepseek-harness".to_string(),
         "workbuddy" => "workbuddy".to_string(),
         _ => DEFAULT_PET_CHANNEL_ID.to_string(),
     }
@@ -10698,6 +12092,7 @@ fn normalize_pet_channel_id(value: String) -> String {
         "claude" => "claude".to_string(),
         "openclaw" => "openclaw".to_string(),
         "mimocode" => "mimocode".to_string(),
+        "deepseek-harness" | "deepseek" | "dsh" => "deepseek-harness".to_string(),
         "workbuddy" => "workbuddy".to_string(),
         "cursor" => "cursor".to_string(),
         _ => DEFAULT_PET_CHANNEL_ID.to_string(),
@@ -12299,6 +13694,38 @@ fn current_timestamp_ms() -> u64 {
 
 #[cfg(test)]
 mod tests {
+
+    #[test]
+    fn visible_composer_lookup_failure_is_not_a_target_switch_receipt() {
+        for error in ["No writable visible semantic composer was found", "NoTarget",
+            "No writable semantic composer", "Visible Agent composer unavailable",
+            "DESKTOP_TASK_TARGET_CHANGEDISH", "lookup failed: target changed label"] {
+            assert!(!super::visible_composer_startup_is_target_changed(error), "{error}");
+        }
+        assert!(super::visible_composer_startup_is_target_changed("DESKTOP_TASK_TARGET_CHANGED"));
+        assert!(super::visible_composer_startup_is_target_changed("DESKTOP_TASK_TARGET_CHANGED: exact owner changed"));
+    }
+
+    #[test]
+    fn startup_delivery_cause_survives_early_final_and_late_cancel_without_fake_release() {
+        use super::device_voice_lifecycle::{DeviceVoiceLifecycle, StopReason, WriterState, ReleaseRole};
+        let lifecycle = std::sync::Arc::new(DeviceVoiceLifecycle::new());
+        let permit = lifecycle.begin_startup().unwrap();
+        let final_handled = std::sync::atomic::AtomicBool::new(true);
+        assert!(final_handled.load(std::sync::atomic::Ordering::SeqCst));
+        // Startup uses first-stop, never the already claimed Final flag.
+        let reason = StopReason::DeliveryError("No writable semantic composer".into());
+        assert!(lifecycle.stop_once(reason.clone()).unwrap());
+        assert!(!lifecycle.stop_once(StopReason::Cancelled("preparing target".into())).unwrap());
+        assert_eq!(lifecycle.stop_reason().unwrap(), Some(reason));
+        assert_eq!(lifecycle.release_result().unwrap(), None);
+        assert!(!permit.finish_startup(WriterState::NoWriter).unwrap());
+        if let ReleaseRole::Owner(mut release) = lifecycle.release().unwrap() {
+            assert_eq!(release.wait_startup(std::time::Duration::ZERO).unwrap(), WriterState::NoWriter);
+            release.finish(Ok(())).unwrap();
+        } else { panic!("first actual release owns completion"); }
+        assert_eq!(lifecycle.release_result().unwrap(), Some(Ok(())));
+    }
     use super::*;
 
     #[test]
@@ -12345,8 +13772,15 @@ mod tests {
             assert!(device_voice_platform_block_reason(id, false).is_none());
         }
         let source = include_str!("lib.rs");
-        let startup = source.split("fn start_device_voice_context(").nth(1).unwrap().split("fn ").next().unwrap();
-        assert!(startup.find("device_voice_platform_block_reason").unwrap() < startup.find("pc_audio::StreamingSpeechRecognizer::start").unwrap());
+        let startup = source.split_once("\nfn start_device_voice_context(").unwrap().1
+            .split("\nfn ").next().unwrap();
+        // ASR now starts in the continuation worker, after the platform guard.
+        let guard = startup.find("device_voice_platform_block_reason").unwrap();
+        assert!(guard < startup.find("thread::Builder::new()").unwrap());
+        assert!(guard < startup.find("continue_device_voice_context_start(").unwrap());
+        let continuation = source.split_once("\nfn continue_device_voice_context_start(").unwrap().1
+            .split("\nfn ").next().unwrap();
+        assert!(continuation.contains("pc_audio::StreamingSpeechRecognizer::start"));
     }
 
     #[test]
@@ -12371,6 +13805,78 @@ mod tests {
     }
 
     #[test]
+    fn deepseek_harness_aliases_preserve_bus_identity_and_final_only_visible_composer() {
+        assert_eq!(
+            normalize_agent_id("DeepSeek-Harness").as_deref(),
+            Some("deepseek-harness")
+        );
+        assert_eq!(
+            normalize_agent_id("deepseek").as_deref(),
+            Some("deepseek-harness")
+        );
+        assert_eq!(normalize_agent_id("DSH").as_deref(), Some("deepseek-harness"));
+        assert_eq!(
+            selected_agent_to_channel_id("deepseek-harness"),
+            "deepseek-harness"
+        );
+        assert_eq!(
+            normalize_pet_channel_id("DSH".into()),
+            "deepseek-harness"
+        );
+        assert_eq!(
+            usb_source_display_name("deepseek-harness"),
+            "DeepSeek Harness"
+        );
+        assert_eq!(usb_source_display_name("dsh"), "DeepSeek Harness");
+        assert!(KNOWN_USB_STATE_SOURCES.contains(&"deepseek-harness"));
+        // State/session routing keeps the DSH bus identity; voice uses its
+        // owned semantic composer and inserts one final draft, not partials.
+        assert!(agent_uses_visible_composer("deepseek-harness"));
+        assert!(!agent_streams_voice_draft("deepseek-harness"));
+        assert!(!should_locate_desktop_session(true, "deepseek-harness"));
+        assert!(device_voice_platform_block_reason("deepseek-harness", false).is_none());
+        assert!(device_voice_platform_block_reason("deepseek-harness", true).is_none());
+    }
+
+    #[test]
+    fn deepseek_harness_usb_source_ranks_between_codex_and_claude() {
+        let dsh_score = score_usb_source("deepseek-harness");
+        assert!(dsh_score < score_usb_source("codex"));
+        assert!(dsh_score > score_usb_source("claude-code"));
+        assert!(dsh_score > score_usb_source("openclaw"));
+
+        let enabled = HashSet::from([
+            "deepseek-harness".to_string(),
+            "codex".to_string(),
+        ]);
+        let selected = Some("deepseek-harness".to_string());
+        assert!(usb_source_allowed_by_follow(
+            "deepseek-harness",
+            &selected,
+            &enabled
+        ));
+        assert!(!usb_source_allowed_by_follow("codex", &selected, &enabled));
+    }
+
+    #[test]
+    fn openclaw_status_bridge_identity_alone_is_not_an_installed_cli() {
+        let (detected, status, detail) = openclaw_detection(None, true);
+        assert!(!detected);
+        assert_eq!(status, "not_found");
+        assert!(detail.contains("状态桥身份"));
+    }
+
+    #[test]
+    fn openclaw_cli_detection_stays_ready_with_or_without_bridge_identity() {
+        for has_status_bridge_identity in [true, false] {
+            let (detected, status, _) =
+                openclaw_detection(Some("/tmp/openclaw"), has_status_bridge_identity);
+            assert!(detected);
+            assert_eq!(status, "ready");
+        }
+    }
+
+    #[test]
     fn default_audio_cues_refresh_without_overwriting_uploaded_cues() {
         let temp = tempfile::tempdir().unwrap();
         let appearance = temp.path().join("appearance");
@@ -12387,6 +13893,15 @@ mod tests {
         fs::write(appearance.join("videos/done.wav"), b"user uploaded cue").unwrap();
         ensure_default_appearance_audio_cues(&appearance, &clips).unwrap();
         assert_eq!(fs::read(appearance.join("videos/done.wav")).unwrap(), b"user uploaded cue");
+    }
+
+    #[test]
+    fn protected_builtin_follow_selects_device_assets_without_audio_dependency() {
+        assert!(prefer_device_builtin_for_follow("builtin-terrier",true,true,true));
+        assert!(prefer_device_builtin_for_follow("builtin-terrier",true,false,false));
+        assert!(!prefer_device_builtin_for_follow("builtin-terrier",true,true,false));
+        assert!(!prefer_device_builtin_for_follow("custom-avatar",true,true,true));
+        assert!(!prefer_device_builtin_for_follow("builtin-terrier",false,true,true));
     }
 
     #[test]
@@ -12459,6 +13974,95 @@ mod tests {
     }
 
     #[test]
+    fn dsh_detection_classifies_present_install() {
+        let detection = classify_dsh_detection(
+            Some(Path::new("DeepSeek Harness.app")),
+            Some(Path::new("dsh-cli")),
+            Some(Path::new("profile")),
+            Some("0.2.1-rc.5"),
+        );
+        assert!(detection.detected);
+        assert!(detection.ready);
+        assert_eq!(detection.status, "ready");
+        assert!(detection.detail.contains("DeepSeek Harness"));
+        assert!(detection.detail.contains("v0.2.1-rc.5"));
+        assert!(detection.detail.contains("dsh-cli"));
+    }
+
+    #[test]
+    fn dsh_detection_classifies_absent_install() {
+        let detection = classify_dsh_detection(None, None, None, None);
+        assert!(!detection.detected);
+        assert!(!detection.ready);
+        assert_eq!(detection.status, "not_found");
+        assert!(detection.detail.contains("未检测到 DeepSeek Harness"));
+    }
+
+    #[test]
+    fn dsh_detection_accepts_cli_or_profile_only_hosts() {
+        let cli_only = classify_dsh_detection(None, Some(Path::new("dsh-cli")), None, None);
+        assert!(cli_only.detected);
+        assert!(cli_only.detail.contains("CLI"));
+        assert!(cli_only.detail.contains("dsh-cli"));
+
+        let profile_only = classify_dsh_detection(None, None, Some(Path::new("profile")), None);
+        assert!(profile_only.detected);
+        assert!(profile_only.detail.contains("配置"));
+    }
+
+    #[test]
+    fn dsh_bundle_version_is_read_from_text_info_plist() {
+        let plist = r#"<?xml version="1.0" encoding="UTF-8"?>
+<plist version="1.0">
+  <dict>
+    <key>CFBundleShortVersionString</key>
+    <string>0.2.1-rc.5</string>
+  </dict>
+</plist>"#;
+        assert_eq!(parse_dsh_plist_version(plist).as_deref(), Some("0.2.1-rc.5"));
+        assert_eq!(
+            parse_dsh_plist_version(r#"<plist version="1.0"><dict/></plist>"#),
+            None
+        );
+    }
+
+    #[test]
+    fn dsh_bundled_cli_lives_inside_app_bundle_resources() {
+        let cli = dsh_bundled_cli_path(Path::new("DeepSeek Harness.app"));
+        assert!(cli.ends_with(Path::new("Contents/Resources/runtime/cli/bin/dsh")));
+    }
+
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn macos_dsh_detection_uses_app_bundle_cli_and_desktop_profile() {
+        let home = tempfile::tempdir().unwrap();
+        let app = home.path().join("Applications").join("DeepSeek Harness.app");
+        let bundled_cli = dsh_bundled_cli_path(&app);
+        fs::create_dir_all(bundled_cli.parent().unwrap()).unwrap();
+        fs::write(&bundled_cli, b"#!/bin/sh\n").unwrap();
+        fs::write(
+            app.join("Contents").join("Info.plist"),
+            br#"<plist version="1.0"><dict><key>CFBundleShortVersionString</key><string>9.9.9</string></dict></plist>"#,
+        )
+        .unwrap();
+        let profile = home.path().join(".dsh").join("profiles").join("desktop");
+        fs::create_dir_all(&profile).unwrap();
+
+        let detected = detect_dsh_with_home(Some(home.path()));
+        assert_eq!(detected.id, "deepseek-harness");
+        assert_eq!(detected.label, "DeepSeek Harness");
+        assert!(detected.detected);
+        assert!(detected.ready);
+        assert_eq!(
+            detected.command_path,
+            bundled_cli.to_string_lossy().into_owned()
+        );
+        assert_eq!(detected.config_path, profile.to_string_lossy().into_owned());
+        assert_eq!(detected.activity_path, app.to_string_lossy().into_owned());
+        assert!(detected.detail.contains("9.9.9"));
+    }
+
+    #[test]
     fn bundled_firmware_version_comparison_is_numeric_and_suffix_tolerant() {
         assert_eq!(
             compare_firmware_versions("0.7.28-p4", "0.7.29-p4").unwrap(),
@@ -12473,6 +14077,45 @@ mod tests {
             VersionOrdering::Greater
         );
         assert!(compare_firmware_versions("unknown", "0.7.29-p4").is_err());
+        // Equal numeric cores are ordered by the -rNNN build revision.
+        assert_eq!(parse_firmware_revision("0.7.103-p4-r144").unwrap().0, 144);
+        assert_eq!(parse_firmware_revision("0.7.103-p4-r142-framework").unwrap().0, 142);
+        assert_eq!(parse_firmware_revision("0.7.34-p4").unwrap().0, 0);
+        assert_eq!(
+            compare_firmware_versions("0.7.103-p4-r142-framework", "0.7.103-p4-r144").unwrap(),
+            VersionOrdering::Less
+        );
+        assert_eq!(
+            compare_firmware_versions("0.7.103-p4-r144", "0.7.103-p4-r144").unwrap(),
+            VersionOrdering::Equal
+        );
+        assert_eq!(
+            compare_firmware_versions("0.7.103-p4-r66", "0.7.103-p4-r144").unwrap(),
+            VersionOrdering::Less
+        );
+        assert_eq!(
+            compare_firmware_versions("0.7.104-p4-r1", "0.7.103-p4-r144").unwrap(),
+            VersionOrdering::Greater
+        );
+    }
+
+    #[test]
+    fn s3_letter_revision_and_custom_profile_block_bundled_downgrade() {
+        for revision in ["r13n", "r14b", "r14c"] {
+            let current = format!("0.7.103-s3-{revision}-80m-l320");
+            assert_eq!(compare_firmware_versions(&current, "0.7.103-s3-r10-l320").unwrap(), VersionOrdering::Greater);
+        }
+        assert_eq!(compare_firmware_versions("0.7.103-s3-r14b-80m-l320", "0.7.103-s3-r14c-80m-l320").unwrap(), VersionOrdering::Less);
+        assert_eq!(compare_firmware_versions("0.7.103-s3-r14c-80m-l320", "0.7.103-s3-r15-80m-l320").unwrap(), VersionOrdering::Less);
+        assert!(compare_firmware_versions("0.7.103-s3-r14beta-l320", "0.7.103-s3-r10-l320").is_err());
+        assert!(compare_firmware_versions("0.7.103-s3-r14c-r9-l320", "0.7.103-s3-r10-l320").is_err());
+        assert!(compare_firmware_versions("0.7.103-s3-rNext-80m-l320", "0.7.103-s3-r10-l320").is_err());
+        assert!(compare_firmware_versions("0.7.103-s3-r-80m-l320", "0.7.103-s3-r10-l320").is_err());
+        let current = "0.7.103-s3-r14c-80m-l320";
+        for bundled in ["0.7.103-s3-r10-l320", current, "0.7.104-s3-r15-l320", "0.7.104-s3-r15-80m"] {
+            assert!(ensure_bundled_firmware_update_allowed(current, bundled).is_err());
+        }
+        assert!(ensure_bundled_firmware_update_allowed(current, "0.7.104-s3-r15-80m-l320").is_ok());
     }
 
     fn write_test_clawpkg_dir(path: &Path) {
@@ -12834,6 +14477,45 @@ mod tests {
     }
 
     #[test]
+    fn follow_reset_io_keeps_metadata_readable_and_unknown_does_not_commit() {
+        let binding = Mutex::new(P4SessionBinding {
+            board_device_id: "test-board".into(), agent_id: "workbuddy".into(),
+            session_id: "old-session".into(), generation: 4, ..P4SessionBinding::default()
+        });
+        let mut attempts = 0;
+        let failed = reset_p4_session_binding_after_send(&binding, "test-board", "codex", || {
+            attempts += 1;
+            assert!(binding.try_lock().is_ok(), "RX/ASR metadata read must not wait on wire IO");
+            Err("unknown serial result".into())
+        });
+        assert!(failed.is_err());
+        assert_eq!(attempts, 1, "unknown send must not replay");
+        assert_eq!(binding.lock().unwrap().agent_id, "workbuddy");
+        assert_eq!(binding.lock().unwrap().session_id, "old-session");
+        assert!(reset_p4_session_binding_after_send(&binding, "test-board", "codex", || {
+            assert!(binding.try_lock().is_ok());
+            Ok(())
+        }).unwrap());
+        assert_eq!(binding.lock().unwrap().agent_id, "codex");
+        assert!(binding.lock().unwrap().session_id.is_empty());
+    }
+
+    #[test]
+    fn queued_follow_cannot_rebind_to_a_reconnected_generation_of_the_same_board() {
+        let mut status = usb_serial::UsbSerialManager::new().status();
+        status.connected = true; status.runtime = "esp-p4".into();
+        status.board_device_id = "test-board".into();
+        status.connection_id = "101".into(); status.boot_id = "0123456789abcdef".into();
+        assert_eq!(follow_connection_generation(&status, "test-board", "101", "0123456789abcdef"), Ok(101));
+        status.connection_id = "102".into();
+        assert!(follow_connection_generation(&status, "test-board", "101", "0123456789abcdef").is_err());
+        status.connection_id = "101".into(); status.boot_id = "ffffffffffffffff".into();
+        assert!(follow_connection_generation(&status, "test-board", "101", "0123456789abcdef").is_err());
+        assert!(follow_connection_generation(&status, "test-board", "", "ffffffffffffffff").is_err());
+        assert!(follow_connection_generation(&status, "test-board", "0", "ffffffffffffffff").is_err());
+    }
+
+    #[test]
     fn p4_agent_switch_resets_exact_session_and_voice_target() {
         let mut current = P4SessionBinding {
             board_device_id: "p4-board-a".to_string(),
@@ -13188,7 +14870,18 @@ mod tests {
             "state": "working",
         });
         let text = build_usb_restore_speech_text("codex", &payload).unwrap_or_default();
-        assert_eq!(text, "ChatGPT（Codex） 工作中");
+        assert_eq!(text, "工作中");
+    }
+
+    #[test]
+    fn restore_pet_status_ignores_identity_metadata_but_preserves_task_content() {
+        for source in ["deepseek-harness", "codex", "workbuddy", "future-agent"] {
+            let payload = serde_json::json!({"state":"working", "title":"ProviderIdentity",
+                "statusText":"ProviderIdentity", "status_text":"ProviderIdentity"});
+            assert_eq!(build_usb_restore_speech_text(source, &payload).as_deref(), Some("工作中"));
+            let content = serde_json::json!({"state":"working", "statusText":"metadata", "text":"DeepSeek Harness"});
+            assert_eq!(build_usb_restore_speech_text(source, &content).as_deref(), Some("DeepSeek Harness"));
+        }
     }
 
     #[test]
@@ -13455,6 +15148,7 @@ mod tests {
         assert!(is_allowed_button_config_action("session_next"));
         assert!(is_allowed_button_config_action("session_previous"));
         assert!(is_allowed_button_config_action("session_clear"));
+        assert!(is_allowed_button_config_action("dsh_interrupt"));
         assert!(is_allowed_button_config_action("miniapp_screen_tap"));
         assert!(is_allowed_button_config_action("miniapp_screen_long_press"));
         assert!(is_allowed_button_config_action("component_center"));
@@ -13532,6 +15226,7 @@ mod tests {
             disabled,
             vec![
                 "codex".to_string(),
+                "deepseek-harness".to_string(),
                 "mimocode".to_string(),
                 "openclaw".to_string(),
                 "workbuddy".to_string()
@@ -13543,6 +15238,7 @@ mod tests {
     fn p4_runtime_routes_to_p4_appearance_sync() {
         let p4_status = usb_serial::UsbConnectionStatus {
             connected: true,
+            connection_id: String::new(),boot_id:String::new(),
             port_name: "COM42".to_string(),
             baud_rate: 4_000_000,
             board_device_id: "board-p4".to_string(),
@@ -13958,5 +15654,22 @@ mod tests {
 
         assert_eq!(read_live_managed_pid(&pid_path), None);
         assert!(!pid_path.exists());
+    }
+}
+
+#[cfg(test)]
+mod component_delete_policy_tests {
+    use super::RemoveWidgetInput;
+    #[test]
+    fn missing_save_policy_defaults_to_preserve_and_no_clear_consent() {
+        let input: RemoveWidgetInput = serde_json::from_value(serde_json::json!({"componentId":"fixture","transport":"usb"})).unwrap();
+        assert!(input.preserve_save.unwrap_or(true));
+        assert!(!input.clear_device_save_confirmed);
+    }
+    #[test]
+    fn explicit_clear_keeps_independent_confirmation_bit() {
+        let input: RemoveWidgetInput = serde_json::from_value(serde_json::json!({"componentId":"fixture","transport":"usb","preserveSave":false})).unwrap();
+        assert_eq!(input.preserve_save,Some(false));
+        assert!(!input.clear_device_save_confirmed);
     }
 }

@@ -1,142 +1,69 @@
 {
   "schemaVersion": 2,
-  "product": "HachimiDock",
-  "desktopVersion": "0.1.167",
-  "firmwareVersion": "0.7.103-p4-r1",
-  "releaseTag": "v0.1.167",
-  "releaseUrl": "https://github.com/YizhengWw/HachimoDock/releases/tag/v0.1.167",
-  "sourceRef": "refs/heads/main",
-  "sourcePublished": true,
-  "sourcePublication": {
-    "date": "2026-10-28",
-    "edition": "normal-public-no-keys",
-    "note": "Public source and documentation cleanup. Public refs were rewritten; existing Release installer and firmware attachments remain unchanged. Re-clone instead of merging old history. This update does not claim to fix the Windows COM-port issue."
-  },
+  "product": "HachimiDock A4 S3 fork",
+  "desktopVersion": "0.1.202",
+  "firmwareVersion": "0.7.103-s3-r16c-80m-l320",
+  "releaseTag": "v0.1.202-s3-a4-r16c",
+  "releaseUrl": "https://github.com/gmingtian/HachimoDock-esp32s3/releases/tag/v0.1.202-s3-a4-r16c",
+  "sourceRef": "refs/heads/release/s3-a4-0.1.202",
+  "sourcePublished": false,
+  "publicationStatus": "prepared-local-pending-authenticated-push-and-native-CI",
   "embeddedServiceKeys": false,
   "embeddedInternalCredentials": false,
   "embeddedEnterpriseCa": false,
   "embeddedFixedProxy": false,
-  "experimental108FirmwareIncluded": false,
-  "flashingTools": {
-    "python": "3.10+",
-    "esptool": "5.4.0"
-  },
   "firmware": [
     {
-      "file": "firmware.bin",
-      "version": "0.7.103-p4-r1",
-      "identity": "0.7.103-p4-r1+b258287dc361",
-      "sha256": "1f1498c6349e811b824ea547ae62d0695bc5a06ba78bf23bf56117b9417da80a",
-      "minChipRevision": 1,
-      "maxChipRevision": 199
-    },
-    {
-      "file": "firmware-v3.bin",
-      "version": "0.7.103-p4-r1",
-      "identity": "0.7.103-p4-r1+50a16b436f15",
-      "sha256": "1deaf2605cd8409c1ffb28d2d63176ab260e349f13d50a5e88be8f147365620c",
-      "minChipRevision": 300,
-      "maxChipRevision": 399
+      "file": "HachimoDock-S3-A4-r16c-OTA.bin",
+      "target": "esp32s3",
+      "version": "0.7.103-s3-r16c-80m-l320",
+      "bytes": 2594464,
+      "sha256": "07ffa6be00feb6cb90ddd747099d20d3fa79ffbcf7bac4cbacdd8057e4496efb",
+      "projectName": "pet_manager_s3_runtime",
+      "display": [
+        320,
+        240
+      ],
+      "lcdSpiHz": 80000000,
+      "inputModel": "s3-a4-buttons-joystick-v1"
     }
   ],
-  "releaseValidation": {
-    "tests": {
-      "frontend": {
-        "passed": 847,
-        "skipped": 1
-      },
-      "bridge": {
-        "passed": 215,
-        "skipped": 0
-      },
-      "native": {
-        "passed": 728,
-        "ignored": 84
-      },
-      "firmware": {
-        "passed": 222,
-        "skipped": 1,
-        "subtests": 11
-      }
-    },
-    "installerPayloadsVerified": true,
-    "embeddedFrontendDecompressedAndScanned": true,
-    "priorSpecialKeyEnvelopesAbsent": true,
-    "knownPrivatePhotosAndReferencesScanned": true,
-    "componentCount": 29,
-    "factorySegmentsAndChecksumsVerified": true,
-    "physicalDeviceValidationThisPackagingRun": false,
-    "windowsRuntimeValidationThisPackagingRun": false,
-    "paidGenerationRequestsThisPackagingRun": 0,
-    "macOSSigning": "local-ad-hoc-not-notarized",
-    "windowsSigning": "unsigned"
-  },
-  "artifacts": [
+  "desktopTargets": [
     {
-      "file": "HachimiDock_0.1.167_macOS-arm64.dmg",
-      "role": "macos",
-      "bytes": 128622542,
-      "sha256": "845adc85834e9e23cbd6790e3e511598db47ad80e683d7eb8ef9dd3f10ac00e5"
+      "os": "windows",
+      "arch": "x86_64",
+      "package": "NSIS exe"
     },
     {
-      "file": "HachimiDock_0.1.167_Windows-x64-setup.exe",
-      "role": "windows",
-      "bytes": 113964231,
-      "sha256": "5a79d40e3212ca74ba5844e9a06f1dc0f3febb9645ed62faa23fc3ba0d0a298e"
+      "os": "macos",
+      "arch": "arm64",
+      "package": "dmg",
+      "signing": "ad-hoc-not-notarized"
     },
     {
-      "file": "HachimoDock-P4-v1_0.7.103-p4-r1_Factory-Flasher.zip",
-      "role": "factory-v1",
-      "bytes": 25896646,
-      "sha256": "6064288258cf61ae06e9524c65fe35db30b049e9287babe5cde0730554c0d3ac"
-    },
-    {
-      "file": "HachimoDock-P4-v3_0.7.103-p4-r1_Factory-Flasher.zip",
-      "role": "factory-v3",
-      "bytes": 25915534,
-      "sha256": "1034a7f5ea8c711b520c13e973b5a2f7b8d78680fdaaf8bbdaad1eaa67b0d9a5"
-    },
-    {
-      "file": "FFmpeg-8.1.2-source.tar.xz",
-      "role": "corresponding-third-party-source",
-      "bytes": 11710924,
-      "sha256": "464beb5e7bf0c311e68b45ae2f04e9cc2af88851abb4082231742a74d97b524c"
-    },
-    {
-      "file": "LICENSE",
-      "role": "license",
-      "bytes": 7607,
-      "sha256": "f410049813a24b574b39af6dd4807c3e0a0432fe41081b768ef3fae4e0f1fd3a"
-    },
-    {
-      "file": "THIRD_PARTY_NOTICES.md",
-      "role": "third-party-notices",
-      "bytes": 6856,
-      "sha256": "4e9187d896428808184a3b54fe71b4a25f5563ad995022efdb76a26b0be252a4"
-    },
-    {
-      "file": "Xiaomi-Miloco-LICENSE.md",
-      "role": "license",
-      "bytes": 6009,
-      "sha256": "376dd562aa127c36a75f39887b1a1cd7c47859f21f097e8a8f1b7bab0ea79a27"
-    },
-    {
-      "file": "Espressif-ESP-SR-LICENSE.txt",
-      "role": "license",
-      "bytes": 1188,
-      "sha256": "923e6274ea64b226c4f0cb9fc29bda915ae343fd6a8fc290ff5e0daaa85f8813"
-    },
-    {
-      "file": "sysinfo-LICENSE.txt",
-      "role": "license",
-      "bytes": 1082,
-      "sha256": "666ccdb468b5fe0f408f90ebb563c95e4d453e89bd1660e93aa7463f2807ae36"
-    },
-    {
-      "file": "RELEASE-NOTES.txt",
-      "role": "release-notes",
-      "bytes": 3030,
-      "sha256": "2012b8e8a3f5e2442fe6df9b7ff974cb3a4f66ac81da73ba763b06869daf37df"
+      "os": "linux",
+      "arch": "x86_64",
+      "package": "tar.gz",
+      "baseline": "Ubuntu 24.04",
+      "systemDependencies": [
+        "WebKitGTK 4.1",
+        "GTK3",
+        "ALSA",
+        "OpenSSL",
+        "FFmpeg with libx264",
+        "Python 3"
+      ]
     }
-  ]
+  ],
+  "hardware": {
+    "pcb": "A4",
+    "enclosure": "R4.4",
+    "manifest": "hardware/release-manifest.json"
+  },
+  "releaseValidation": {
+    "physicalFirmwareValidation": "r16c device regression passed; see docs/ESP32-S3-r16c-Xiangqi-Speed.md",
+    "sourceTests": "see release validation receipt; native installers require per-target build",
+    "allPlatformBuildsCompleted": false
+  },
+  "artifacts": []
 }

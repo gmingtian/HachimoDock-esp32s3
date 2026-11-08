@@ -15,6 +15,7 @@ import { Download, LoaderCircle } from "lucide-react";
 import { firmwareUpdateDisposition } from "../lib/firmware-version.js";
 import { useToast } from "./ToastStack.jsx";
 import { useExitProtection } from "../lib/exit-protection.js";
+import { firmwareUpdateFailureMessage } from "../lib/firmware-update-error.js";
 
 export default function FirmwareUpdateNavItem({ usb = {} }) {
   const { push } = useToast();
@@ -92,8 +93,8 @@ export default function FirmwareUpdateNavItem({ usb = {} }) {
     } catch (error) {
       push({
         tone: "error",
-        title: "固件升级失败",
-        message: typeof error === "string" ? error : String(error),
+        title: "固件升级未完成",
+        message: firmwareUpdateFailureMessage(error),
       });
     } finally {
       setPending(false);
@@ -105,7 +106,7 @@ export default function FirmwareUpdateNavItem({ usb = {} }) {
       className="sidebar-nav__item sidebar-firmware-update"
       aria-label="固件升级"
       title={bundledFirmware?.version
-        ? `设备 ${currentVersion || "未知"} · 内置 ${bundledFirmware.version}`
+        ? `设备 ${currentVersion || "未知"} · 内置 ${bundledFirmware.version}${disposition === "protected" ? " · 版本适配标记不匹配，已阻止自动覆盖" : ""}`
         : "固件升级"}
     >
       {pending ? <LoaderCircle size={16} className="spin" /> : <Download size={16} />}
@@ -122,6 +123,9 @@ export default function FirmwareUpdateNavItem({ usb = {} }) {
       )}
       {!pending && disposition === "latest" && (
         <span className="sidebar-firmware-update__latest">已最新</span>
+      )}
+      {!pending && disposition === "protected" && (
+        <span className="sidebar-firmware-update__latest">适配版已保护</span>
       )}
     </div>
   );

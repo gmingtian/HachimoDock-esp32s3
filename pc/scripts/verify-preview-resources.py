@@ -12,15 +12,16 @@ import importlib.util
 import json
 from pathlib import Path, PurePosixPath
 import re
+import shutil
 import struct
 import subprocess
 import sys
 import tempfile
 
 ROOT = Path(__file__).resolve().parents[2]
-FIRMWARE_VERSION = '0.7.103-s3-r6-l320'
-FIRMWARE_SHA = '3c566489c96b5efae072d8383c87eb46333b9d28cdb53322813e9dc33a5e279d'
-NATIVE_UI_INVENTORY_SHA = '0b7d0a687b0b172b09147eec1855298edc4f3223297c40e6e6145371a8483aa3'
+FIRMWARE_VERSION = '0.7.103-s3-r16c-80m-l320'
+FIRMWARE_SHA = '07ffa6be00feb6cb90ddd747099d20d3fa79ffbcf7bac4cbacdd8057e4496efb'
+NATIVE_UI_INVENTORY_SHA = 'b99ac3478758f9d17ecbd61f6397ed740194c243e48ca2e5641537a1535d958c'
 
 
 def sha256(path):
@@ -61,6 +62,9 @@ def validate_executable(path, target):
         offset = struct.unpack_from('<I', header, 0x3c)[0] if len(header) >= 64 else 0
         if not header.startswith(b'MZ') or offset < 64 or offset + 6 > len(header) or header[offset:offset+4] != b'PE\0\0' or struct.unpack_from('<H', header, offset + 4)[0] != 0x8664:
             raise ValueError(f'{path.name} is not a Windows x64 executable')
+    elif target == 'linux':
+        if len(header) < 20 or header[:6] != b'\x7fELF\x02\x01' or struct.unpack_from('<H', header, 18)[0] != 62:
+            raise ValueError(f'{path.name} is not a Linux x86_64 executable')
     else:
         # Native arm64 Mach-O only; a fat/universal binary needs its slices
         # inspected explicitly rather than being accepted on magic alone.
@@ -102,8 +106,8 @@ def validate_native_ui(root):
     inventory = json.loads(inventory_path.read_text(encoding='utf-8'))
     components = inventory.get('components', [])
     if (inventory.get('format') != 's3-native-ui-v1' or inventory.get('display') != [320, 240]
-            or inventory.get('logicalCanvas') != [640, 480] or len(components) != 25
-            or len(set(components)) != 25):
+            or inventory.get('logicalCanvas') != [640, 480] or len(components) != 28
+            or len(set(components)) != 28):
         raise ValueError('Native UI inventory profile mismatch')
     files = {'inventory.json': inventory_path}
     cached_images = 0
@@ -128,7 +132,7 @@ def validate_native_ui(root):
             raise ValueError(f'Native UI resource symlink is not portable: {path}')
         if path.is_file():
             actual.add(path.relative_to(root).as_posix())
-    if actual != set(files) or cached_images != 64:
+    if actual != set(files) or cached_images != 74:
         raise ValueError('Native UI inventory does not cover every resource or cached image')
     for component in components:
         for suffix in ('component.json', 'buttons.json', 'runtime/widget.json'):
@@ -359,25 +363,34 @@ def validate_node_notice(node, notice):
 def verify(target, tools, runtime, firmware, fixture, resource_root=None):
     app_version = validate_desktop_metadata()
     suffix = '.exe' if target == 'windows' else ''
-    converter = tools / ('prepare-s3-assets' + suffix)
-    helper = tools / ('s3-ffmpeg' + suffix)
+    linux = target == 'linux'
+    converter = tools / ('prepare_s3_assets.py' if linux else 'prepare-s3-assets' + suffix)
+    helper = Path(shutil.which('ffmpeg') or '/missing/ffmpeg') if linux else tools / ('s3-ffmpeg' + suffix)
+    converter_command = [sys.executable, converter] if linux else [converter]
     firmware_info = validate_firmware(firmware)
     native_ui_root = resource_root / 's3-landscape-ui' if resource_root else ROOT / 'firmware/assets/s3-landscape-ui'
     native_ui = validate_native_ui(native_ui_root)
-    validate_lgpl(runtime, target, installed=resource_root is not None)
+    if not linux:
+        validate_lgpl(runtime, target, installed=resource_root is not None)
     node = (resource_root / 'bridge/runtime' if resource_root else runtime) / ('node' + suffix)
-    for binary in (converter, helper, node):
+    for binary in ((helper.resolve(), node) if linux else (converter, helper, node)):
         validate_executable(binary, target)
-    validate_helper_metadata(tools)
-    converter_licenses = validate_converter_licenses(tools)
-    node_notice = resource_root / 'licenses/Node-LICENSE.txt' if resource_root else runtime / 'node.LICENSE'
+    if linux:
+        expected_converter = ROOT / 'firmware/tools/prepare_s3_assets.py'
+        if not converter.is_file() or sha256(converter) != sha256(expected_converter):
+            raise ValueError('Linux packaged converter differs from verified source')
+        converter_licenses = {'mode':'system-python3', 'bundledRuntime':False}
+    else:
+        validate_helper_metadata(tools)
+        converter_licenses = validate_converter_licenses(tools)
+    node_notice = (resource_root / ('bridge/runtime/node.LICENSE' if linux else 'licenses/Node-LICENSE.txt')) if resource_root else runtime / 'node.LICENSE'
     node_metadata = validate_node_notice(node, node_notice)
-    help_text = run([converter, '--help']).stdout
+    help_text = run([*converter_command, '--help']).stdout
     if any(flag not in help_text for flag in ('--source', '--ffmpeg', '--width', '--height', '--crf')):
         raise ValueError('standalone converter --help contract mismatch')
     version = run([helper, '-hide_banner', '-version']).stdout
     encoders = run([helper, '-hide_banner', '-encoders']).stdout
-    if '--enable-gpl' not in version or 'libx264' not in encoders:
+    if (not linux and '--enable-gpl' not in version) or 'libx264' not in encoders:
         raise ValueError('separate S3 FFmpeg helper lacks GPL/libx264 encoder')
     if not fixture.is_file() or fixture.read_bytes()[:100].startswith(b'version https://git-lfs.github.com/spec/v1'):
         raise ValueError(f'real smoke input video missing: {fixture}')
@@ -390,7 +403,7 @@ def verify(target, tools, runtime, firmware, fixture, resource_root=None):
              '-i', fixture, '-t', '1', '-an', '-c:v', 'libx264',
              '-pix_fmt', 'yuv420p', source / 'fixture.mp4'])
         output = temp / 'output'
-        run([converter, '--source', source, '--output', output, '--ffmpeg', helper,
+        run([*converter_command, '--source', source, '--output', output, '--ffmpeg', helper,
              '--width', 320, '--height', 240, '--crf', 18])
         manifest = json.loads((output / 'p4/manifest.json').read_text(encoding='utf-8'))
         smoke = validate_pack(manifest, output)
@@ -403,7 +416,7 @@ def verify(target, tools, runtime, firmware, fixture, resource_root=None):
                 raise ValueError('SPS-rewritten fixture decoded frame size/count mismatch')
             stream['decodedFrames'] = stream['frames']
     files = {}
-    for base, prefix in ((tools, 'tools/s3-runtime'), (runtime, 'tools')):
+    for base, prefix in (((runtime, 'tools'),) if linux else ((tools, 'tools/s3-runtime'), (runtime, 'tools'))):
         for path in sorted(base.rglob('*')):
             if path.is_symlink():
                 raise ValueError(f'resource symlink is not portable: {path.name}')
@@ -425,11 +438,13 @@ def verify(target, tools, runtime, firmware, fixture, resource_root=None):
                     raise ValueError(f'resource destination collision: {logical}')
                 files[logical] = info
     files['bridge/runtime/' + node.name] = {'sha256':sha256(node), 'bytes':node.stat().st_size}
-    files['licenses/Node-LICENSE.txt'] = {'sha256':sha256(node_notice), 'bytes':node_notice.stat().st_size}
+    files['bridge/runtime/node.LICENSE' if linux else 'licenses/Node-LICENSE.txt'] = {'sha256':sha256(node_notice), 'bytes':node_notice.stat().st_size}
     files['firmware/esp32-s3/firmware.bin'] = {'sha256':firmware_info['sha256'], 'bytes':firmware_info['bytes']}
     files.update({'s3-landscape-ui/' + logical: info for logical, info in native_ui.pop('files').items()})
-    return {'schemaVersion':2, 'appVersion':app_version, 'target':target + ('-x64' if target == 'windows' else '-arm64'),
-            'upstreamRuntimeVersion':'0.1.167', 'firmware':firmware_info,
+    return {'schemaVersion':2, 'appVersion':app_version, 'target':target + ('-arm64' if target == 'macos' else '-x64'),
+            'upstreamRuntimeVersion':None if linux else '0.1.167',
+            'systemMediaRuntime':{'ffmpegVersion':version.splitlines()[0], 'pythonVersion':sys.version.split()[0], 'bundled':False} if linux else None,
+            'firmware':firmware_info,
             'nativeUi':native_ui,
             'nodeRuntime':node_metadata, 'converterRuntimeLicenses':converter_licenses,
             'converterSmoke':smoke,
@@ -438,7 +453,7 @@ def verify(target, tools, runtime, firmware, fixture, resource_root=None):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--target', choices=('windows', 'macos'))
+    parser.add_argument('--target', choices=('windows', 'macos', 'linux'))
     parser.add_argument('--static-only', action='store_true', help='Check versions, resource maps, S3 firmware and native UI without executing target binaries')
     parser.add_argument('--tools-dir', type=Path)
     parser.add_argument('--runtime-dir', type=Path, default=ROOT / 'pc/src-tauri/generated-runtime')
@@ -451,12 +466,12 @@ def main():
         return
     if not args.target:
         parser.error('--target is required unless --static-only is selected')
-    host = {'win32':'windows', 'darwin':'macos'}.get(sys.platform)
+    host = {'win32':'windows', 'darwin':'macos', 'linux':'linux'}.get(sys.platform)
     if host != args.target:
         parser.error('executable smoke verification must run on the native target host')
     resource_root = args.resource_root.resolve() if args.resource_root else None
     runtime = resource_root / 'tools' if resource_root else args.runtime_dir.resolve()
-    tools = resource_root / 'tools/s3-runtime' if resource_root else (args.tools_dir or runtime / 's3').resolve()
+    tools = resource_root / ('tools' if args.target == 'linux' else 'tools/s3-runtime') if resource_root else (args.tools_dir or runtime / 's3').resolve()
     firmware = (resource_root if resource_root else ROOT / 'pc/src-tauri') / 'firmware/esp32-s3/firmware.bin'
     result = verify(args.target, tools, runtime, firmware, args.fixture.resolve(), resource_root)
     destination = args.manifest or ROOT / 'pc/src-tauri/preview-resource-manifest.json'

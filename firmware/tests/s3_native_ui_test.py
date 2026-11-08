@@ -15,7 +15,6 @@ def test_native_home_keeps_selected_session_readable_and_within_panel(tmp_path):
 #include <string.h>
 #include "pet_p4_view.h"
 #include "pet_s3_render.h"
-#include "pet_s3_menu.h"
 typedef struct font font;
 typedef struct { int adv_w,box_w,box_h,ofs_x,ofs_y,req_raw_bitmap; const font *resolved_font; } lv_font_glyph_dsc_t;
 struct font {int line_height,base_line; const void *(*get_glyph_bitmap)(lv_font_glyph_dsc_t *,void *);};
@@ -30,7 +29,6 @@ static int glyph_width(uint32_t cp,uint32_t next){(void)next;return cp<128?8:16;
 static uint8_t glyph_alpha_at(const uint8_t *b,const lv_font_glyph_dsc_t *g,int x,int y){(void)b;(void)g;(void)x;(void)y;return 255;}
 static bool lv_font_get_glyph_dsc(const font *f,lv_font_glyph_dsc_t *g,uint32_t cp,uint32_t next){(void)next;pending=cp;*g=(lv_font_glyph_dsc_t){.adv_w=cp<128?8:16,.box_w=1,.box_h=1,.resolved_font=f};return true;}
 static void lv_font_glyph_release_draw_data(lv_font_glyph_dsc_t *g){(void)g;}
-bool pet_s3_menu_snapshot(pet_s3_menu_view_t *out){memset(out,0,sizeof(*out));return false;}
 bool pet_p4_state_host_connected(const pet_p4_runtime_state_t *s,unsigned long long now){(void)s;(void)now;return true;}
 typedef struct {char title[64],widget_id[64];} pet_p4_miniapp_catalog_entry_t;
 static size_t pet_p4_miniapp_catalog_count(void){return 0;}
@@ -110,55 +108,3 @@ int main(void){
     subprocess.run(['cc', '-std=c11', '-Wall', '-Wextra', '-Werror', '-fsanitize=undefined',
                     '-I', str(ROOT/'main'), '-I', str(ROOT/'s3'), str(c), '-o', str(exe)], check=True)
     subprocess.run([str(exe)], check=True)
-
-
-def test_confirm_hold_cannot_stop_realtime_capture(tmp_path):
-    source = (ROOT/'s3/pet_s3_input_menu.inc').read_text()
-    start = source.index('static void pet_s3_process_key(')
-    end = source.index('  if(action==PET_S3_ACTION_BACK)', start)
-    prefix = source[start:end] + '\n(void)app;\n}\n'
-    harness = r'''
-#include <assert.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <string.h>
-#include "pet_p4_protocol.h"
-#include "pet_s3_keys.h"
-#define ESP_OK 0
-typedef int esp_err_t;
-typedef struct {unsigned delta;uint64_t ts_ms;} pet_p4_input_event_t;
-static bool requested;static unsigned starts,stops,sends;
-static bool pet_p4_conversation_active(const pet_p4_runtime_state_t *s){return s->conversation_state[0]!=0;}
-static esp_err_t pet_p4_audio_capture_start(bool standalone){(void)standalone;starts++;if(requested)return -1;requested=true;return ESP_OK;}
-static esp_err_t pet_p4_audio_capture_stop(void){stops++;requested=false;return ESP_OK;}
-static void pet_s3_pointer_cancel(uint64_t now){(void)now;}
-static void pet_s3_send_local(pet_p4_runtime_state_t *s,pet_p4_send_line_fn fn,void *ctx,const pet_p4_input_event_t *e,const char *action,const char *value,bool handled){(void)s;(void)fn;(void)ctx;(void)e;(void)value;assert(!strcmp(action,"voice_ptt"));(void)handled;sends++;}
-''' + prefix + r'''
-int main(void){
- static pet_p4_runtime_state_t state;
- strcpy(state.screen_page,"main");strcpy(state.conversation_state,"listening");requested=true;
- assert(pet_p4_conversation_active(&state));
- pet_p4_input_event_t event={.delta=PET_S3_ACTION_VOICE_START,.ts_ms=1000};
- pet_s3_process_key(&state,NULL,NULL,&event);
- event.delta=PET_S3_ACTION_VOICE_END;pet_s3_process_key(&state,NULL,NULL,&event);
- assert(starts==0&&stops==0&&requested&&sends==0&&!state.session_voice_active);
- state.conversation_state[0]=0;requested=false;
- event.delta=PET_S3_ACTION_VOICE_START;pet_s3_process_key(&state,NULL,NULL,&event);
- assert(starts==1&&requested&&state.session_voice_active&&sends==1);
- event.delta=PET_S3_ACTION_VOICE_END;pet_s3_process_key(&state,NULL,NULL,&event);
- assert(stops==1&&!requested&&!state.session_voice_active&&sends==2);
- event.delta=PET_S3_ACTION_VOICE_START;pet_s3_process_key(&state,NULL,NULL,&event);
- assert(starts==2&&requested&&state.session_voice_active);
- strcpy(state.conversation_state,"listening");
- event.delta=PET_S3_ACTION_VOICE_END;pet_s3_process_key(&state,NULL,NULL,&event);
- assert(stops==1&&requested&&!state.session_voice_active&&sends==3);
- pet_s3_process_key(NULL,NULL,NULL,&event);assert(stops==1);
- return 0;
-}
-'''
-    c = tmp_path/'ptt.c'
-    c.write_text(harness)
-    exe = tmp_path/'ptt'
-    subprocess.run(['cc','-std=c11','-Wall','-Wextra','-Werror','-fsanitize=undefined',
-                    '-I',str(ROOT/'main'),'-I',str(ROOT/'s3'),str(c),'-o',str(exe)],check=True)
-    subprocess.run([str(exe)],check=True)

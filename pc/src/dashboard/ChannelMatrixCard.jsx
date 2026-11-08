@@ -5,7 +5,8 @@
  * [Sync] If this file changes, update `pc/src/dashboard/.folder.md`.
  */
 
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { invoke } from "@tauri-apps/api/core";
 import {
   CheckCircle,
   ChevronDown,
@@ -39,7 +40,18 @@ const AGENT_ICONS = {
   openclaw: Zap,
   mimocode: Braces,
   workbuddy: Code,
+  "deepseek-harness": Braces,
 };
+
+export const DSH_APPROVAL_NEVER_TIMEOUT_MS = 99999;
+const DSH_APPROVAL_TIMEOUT_OPTIONS = [
+  { value: 10000, label: "10 秒" },
+  { value: 30000, label: "30 秒" },
+  { value: 60000, label: "1 分钟" },
+  { value: 300000, label: "5 分钟" },
+  { value: 600000, label: "10 分钟" },
+  { value: DSH_APPROVAL_NEVER_TIMEOUT_MS, label: "永不超时" },
+];
 
 function appearanceKindLabel(appearance) {
   if (appearance?.type === "codex-import") return "Codex pet";
@@ -87,6 +99,9 @@ export default function ChannelMatrixCard() {
 
   const [pickerState, setPickerState] = useState(null); // { agentId }
   const [pendingFollow, setPendingFollow] = useState(null); // { agentId, appearance }
+  const [dshApprovalTimeoutMs, setDshApprovalTimeoutMs] = useState(30000);
+  const [dshApprovalTimeoutSaving, setDshApprovalTimeoutSaving] = useState(false);
+  const [dshApprovalTimeoutOpen, setDshApprovalTimeoutOpen] = useState(false);
   const syncing = appearanceSync?.pending === true;
   const syncProgress = appearanceSync?.progress
     ? normalizeSyncProgress(appearanceSync.progress)
@@ -102,6 +117,55 @@ export default function ChannelMatrixCard() {
     },
     [agentAppearanceMap, appearances],
   );
+
+  useEffect(() => {
+    let disposed = false;
+    invoke("load_dsh_approval_timeout")
+      .then((value) => {
+        if (!disposed && Number.isFinite(Number(value))) setDshApprovalTimeoutMs(Number(value));
+      })
+      .catch((error) => {
+        console.warn("[ChannelMatrixCard] load DSH approval timeout failed", error);
+      });
+    return () => { disposed = true; };
+  }, []);
+
+  useEffect(() => {
+    if (!dshApprovalTimeoutOpen) return undefined;
+    const close = (event) => {
+      if (!event.target.closest?.('.channel-row__approval-timeout-control')) {
+        setDshApprovalTimeoutOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', close);
+    return () => document.removeEventListener('mousedown', close);
+  }, [dshApprovalTimeoutOpen]);
+
+  const updateDshApprovalTimeout = useCallback(async (nextValue) => {
+    const timeoutMs = Number(nextValue);
+    const previous = dshApprovalTimeoutMs;
+    setDshApprovalTimeoutOpen(false);
+    setDshApprovalTimeoutMs(timeoutMs);
+    setDshApprovalTimeoutSaving(true);
+    try {
+      await invoke("save_dsh_approval_timeout", { timeoutMs });
+      const timeoutLabel = timeoutMs === DSH_APPROVAL_NEVER_TIMEOUT_MS
+        ? "永不超时"
+        : DSH_APPROVAL_TIMEOUT_OPTIONS.find((item) => item.value === timeoutMs)?.label
+          || "已保存";
+      push({
+        tone: "success",
+        title: timeoutMs === DSH_APPROVAL_NEVER_TIMEOUT_MS
+          ? "DSH 审批将永不超时"
+          : `DSH 审批超时已设为 ${timeoutLabel}`,
+      });
+    } catch (error) {
+      setDshApprovalTimeoutMs(previous);
+      push({ tone: "error", title: "保存 DSH 审批超时失败", message: error?.message || String(error) });
+    } finally {
+      setDshApprovalTimeoutSaving(false);
+    }
+  }, [dshApprovalTimeoutMs, push]);
 
   const closePicker = useCallback(() => setPickerState(null), []);
 
@@ -143,7 +207,7 @@ export default function ChannelMatrixCard() {
       push({
         tone,
         title: cancelled ? "形象传输已中断" : "更换形象失败",
-        message: cancelled ? "设备继续保留原形象。" : msg,
+        message: cancelled ? "已停止本次操作。" : msg,
       });
     }
   }, [activeAgentId, agentOptions, applyDesktopPet, closePicker, push, saveAgentAppearance]);
@@ -163,7 +227,7 @@ export default function ChannelMatrixCard() {
       const { notice } = await applyDesktopPet(agentId, appearance, {
         initialProgress: followOnly
           ? {
-            text: `沿用「${appearance.name}」，正在把设备跟随切换到 ${channelLabelForId(agentOptions, agentId)}…`,
+            text: "正在确认…",
             followOnly: true,
           }
           : {
@@ -185,7 +249,7 @@ export default function ChannelMatrixCard() {
       push({
         tone,
         title: cancelled ? "形象传输已中断" : "切换跟随失败",
-        message: cancelled ? "设备继续保留原形象和跟随主体。" : msg,
+        message: cancelled ? "本次未切换。" : msg,
       });
     }
   }, [agentOptions, applyDesktopPet, currentDisplay.appearance?.id, pendingFollow, push]);
@@ -287,6 +351,44 @@ export default function ChannelMatrixCard() {
                       >
                         <ChevronDown size={14} /> 更换形象
                       </button>
+                      {agent.id === "deepseek-harness" && (
+                        <label className="channel-row__approval-timeout">
+                          <span>超时时间</span>
+                          <span className="channel-row__approval-timeout-control">
+                            <button
+                              type="button"
+                              className="btn-secondary btn-sm channel-row__approval-timeout-trigger"
+                              onClick={() => setDshApprovalTimeoutOpen((open) => !open)}
+                              disabled={dshApprovalTimeoutSaving || syncing}
+                              aria-haspopup="listbox"
+                              aria-expanded={dshApprovalTimeoutOpen}
+                              aria-label="DeepSeek Harness 审批超时时间"
+                            >
+                              <ChevronDown size={14} aria-hidden="true" />
+                              {dshApprovalTimeoutMs === DSH_APPROVAL_NEVER_TIMEOUT_MS
+                                ? "永不超时"
+                                : DSH_APPROVAL_TIMEOUT_OPTIONS.find((option) => option.value === dshApprovalTimeoutMs)?.label
+                                  || "30 秒"}
+                            </button>
+                            {dshApprovalTimeoutOpen && (
+                              <div className="channel-row__approval-timeout-menu" role="listbox" aria-label="选择审批超时时间">
+                                {DSH_APPROVAL_TIMEOUT_OPTIONS.map((option) => (
+                                  <button
+                                    type="button"
+                                    key={option.value}
+                                    role="option"
+                                    aria-selected={option.value === dshApprovalTimeoutMs}
+                                    className={`channel-row__approval-timeout-option${option.value === dshApprovalTimeoutMs ? " is-selected" : ""}`}
+                                    onClick={() => updateDshApprovalTimeout(option.value)}
+                                  >
+                                    {option.label}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </span>
+                        </label>
+                      )}
                     </div>
                     <span>{appearanceKindLabel(appearance)}</span>
                   </div>
@@ -446,7 +548,7 @@ function FollowAgentConfirmModal({
         <div className="modal-body channel-switch-confirm-modal__body">
           <div className="message-banner message-banner--muted channel-switch-confirm-modal__message">
             {reusesCurrentAppearance
-              ? <>将设备端跟随的 Agent 从 {currentLabel || "当前 Agent"} 切换为 {nextLabel || "目标 Agent"}，沿用设备当前的「{appearanceName}」，无需重新传输素材。</>
+              ? <>将设备端跟随的 Agent 从 {currentLabel || "当前 Agent"} 切换为 {nextLabel || "目标 Agent"}，继续使用「{appearanceName}」。</>
               : <>将设备端跟随的 Agent 从 {currentLabel || "当前 Agent"} 切换为 {nextLabel || "目标 Agent"}，并同步「{appearanceName}」到设备端展示。</>}
           </div>
         </div>

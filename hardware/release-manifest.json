@@ -1,0 +1,1357 @@
+{
+  "release": "v0.1.202-s3-a4-r16c",
+  "pcbRevision": "A4",
+  "enclosureRevision": "R4.4-speaker-and-smooth-rim",
+  "pathsRelativeTo": "repository-root",
+  "notes": [
+    "Current manufacturing outputs and portable editable KiCad / STEP inputs are included.",
+    "No current R4.4 F3D or printer-specific 3MF is available; use the supplied STL pair in mm.",
+    "Fusion process scripts need Fusion and a new local bridge session; historical body IDs are not portable CAD history.",
+    "Local IPC, caches, logs, historical duplicate meshes and private board backups are excluded.",
+    "BOM and connections are supplied; no unverified pick-and-place/CPL file is invented.",
+    "Original audit physical-fit flags preserve their export-time scope; later assembly photos are separate evidence."
+  ],
+  "verifiedAtPackaging": {
+    "gerberArchiveAndAllNineManufacturingMembers": true,
+    "nativeDrcBoundBoardProjectAndReport": true,
+    "r44UpperAndLowerMatchExportReport": true,
+    "noSelectedFileAtOrAbove90MiB": true,
+    "noPersonalAbsoluteUserPathInSelectedText": true
+  },
+  "files": [
+    {
+      "path": "LICENSE",
+      "role": "documentation-and-license",
+      "bytes": 7607,
+      "sha256": "f410049813a24b574b39af6dd4807c3e0a0432fe41081b768ef3fae4e0f1fd3a"
+    },
+    {
+      "path": "README.en.md",
+      "role": "documentation-and-license",
+      "bytes": 4949,
+      "sha256": "f54c5a7da88d0613f7ee919df1a17033f95c69583d4a4f2016bf032cc00f108d"
+    },
+    {
+      "path": "README.md",
+      "role": "documentation-and-license",
+      "bytes": 4618,
+      "sha256": "629944c172a32fa272b8399665ae4615a896cf08009f8e848274d7154b0b20e7"
+    },
+    {
+      "path": "THIRD_PARTY_NOTICES.md",
+      "role": "documentation-and-license",
+      "bytes": 7958,
+      "sha256": "4c2fde91ec83e75f8bb2c548116c680d68543138277a13c943927288a436ac03"
+    },
+    {
+      "path": "docs/COMPATIBILITY.md",
+      "role": "documentation-and-license",
+      "bytes": 2942,
+      "sha256": "29bc3f1694cbcef943ccc892457db4f44517a518a8138a8d74bb80e9af08a177"
+    },
+    {
+      "path": "docs/ESP32-S3-A4-Controls.md",
+      "role": "documentation-and-license",
+      "bytes": 2587,
+      "sha256": "543069b0c194f01afe5ae6be7e963f6e69f6f37e1c742d998e58a6b50d642efd"
+    },
+    {
+      "path": "docs/ESP32-S3-Linux.md",
+      "role": "documentation-and-license",
+      "bytes": 3500,
+      "sha256": "47375c294badab2b394e07a7d7934ea93cacbe170b8874d75491aabb12236b44"
+    },
+    {
+      "path": "docs/ESP32-S3-r16-Xiangqi.md",
+      "role": "documentation-and-license",
+      "bytes": 5424,
+      "sha256": "e6a185153092c0439d0330b3babda5e0f52b17b749a03a77835d51d492411a79"
+    },
+    {
+      "path": "docs/ESP32-S3-r16c-Xiangqi-Speed.md",
+      "role": "documentation-and-license",
+      "bytes": 3723,
+      "sha256": "96d7ad233a228d02e7e4711c301c85a1640f85c55d23be6bff69c66559bad33a"
+    },
+    {
+      "path": "docs/FEATURE-COMPARISON.md",
+      "role": "documentation-and-license",
+      "bytes": 2604,
+      "sha256": "02e752d698823fd9fcdf5c738ab29e03e4df6519a50ffbfb0cf9d979e4252816"
+    },
+    {
+      "path": "docs/Gomoku-A4.md",
+      "role": "documentation-and-license",
+      "bytes": 4047,
+      "sha256": "0546813775122b8019b8ebbc78d208b10c0764044264339112b636544464f25a"
+    },
+    {
+      "path": "docs/INSTALLATION.md",
+      "role": "documentation-and-license",
+      "bytes": 3390,
+      "sha256": "7660d96b1284cf36755312bd7ee7dd1d3509eb4b319f952e723ca18a186c9fdf"
+    },
+    {
+      "path": "docs/WIFI.md",
+      "role": "documentation-and-license",
+      "bytes": 3827,
+      "sha256": "dfa81c80dc2f98568ca9cb49584ba36520743691a84ec292c229ba44990dbb08"
+    },
+    {
+      "path": "docs/images/a4-enclosure-pet.jpg",
+      "role": "documentation-and-license",
+      "bytes": 246549,
+      "sha256": "af2340220217642d4ea7824ec25a3188c3c9e0ff6741aa8751f969b103a294ce"
+    },
+    {
+      "path": "docs/images/a4-pcb-radio.jpg",
+      "role": "documentation-and-license",
+      "bytes": 312867,
+      "sha256": "157ee3dc002f53744fd57429f4bf377a940fb4c0c4aad5f26897490b3a1ccf66"
+    },
+    {
+      "path": "hardware/README.md",
+      "role": "documentation-and-license",
+      "bytes": 3548,
+      "sha256": "d58f99895083c1f87c7d18b215be16859a6392d66dc5a533727c356f7768aecd"
+    },
+    {
+      "path": "hardware/enclosure-a4/README.md",
+      "role": "enclosure-process-source",
+      "bytes": 9925,
+      "sha256": "15ee3531158543829f19c15721994bc09b73ef422925dd923901083561e26c80"
+    },
+    {
+      "path": "hardware/enclosure-a4/build_enclosure.py",
+      "role": "enclosure-process-source",
+      "bytes": 17931,
+      "sha256": "8e31b5252f695b5677d18cef84b252fe8f690c28c8dc0de5f5b639738908ff38"
+    },
+    {
+      "path": "hardware/enclosure-a4/check_joystick_motion.py",
+      "role": "enclosure-process-source",
+      "bytes": 2585,
+      "sha256": "b3fdac622b574651db197682789348f3693331eb24ec72dff730fe9148b25ad1"
+    },
+    {
+      "path": "hardware/enclosure-a4/explore_geometry.py",
+      "role": "enclosure-process-source",
+      "bytes": 3013,
+      "sha256": "131e4cff2e370135b6dd5be270cc5d679c8adcedd664a3748886d22b85fd4296"
+    },
+    {
+      "path": "hardware/enclosure-a4/fusion/FusionEnclosureBridge/FusionEnclosureBridge.manifest",
+      "role": "enclosure-fusion-source",
+      "bytes": 278,
+      "sha256": "9448b119be6e58d66a60400ed207276f0768b493962edefff8f7d0892c750292"
+    },
+    {
+      "path": "hardware/enclosure-a4/fusion/FusionEnclosureBridge/FusionEnclosureBridge.py",
+      "role": "enclosure-fusion-source",
+      "bytes": 861,
+      "sha256": "8dc5218deade88add37c041d182474ae468d7cb97aa2933bdf0a7eb13b77ae00"
+    },
+    {
+      "path": "hardware/enclosure-a4/fusion/FusionEnclosureBridge/bridge_protocol.py",
+      "role": "enclosure-fusion-source",
+      "bytes": 2430,
+      "sha256": "a6e089faa8df5a822cca3991c4a194393ee5afba688a273d081fedc4ddc23fc8"
+    },
+    {
+      "path": "hardware/enclosure-a4/fusion/FusionEnclosureBridge/bridge_runtime.py",
+      "role": "enclosure-fusion-source",
+      "bytes": 4609,
+      "sha256": "ed676738e47220d9a2d3f3f07e3a9014fa48a40a6d3e7a3d29dc2414c98e51ef"
+    },
+    {
+      "path": "hardware/enclosure-a4/fusion/FusionEnclosureBridge/clean_profile.py",
+      "role": "enclosure-fusion-source",
+      "bytes": 8400,
+      "sha256": "99ca33083408d653b259b5556fc046f05c03ddec18b2d06515d73a3a105feee3"
+    },
+    {
+      "path": "hardware/enclosure-a4/fusion/FusionEnclosureBridge/clone_baseline.py",
+      "role": "enclosure-fusion-source",
+      "bytes": 3895,
+      "sha256": "e81e6add762921d424ec2bd5887a13ee7357db29097cbd8b20f594ff75452912"
+    },
+    {
+      "path": "hardware/enclosure-a4/fusion/FusionEnclosureBridge/engrave_wordmark.py",
+      "role": "enclosure-fusion-source",
+      "bytes": 4660,
+      "sha256": "379e7aa39b54dd1016043e104be7858b33d06ca0be7e79fc943bdedba76fb072"
+    },
+    {
+      "path": "hardware/enclosure-a4/fusion/FusionEnclosureBridge/fit_trial.py",
+      "role": "enclosure-fusion-source",
+      "bytes": 3085,
+      "sha256": "dd7aef6cf1af99a3815ce4dd284699782512518e8c6f41dbc691861ddd55d039"
+    },
+    {
+      "path": "hardware/enclosure-a4/fusion/FusionEnclosureBridge/fusion_ops.py",
+      "role": "enclosure-fusion-source",
+      "bytes": 19627,
+      "sha256": "38f02386a49dc6dd96d075c8e76baa67fbf4d4f17d3fc6aaee53968d5e1769e8"
+    },
+    {
+      "path": "hardware/enclosure-a4/fusion/FusionEnclosureBridge/native_clone.py",
+      "role": "enclosure-fusion-source",
+      "bytes": 13127,
+      "sha256": "69f4a0f0e79df29de9868eebde8022cae787dec9e9ef068903a8d42a5fa20cc8"
+    },
+    {
+      "path": "hardware/enclosure-a4/fusion/FusionEnclosureBridge/native_enclosure.py",
+      "role": "enclosure-fusion-source",
+      "bytes": 9958,
+      "sha256": "76bb6643c7dedbc98d411456354ee145e061a7f54e9526a140c612b17dd8f6cc"
+    },
+    {
+      "path": "hardware/enclosure-a4/fusion/FusionEnclosureBridge/native_original.py",
+      "role": "enclosure-fusion-source",
+      "bytes": 12395,
+      "sha256": "99c18822a0f5c28ef18857c0096c94d023ba166816b6607a7358ec9cad921d89"
+    },
+    {
+      "path": "hardware/enclosure-a4/fusion/FusionEnclosureBridge/repair_clone_vents.py",
+      "role": "enclosure-fusion-source",
+      "bytes": 2976,
+      "sha256": "7039fb430d7da416546e11a686d3f826fde81c270f41df2fa09a189bcb3cf848"
+    },
+    {
+      "path": "hardware/enclosure-a4/fusion/FusionEnclosureBridge/speaker_slot.py",
+      "role": "enclosure-fusion-source",
+      "bytes": 3360,
+      "sha256": "1e074b93ea90bf8fdb4065c7d7441eeb2f05b1f18f0950cdc5425a874ae4715d"
+    },
+    {
+      "path": "hardware/enclosure-a4/fusion/FusionEnclosureBridge/widen_case.py",
+      "role": "enclosure-fusion-source",
+      "bytes": 7451,
+      "sha256": "3d651602d020c82d94c3d40c0ee4b8e9d123d49f4b88014c8cf7590b84af9085"
+    },
+    {
+      "path": "hardware/enclosure-a4/fusion/assets/hachimo-joystick-vectors.json",
+      "role": "enclosure-fusion-source",
+      "bytes": 76723,
+      "sha256": "9666ddbec246edb30a19c01e5a6e66e33fe7c0d5eadcb0908e3305b4bf3b6d7b"
+    },
+    {
+      "path": "hardware/enclosure-a4/fusion/assets/hachimo-joystick.svg",
+      "role": "enclosure-fusion-source",
+      "bytes": 17342,
+      "sha256": "ecaa1d3ca8648a7e9a1e89915e5f23fa6d21a27b93e75ef1bc1a7731cdd0c9c7"
+    },
+    {
+      "path": "hardware/enclosure-a4/fusion/bridge_client.py",
+      "role": "enclosure-fusion-source",
+      "bytes": 1633,
+      "sha256": "ccd1c81a89d2e962d96b4a9e88dce5514b571101da69445c45ab2860d74dd95b"
+    },
+    {
+      "path": "hardware/enclosure-a4/fusion/build_fit_trial.py",
+      "role": "enclosure-fusion-source",
+      "bytes": 1815,
+      "sha256": "b093347d95daba1399ff5b48a96706c367fde62eca2a5188d9f0acbb42d92983"
+    },
+    {
+      "path": "hardware/enclosure-a4/fusion/build_hachimo_inset.py",
+      "role": "enclosure-fusion-source",
+      "bytes": 2489,
+      "sha256": "c302e8037df3ae6975adf3046cde4299e31feac795934e71b045831e32dffabc"
+    },
+    {
+      "path": "hardware/enclosure-a4/fusion/build_native.py",
+      "role": "enclosure-fusion-source",
+      "bytes": 885,
+      "sha256": "9d7e0b3a011874f8d0261067dbfe21d8a837ea3dcbc7ddb2071c1db7d014d5e9"
+    },
+    {
+      "path": "hardware/enclosure-a4/fusion/build_original.py",
+      "role": "enclosure-fusion-source",
+      "bytes": 1221,
+      "sha256": "486fc6fe934cfae5b9606726a321871dc6f78749f52d2653753b5849f0ebf091"
+    },
+    {
+      "path": "hardware/enclosure-a4/fusion/build_r4.py",
+      "role": "enclosure-fusion-source",
+      "bytes": 2054,
+      "sha256": "cd86901279887e5d7680026ef27f0ef2969c4a81807c3e7853f2f05b2358bab2"
+    },
+    {
+      "path": "hardware/enclosure-a4/fusion/build_speaker_slot.py",
+      "role": "enclosure-fusion-source",
+      "bytes": 1902,
+      "sha256": "e5a21a7891a908d97f8174b0d03a67a1a35b300859c46c9dd6647eb21b5a0ef4"
+    },
+    {
+      "path": "hardware/enclosure-a4/fusion/calibrate.py",
+      "role": "enclosure-fusion-source",
+      "bytes": 756,
+      "sha256": "4b490d39147221cc5d9bd84132eaf6c261ef984ed96a4dd78a431b1d182f7ba4"
+    },
+    {
+      "path": "hardware/enclosure-a4/fusion/check_exterior_holes.py",
+      "role": "enclosure-fusion-source",
+      "bytes": 2821,
+      "sha256": "b845b9d0df18ebbf4521534837f9d3783726e557d89e11e9ce4019c7c6498a15"
+    },
+    {
+      "path": "hardware/enclosure-a4/fusion/check_exterior_holes_r4.py",
+      "role": "enclosure-fusion-source",
+      "bytes": 3603,
+      "sha256": "1c2ce54dc4e46b4f1bdacf9e3ed54d8e399765cc86036f4b434774e4ef231b9e"
+    },
+    {
+      "path": "hardware/enclosure-a4/fusion/check_rear_holes.py",
+      "role": "enclosure-fusion-source",
+      "bytes": 1860,
+      "sha256": "614aaeb3b5a0127730763bde1815f2cf86f97ffe0e369835573f47d2af33fc0a"
+    },
+    {
+      "path": "hardware/enclosure-a4/fusion/check_rear_holes_r4.py",
+      "role": "enclosure-fusion-source",
+      "bytes": 1976,
+      "sha256": "b428046c9321732193ba18bf5cc62048ac1d91dbf440158254f0900e71e9ca1c"
+    },
+    {
+      "path": "hardware/enclosure-a4/fusion/check_screen_view.py",
+      "role": "enclosure-fusion-source",
+      "bytes": 1725,
+      "sha256": "7771249b2e21803170af4f73ea65d2bd079382695c5ccf91c9dcefbb936832db"
+    },
+    {
+      "path": "hardware/enclosure-a4/fusion/check_screen_view_r4.py",
+      "role": "enclosure-fusion-source",
+      "bytes": 1761,
+      "sha256": "2185aeebf06a1d7222d3f0916693f0d24fccc9542522988f13afc8d6d2c0daa2"
+    },
+    {
+      "path": "hardware/enclosure-a4/fusion/check_side_holes.py",
+      "role": "enclosure-fusion-source",
+      "bytes": 2388,
+      "sha256": "04ccf938b64005703b08eccc76892dc4f2f254901585a06eed79a461cd511afc"
+    },
+    {
+      "path": "hardware/enclosure-a4/fusion/check_side_holes_r4.py",
+      "role": "enclosure-fusion-source",
+      "bytes": 2609,
+      "sha256": "f02dc68b16202537111e6e595a986aeefffe912dcce7652a32accc63ad290cfd"
+    },
+    {
+      "path": "hardware/enclosure-a4/fusion/deliver_r4.py",
+      "role": "enclosure-fusion-source",
+      "bytes": 4139,
+      "sha256": "bcf97fef703236dedd0d426486d6d28b6e2948acae987b04e767a85b62121142"
+    },
+    {
+      "path": "hardware/enclosure-a4/fusion/deliver_stl.py",
+      "role": "enclosure-fusion-source",
+      "bytes": 3947,
+      "sha256": "b7e290635e41197c5ccbd802faebf570c1b6813fb7bb9d4d0a343bdbaf4df8ed"
+    },
+    {
+      "path": "hardware/enclosure-a4/fusion/diagnose_control_rim.py",
+      "role": "enclosure-fusion-source",
+      "bytes": 935,
+      "sha256": "42263a9bd446fca56ee2af51294689ee804825d39972c9f88bd07339d72a32a7"
+    },
+    {
+      "path": "hardware/enclosure-a4/fusion/finish_speaker_and_rim.py",
+      "role": "enclosure-fusion-source",
+      "bytes": 3938,
+      "sha256": "7bff38e880122670cfa545139367c56e04b92771df6bb6390a2443167c30d59b"
+    },
+    {
+      "path": "hardware/enclosure-a4/fusion/interface_seams.py",
+      "role": "enclosure-fusion-source",
+      "bytes": 546,
+      "sha256": "2dd5abff519326005781ab38d4535578e92464b053b20dc0ba01a178d8ace07a"
+    },
+    {
+      "path": "hardware/enclosure-a4/fusion/lettering_designs.py",
+      "role": "enclosure-fusion-source",
+      "bytes": 6742,
+      "sha256": "1bec2b55c2f5316c2d41eb7db9478169897f40fb1c6e816be4bcb6f4082e7b4f"
+    },
+    {
+      "path": "hardware/enclosure-a4/fusion/lettering_regions.py",
+      "role": "enclosure-fusion-source",
+      "bytes": 790,
+      "sha256": "20dba33cb1996397ec50afc143454fe9dd731839422cdfd68608b05b05d776c4"
+    },
+    {
+      "path": "hardware/enclosure-a4/fusion/native_difference.py",
+      "role": "enclosure-fusion-source",
+      "bytes": 1247,
+      "sha256": "b52ff80ce75e51f0f105ec7e7d0e5220f0a83d4420e6fd7fe4e5e0cc2bbd0045"
+    },
+    {
+      "path": "hardware/enclosure-a4/fusion/preview_native.py",
+      "role": "enclosure-fusion-source",
+      "bytes": 695,
+      "sha256": "2a849add3bc67d87f35a89c83f8b754813f0f377cfa30a065e94f94f52cd24eb"
+    },
+    {
+      "path": "hardware/enclosure-a4/fusion/publish_full_r4_4.py",
+      "role": "enclosure-fusion-source",
+      "bytes": 2668,
+      "sha256": "818b800160a957ff0325e357de932bedfb2d5524f176db8aed6a1b2eed07a762"
+    },
+    {
+      "path": "hardware/enclosure-a4/fusion/render_internal_assembly.py",
+      "role": "enclosure-fusion-source",
+      "bytes": 17345,
+      "sha256": "9ad03b149c5424dd9669bae6b55cbce14dd9736c2463664c2e0a1e809bbd2686"
+    },
+    {
+      "path": "hardware/enclosure-a4/fusion/study_original_fit.py",
+      "role": "enclosure-fusion-source",
+      "bytes": 1709,
+      "sha256": "3d07f599b27b44edb71260e5a49bafa3ec0db1fc2cd20d9822465891be5025f9"
+    },
+    {
+      "path": "hardware/enclosure-a4/fusion/tests/test_bridge_protocol.py",
+      "role": "enclosure-fusion-source",
+      "bytes": 3160,
+      "sha256": "2c060413010bfee38d15093c3a872270fd8d027967ccf39bae825fd069f0791c"
+    },
+    {
+      "path": "hardware/enclosure-a4/fusion/verify_control_rim.py",
+      "role": "enclosure-fusion-source",
+      "bytes": 1150,
+      "sha256": "398be744b7ba31e690c9ca96787c67ef450345dbfe89ff96e3789cc4a02c9606"
+    },
+    {
+      "path": "hardware/enclosure-a4/fusion/verify_fit_trial.py",
+      "role": "enclosure-fusion-source",
+      "bytes": 5652,
+      "sha256": "fbb6cc5c7d33b95318e0be528b62bceacc8a6a66a5b6993e676ccac31395f085"
+    },
+    {
+      "path": "hardware/enclosure-a4/fusion/verify_fixings.py",
+      "role": "enclosure-fusion-source",
+      "bytes": 2401,
+      "sha256": "e825dc0fc9ec8b666d313495fa9dd4bf46788a101e76aa66142ce29dd1b8b135"
+    },
+    {
+      "path": "hardware/enclosure-a4/fusion/verify_full_r4_4.py",
+      "role": "enclosure-fusion-source",
+      "bytes": 6383,
+      "sha256": "e288e92311bb1285f543f4b4f67a005bb23494505fd0833d722c6ece014b4cf8"
+    },
+    {
+      "path": "hardware/enclosure-a4/fusion/verify_hachimo_inset.py",
+      "role": "enclosure-fusion-source",
+      "bytes": 4286,
+      "sha256": "fd82b4f10d148e1712fe82c8a29fd07b6ea0e5a554ce0143fd19315ed73dfbc3"
+    },
+    {
+      "path": "hardware/enclosure-a4/fusion/verify_mount_access_and_controls.py",
+      "role": "enclosure-fusion-source",
+      "bytes": 3882,
+      "sha256": "3e2e1a9e4655891d10c6ff71079065a47455cbd43761f1fafe14ed90967f5fa3"
+    },
+    {
+      "path": "hardware/enclosure-a4/fusion/verify_r2.py",
+      "role": "enclosure-fusion-source",
+      "bytes": 4630,
+      "sha256": "c3ba7109366b0cc46d063218d03414d03ce5ea47a232642ada0ba68cd211d244"
+    },
+    {
+      "path": "hardware/enclosure-a4/fusion/verify_r3.py",
+      "role": "enclosure-fusion-source",
+      "bytes": 6627,
+      "sha256": "587b508ead86ef1da807931b60fce38e31a19992d5950cbd680e530c9611cbf1"
+    },
+    {
+      "path": "hardware/enclosure-a4/fusion/verify_r4.py",
+      "role": "enclosure-fusion-source",
+      "bytes": 7606,
+      "sha256": "5d8a0de363260971ae426621544548b2aba475a1893a416feba682fc1ef634cc"
+    },
+    {
+      "path": "hardware/enclosure-a4/fusion/verify_speaker_slot.py",
+      "role": "enclosure-fusion-source",
+      "bytes": 4232,
+      "sha256": "0e57b711672d48c3641a2f1e9422e8e1b3d178b6d703717a04f40b73f13a0a3c"
+    },
+    {
+      "path": "hardware/enclosure-a4/fusion/verify_spi_r4.py",
+      "role": "enclosure-fusion-source",
+      "bytes": 3805,
+      "sha256": "25ad4d77f2c0051bf9b1f3e5558f5ff0b896e41fe5956f6043cbde1c5e2b692e"
+    },
+    {
+      "path": "hardware/enclosure-a4/fusion/启动说明.txt",
+      "role": "enclosure-fusion-source",
+      "bytes": 944,
+      "sha256": "867f14bc68552f57ed04d9ee5ee106c6e9a854320ed83e1580c6743181393d97"
+    },
+    {
+      "path": "hardware/enclosure-a4/inspect_3mf.py",
+      "role": "enclosure-process-source",
+      "bytes": 2495,
+      "sha256": "d08b4b9e76709b37e7c4b647e9debd6fb6e6bacbbd7d509aea3f02a16809b759"
+    },
+    {
+      "path": "hardware/enclosure-a4/inspect_original.py",
+      "role": "enclosure-process-source",
+      "bytes": 1687,
+      "sha256": "27cd618dfc71783484de4dccecf1855b879d5edad9098dc7ea82dd1cf00f0ec4"
+    },
+    {
+      "path": "hardware/enclosure-a4/make_delivery.py",
+      "role": "enclosure-process-source",
+      "bytes": 3600,
+      "sha256": "8055070e114ee39c0fcc53fea35085ed03139d60b829171938e2aa73eb35840c"
+    },
+    {
+      "path": "hardware/enclosure-a4/make_layout_sheet.py",
+      "role": "enclosure-process-source",
+      "bytes": 5345,
+      "sha256": "8a929583cdf9c75c4412ef88b2e24e6ba3e9acfda0d064073117f2705e4a8a1e"
+    },
+    {
+      "path": "hardware/enclosure-a4/output/r4-original-copy/full-r4.4/a4-lower-r4.4-speaker.stl",
+      "role": "enclosure-current-output",
+      "bytes": 7727684,
+      "sha256": "608fb8056016b028f99e9a6d6622f4be27979261779831fed110d7f0a131031a"
+    },
+    {
+      "path": "hardware/enclosure-a4/output/r4-original-copy/full-r4.4/a4-upper-r4.4-hachimo.stl",
+      "role": "enclosure-current-output",
+      "bytes": 10669784,
+      "sha256": "01d77478ed527ab42ce805d199b169055bbe6fa60e9182cd0038c1b7b9c5825d"
+    },
+    {
+      "path": "hardware/enclosure-a4/output/r4-original-copy/full-r4.4/complete-assembly.png",
+      "role": "enclosure-current-output",
+      "bytes": 489692,
+      "sha256": "f66d55006c8f8f4ab8f3fc863d5f8062a8da99ce589ccad8f28b4f059041651f"
+    },
+    {
+      "path": "hardware/enclosure-a4/output/r4-original-copy/full-r4.4/full-verification.json",
+      "role": "enclosure-current-output",
+      "bytes": 3765,
+      "sha256": "614a4857154496a6730f9c67aa1cbf343deaa242e8dbaa993057cc85b13172df"
+    },
+    {
+      "path": "hardware/enclosure-a4/output/r4-original-copy/full-r4.4/speaker-slot-inside.png",
+      "role": "enclosure-current-output",
+      "bytes": 907974,
+      "sha256": "9704903c2f148bbb9d55aedf978b068aaa3088c3dac845ef001052dc21e44d18"
+    },
+    {
+      "path": "hardware/enclosure-a4/output/r4-original-copy/full-r4.4/speaker-verification.json",
+      "role": "enclosure-current-output",
+      "bytes": 1755,
+      "sha256": "c008a4da6e02fea166ff688aec993f53fbac135e83bf018788d6daa6be23573d"
+    },
+    {
+      "path": "hardware/enclosure-a4/output/r4-original-copy/full-r4.4/working-full.json",
+      "role": "enclosure-current-output",
+      "bytes": 15054,
+      "sha256": "d22256d88136a895deb6bcc7aba7a3a3d2fcdab6481e3a9b200d28af185eb1a1"
+    },
+    {
+      "path": "hardware/enclosure-a4/output/r4-original-copy/full-r4.4/working-r4.4-full.step",
+      "role": "enclosure-current-output",
+      "bytes": 4051623,
+      "sha256": "e9a44ba1b4245c4f9106d4ecfae460ab3da26876c83ffe3f72b2a11b6f7e62e0"
+    },
+    {
+      "path": "hardware/enclosure-a4/package_3mf.py",
+      "role": "enclosure-process-source",
+      "bytes": 7722,
+      "sha256": "e4824ef3b4e68e516cb10b4c48f72d8119cbcfe20a350774eeb6d21eee6e2262"
+    },
+    {
+      "path": "hardware/enclosure-a4/parameters.json",
+      "role": "enclosure-process-source",
+      "bytes": 1043,
+      "sha256": "9a248e21a888bb13a94147cb63ee596f4e1c5d6b93d392e74d642088bdd9a0ef"
+    },
+    {
+      "path": "hardware/enclosure-a4/reference/assembled-user-side.jpg",
+      "role": "enclosure-reference-input",
+      "bytes": 151090,
+      "sha256": "d53e9dff5fa4b2142184233b1c922ec47bf930392d28252738242b1319d3ae35"
+    },
+    {
+      "path": "hardware/enclosure-a4/reference/assembled-user-top.jpg",
+      "role": "enclosure-reference-input",
+      "bytes": 173960,
+      "sha256": "6ca150cca06d6af4a369330854e1d098a7d53d027e7541851c0fa4b28176a1f9"
+    },
+    {
+      "path": "hardware/enclosure-a4/reference/original-assembly.STEP",
+      "role": "enclosure-reference-input",
+      "bytes": 1890358,
+      "sha256": "0c4a8b58af7ed373da93895adf4c9dde235b14f9bbf6209ec10d7f310a2b896c"
+    },
+    {
+      "path": "hardware/enclosure-a4/reference/original-inspection.json",
+      "role": "enclosure-reference-input",
+      "bytes": 2921,
+      "sha256": "422420362c2f40afe4c0185632bfe454a74e424b4e4303557b1a87e61268d895"
+    },
+    {
+      "path": "hardware/enclosure-a4/reference/original-lower.stl",
+      "role": "enclosure-reference-input",
+      "bytes": 121384,
+      "sha256": "34268daab8946b40464d46bc5f6cb275e0ae1c9812ea78d9ac9d581854b49ccd"
+    },
+    {
+      "path": "hardware/enclosure-a4/reference/original-upper.stl",
+      "role": "enclosure-reference-input",
+      "bytes": 291884,
+      "sha256": "b32b5c2505f87dd587adee965f0badce725de075b6bac3ba2de9077248e6b2d5"
+    },
+    {
+      "path": "hardware/enclosure-a4/reference/screen-user-drawing.jpg",
+      "role": "enclosure-reference-input",
+      "bytes": 151032,
+      "sha256": "66b4eff0d893482d62b000aa2b193bbc86ab3a5521878229a4ae358dca3bdb33"
+    },
+    {
+      "path": "hardware/enclosure-a4/requirements-cad.txt",
+      "role": "enclosure-process-source",
+      "bytes": 129,
+      "sha256": "7f718ec218aeabbadb7787193d8c063ffcad999027fe1b03fc5a9f8a204b8b91"
+    },
+    {
+      "path": "hardware/enclosure-a4/requirements.json",
+      "role": "enclosure-process-source",
+      "bytes": 6860,
+      "sha256": "695bc32f46a82901cbd2420b18bdc5e596d85b257592f5232c3de70b64612980"
+    },
+    {
+      "path": "hardware/enclosure-a4/verify_motion_r1.py",
+      "role": "enclosure-process-source",
+      "bytes": 6963,
+      "sha256": "8d10ec8ef423d76fc0dd065957f93f5137618900dca40d45f12543d058b5c2e9"
+    },
+    {
+      "path": "hardware/s3-carrier/README.md",
+      "role": "pcb-documentation",
+      "bytes": 20472,
+      "sha256": "8d5bc54dccc473c54ca3c03b281a66a5924b342aec4ea45f7d53b98a5b024534"
+    },
+    {
+      "path": "hardware/s3-carrier/output/BOM.csv",
+      "role": "pcb-current-output",
+      "bytes": 1358,
+      "sha256": "163a64f2c24e98c0dd8f471b93be0d8cc3c84fc6d64f88b88b1bb55eeae16e92"
+    },
+    {
+      "path": "hardware/s3-carrier/output/HachimoDock-S3-carrier-A4-Gerber.zip",
+      "role": "pcb-current-output",
+      "bytes": 118099,
+      "sha256": "f37d6a4aacb843249476b656e248e3e576f963c258f840ecbc87fd694797cb69"
+    },
+    {
+      "path": "hardware/s3-carrier/output/HachimoDock-S3-carrier-A4-schematic.pdf",
+      "role": "pcb-current-output",
+      "bytes": 734513,
+      "sha256": "466c45aa5fa7f4e854cc489dc7a25bf491f91cc7eaaab91c0de9b3d3099e05d8"
+    },
+    {
+      "path": "hardware/s3-carrier/output/HachimoDock-S3-carrier-A4.epro2",
+      "role": "pcb-current-output",
+      "bytes": 41634,
+      "sha256": "f3b274fec4c4f457241f2e33d177d27c9d36b3f87c24da7e860e3e2510ca2dd2"
+    },
+    {
+      "path": "hardware/s3-carrier/output/HachimoDock-S3-carrier-A4.kicad_pcb",
+      "role": "pcb-current-output",
+      "bytes": 568987,
+      "sha256": "3ea5f653f6bf27bdb09c90290e1f22ae493803e0c346911ff89b9b5f40b8624e"
+    },
+    {
+      "path": "hardware/s3-carrier/output/HachimoDock-S3-carrier-A4.kicad_pro",
+      "role": "pcb-current-output",
+      "bytes": 653,
+      "sha256": "b2a18f50c34a588883561c41c05b10932a7583cc24a686b083e6005ec281fcdb"
+    },
+    {
+      "path": "hardware/s3-carrier/output/HachimoDock-S3-carrier-A4.kicad_sch",
+      "role": "pcb-current-output",
+      "bytes": 51606,
+      "sha256": "f92f0824d6a0f048196c06ed42fdad58a24fc77102f4e2e1d758099eba8d7d45"
+    },
+    {
+      "path": "hardware/s3-carrier/output/S3_Carrier.kicad_sym",
+      "role": "pcb-current-output",
+      "bytes": 18306,
+      "sha256": "29993c15d00ae47de5794c7809a42d203103b43c1623311d5a0eae5253012ea1"
+    },
+    {
+      "path": "hardware/s3-carrier/output/S3_Carrier.pretty/H1.kicad_mod",
+      "role": "pcb-current-output",
+      "bytes": 1079,
+      "sha256": "7809cfb4a81141691e23969f87b8c6059f15c0beb753aeadec7f3dcdede1b8ec"
+    },
+    {
+      "path": "hardware/s3-carrier/output/S3_Carrier.pretty/H2.kicad_mod",
+      "role": "pcb-current-output",
+      "bytes": 1079,
+      "sha256": "463b5d3c06c81f7805d79c4b05ad0cbe3ee411259e11ee9e861ad4da1929bf1e"
+    },
+    {
+      "path": "hardware/s3-carrier/output/S3_Carrier.pretty/H3.kicad_mod",
+      "role": "pcb-current-output",
+      "bytes": 1079,
+      "sha256": "d1ee1d24b3bf4f599154a587da9a9142db568a4cdfb141a48b9d69f75dec888c"
+    },
+    {
+      "path": "hardware/s3-carrier/output/S3_Carrier.pretty/H4.kicad_mod",
+      "role": "pcb-current-output",
+      "bytes": 1079,
+      "sha256": "4bddfa42b1afdcd4472b300423dbee26eb43acd852e4d4e4e6995069632aa991"
+    },
+    {
+      "path": "hardware/s3-carrier/output/S3_Carrier.pretty/H5.kicad_mod",
+      "role": "pcb-current-output",
+      "bytes": 1079,
+      "sha256": "5ddad15d6dbb748589204c23d1fac5968e600570b5aef8e38813648c35bfd135"
+    },
+    {
+      "path": "hardware/s3-carrier/output/S3_Carrier.pretty/J1.kicad_mod",
+      "role": "pcb-current-output",
+      "bytes": 2699,
+      "sha256": "7859c2b3ff80d96d5b3279d6beff63add1f7aeb6a3118034a1ea904d11c87b83"
+    },
+    {
+      "path": "hardware/s3-carrier/output/S3_Carrier.pretty/JP1.kicad_mod",
+      "role": "pcb-current-output",
+      "bytes": 1814,
+      "sha256": "dbe0513ab42f26b890ab90606b084aa6d4e7d619d4f370cfa358fd225149b1a9"
+    },
+    {
+      "path": "hardware/s3-carrier/output/S3_Carrier.pretty/JS1.kicad_mod",
+      "role": "pcb-current-output",
+      "bytes": 4165,
+      "sha256": "d89c4c754bdcf60a654d2c0e1cada199e5ffd87debdc1d27c93891ba50d07086"
+    },
+    {
+      "path": "hardware/s3-carrier/output/S3_Carrier.pretty/SW1.kicad_mod",
+      "role": "pcb-current-output",
+      "bytes": 2243,
+      "sha256": "7656bb70e26d9269ebf0efb5b0b2af8bc3d081eb31b03f50dc2ffc1ec968495b"
+    },
+    {
+      "path": "hardware/s3-carrier/output/S3_Carrier.pretty/SW2.kicad_mod",
+      "role": "pcb-current-output",
+      "bytes": 2243,
+      "sha256": "e1ed6733eab2485f817ec7f2e8997a90b4f8a17b4f6c52dff888eba09512b318"
+    },
+    {
+      "path": "hardware/s3-carrier/output/S3_Carrier.pretty/SW3.kicad_mod",
+      "role": "pcb-current-output",
+      "bytes": 2242,
+      "sha256": "4f47db112d97c7e31ddc4348f7ca0d1cf1522889b2dfd09b1464915a27b993e6"
+    },
+    {
+      "path": "hardware/s3-carrier/output/S3_Carrier.pretty/U1.kicad_mod",
+      "role": "pcb-current-output",
+      "bytes": 9470,
+      "sha256": "20b3fb8e28f2de5613666084c5bc98104b463e4a7fc4c66d10af86ca901c5dca"
+    },
+    {
+      "path": "hardware/s3-carrier/output/S3_Carrier.pretty/U2.kicad_mod",
+      "role": "pcb-current-output",
+      "bytes": 2585,
+      "sha256": "2fe611c927a264052914252334dd99080cee215ad7e24b956d74321a470e6716"
+    },
+    {
+      "path": "hardware/s3-carrier/output/S3_Carrier.pretty/U3.kicad_mod",
+      "role": "pcb-current-output",
+      "bytes": 2557,
+      "sha256": "8094fbb54b353d389134330101d24c26532c36e31790e264518a118a77e215da"
+    },
+    {
+      "path": "hardware/s3-carrier/output/SHA256SUMS",
+      "role": "pcb-delivery-checksums",
+      "bytes": 7630,
+      "sha256": "88bd2848657f7e949453037c7ec6171fb95c051f229f4b0de2df6bc032b599ae"
+    },
+    {
+      "path": "hardware/s3-carrier/output/assembly-orientation.png",
+      "role": "pcb-current-output",
+      "bytes": 179476,
+      "sha256": "f145313f1f5c68cd770cf9a079121b5a5181c7ee164191e81d9a52d0c2b2cf34"
+    },
+    {
+      "path": "hardware/s3-carrier/output/assembly-orientation.svg",
+      "role": "pcb-current-output",
+      "bytes": 98841,
+      "sha256": "e3a1c266776b23741c21d8d6ea77a276a03a0e08b4b99df54e92888c06415ef3"
+    },
+    {
+      "path": "hardware/s3-carrier/output/assembly-render/assembly-four-views.png",
+      "role": "pcb-current-output",
+      "bytes": 877145,
+      "sha256": "e7507bad8136af99bc252be4c7c0d74913738b8e668814db7aa11f88ccbe4d52"
+    },
+    {
+      "path": "hardware/s3-carrier/output/assembly-render/assembly-isometric.png",
+      "role": "pcb-current-output",
+      "bytes": 207583,
+      "sha256": "ff091eacdf012793ab5fbbcc0bacce7074c73017b03f62bd2cbd51398333be3d"
+    },
+    {
+      "path": "hardware/s3-carrier/output/assembly-render/connector-fastener-clearance.png",
+      "role": "pcb-current-output",
+      "bytes": 182927,
+      "sha256": "c479e1022f88e9daa75d23ce8e32211f3243d8688be32e479508f9fc904b01fc"
+    },
+    {
+      "path": "hardware/s3-carrier/output/assembly-render/front-left.png",
+      "role": "pcb-current-output",
+      "bytes": 207767,
+      "sha256": "6a3a1ce501564a76f5832d019c4ef12289f68083c2acf0e616a1d569d3400a50"
+    },
+    {
+      "path": "hardware/s3-carrier/output/assembly-render/front-right.png",
+      "role": "pcb-current-output",
+      "bytes": 204978,
+      "sha256": "b7231c010558f6ec8794c7743085ed631b54e923343de6d5e3f969ce381892c9"
+    },
+    {
+      "path": "hardware/s3-carrier/output/assembly-render/rear.png",
+      "role": "pcb-current-output",
+      "bytes": 171274,
+      "sha256": "2e5d6c7b18fb3572dfd9a76d08b857fd1c22f892bdd06751b6ad901d23010b43"
+    },
+    {
+      "path": "hardware/s3-carrier/output/assembly-render/render-assumptions.json",
+      "role": "pcb-current-output",
+      "bytes": 1149,
+      "sha256": "4d71eb768610b6b5b5aa8307670868867bd978455b010acad14ce8b9d71c93d8"
+    },
+    {
+      "path": "hardware/s3-carrier/output/assembly-render/top.png",
+      "role": "pcb-current-output",
+      "bytes": 156652,
+      "sha256": "a764f53b5ce341be29d6ead157dd9900e853142e7bd33a21e8316ad5a737fe78"
+    },
+    {
+      "path": "hardware/s3-carrier/output/audit-fault-checks.json",
+      "role": "pcb-current-output",
+      "bytes": 878,
+      "sha256": "95765e81a9b8c36ad7af9c34b5985669c8c150fc5cef884a5daf4ff7230a4165"
+    },
+    {
+      "path": "hardware/s3-carrier/output/connections.csv",
+      "role": "pcb-current-output",
+      "bytes": 2349,
+      "sha256": "b31f7d75707fd731812058b62ea73dc09d0e8800d62a41512e08b8284afc708b"
+    },
+    {
+      "path": "hardware/s3-carrier/output/design.json",
+      "role": "pcb-current-output",
+      "bytes": 99411,
+      "sha256": "c99cb1041a49082fe1eb45d4825c697bb40f3f2109292dac8e39d847eaaa322e"
+    },
+    {
+      "path": "hardware/s3-carrier/output/drc-attestation.json",
+      "role": "pcb-current-output",
+      "bytes": 346,
+      "sha256": "0f94f399207e83d6702fc24b185a4eecbf07f70b7245297b71fb5d56f9e6c517"
+    },
+    {
+      "path": "hardware/s3-carrier/output/drc.json",
+      "role": "pcb-current-output",
+      "bytes": 362,
+      "sha256": "cad36bbe3d17cea1ba2441ca362e8a33309eafbf00bc2b3aa09fd6bb6f6c72d5"
+    },
+    {
+      "path": "hardware/s3-carrier/output/electrical-audit.json",
+      "role": "pcb-current-output",
+      "bytes": 16631,
+      "sha256": "2362f25f0d164a37d111dfb3b1bbc7ff6269aa33a2211755e187a27b6a79c3d8"
+    },
+    {
+      "path": "hardware/s3-carrier/output/electrical-audit.md",
+      "role": "pcb-current-output",
+      "bytes": 2140,
+      "sha256": "74687a0a8f8e1fb8094454a5e4312db730e01cb1f482687d311871a845b64c4c"
+    },
+    {
+      "path": "hardware/s3-carrier/output/fp-lib-table",
+      "role": "pcb-current-output",
+      "bytes": 147,
+      "sha256": "0cba8577a3014ae94425deb21deabaad3a20a7b9eaca1f869bcf66175fd1a622"
+    },
+    {
+      "path": "hardware/s3-carrier/output/independent-review.md",
+      "role": "pcb-current-output",
+      "bytes": 953,
+      "sha256": "8e8958d92b2d24fa0eff536d7c32f4ab69fea0f5e5a0e753cc3fdd725a9e7ebc"
+    },
+    {
+      "path": "hardware/s3-carrier/output/manufacturing-export.json",
+      "role": "pcb-current-output",
+      "bytes": 1978,
+      "sha256": "fb6e8abbdd45c301b2707e9c327e744273040ea84479d265cf25238b4926273d"
+    },
+    {
+      "path": "hardware/s3-carrier/output/mechanical-audit.json",
+      "role": "pcb-current-output",
+      "bytes": 4131,
+      "sha256": "2dcb0e5a602878a28547dd397f4299e42b786df4186bc4300c42c3e2370be285"
+    },
+    {
+      "path": "hardware/s3-carrier/output/mechanical-audit.md",
+      "role": "pcb-current-output",
+      "bytes": 3201,
+      "sha256": "ebb08f346d21856c9f05513bc3b59b606057ce4f74e04354bca5e4d775c80681"
+    },
+    {
+      "path": "hardware/s3-carrier/output/pcb-preview.png",
+      "role": "pcb-current-output",
+      "bytes": 386911,
+      "sha256": "b13d70bf035388564e28ff1a6b3985e21dfd85bab8eb710e1c6cd47eeb51124e"
+    },
+    {
+      "path": "hardware/s3-carrier/output/pcb-preview.svg",
+      "role": "pcb-current-output",
+      "bytes": 432042,
+      "sha256": "9e90d732a4c7b2d8f5ec9637032f703ef28473fa59af52c475123c17c1e278a0"
+    },
+    {
+      "path": "hardware/s3-carrier/output/schematic-audit.json",
+      "role": "pcb-current-output",
+      "bytes": 597,
+      "sha256": "d333bfa42962c415867520ec837b2290e2a353257c3462d13f6d93ff0003e9d1"
+    },
+    {
+      "path": "hardware/s3-carrier/output/schematic-erc.json",
+      "role": "pcb-current-output",
+      "bytes": 467,
+      "sha256": "d48d3bad91d3f948f13415c27d40a8795f132acd7414c2049c1424089600fd99"
+    },
+    {
+      "path": "hardware/s3-carrier/output/schematic-netlist.xml",
+      "role": "pcb-current-output",
+      "bytes": 22909,
+      "sha256": "b8e506fc4ffc236f586f4d99f7bc40783ec937393e44590cb53c30a76babdc4c"
+    },
+    {
+      "path": "hardware/s3-carrier/output/schematic-preview.png",
+      "role": "pcb-current-output",
+      "bytes": 225088,
+      "sha256": "8a99ff08cc00b27f9196cf66af50bb02179ad4701b374b2388a5ec1ff06c185c"
+    },
+    {
+      "path": "hardware/s3-carrier/output/sym-lib-table",
+      "role": "pcb-current-output",
+      "bytes": 149,
+      "sha256": "06b56d2aafa9e20d3947cfc06aa9f71226d670a80f8fe26d8594739caea46cb0"
+    },
+    {
+      "path": "hardware/s3-carrier/output/usb-options.json",
+      "role": "pcb-current-output",
+      "bytes": 2050,
+      "sha256": "ccbcd075b6a5501ce6de80c4c7f0a49d7d08dfaf49235edef483b2fe9d16058e"
+    },
+    {
+      "path": "hardware/s3-carrier/output/validation.json",
+      "role": "pcb-current-output",
+      "bytes": 16565,
+      "sha256": "a38778f31713d57ad1a43a64413dcaf8e1f50f37c6670a1bb836c941e30e76b0"
+    },
+    {
+      "path": "hardware/s3-carrier/reference/a3-layout-lock.json",
+      "role": "pcb-source-and-audit",
+      "bytes": 37024,
+      "sha256": "ae7473c1774b8303433a7e957b690213396516b3f022d4cb8ec49bffb5f447db"
+    },
+    {
+      "path": "hardware/s3-carrier/reference/goouuu-reference-carrier.epro2",
+      "role": "pcb-source-and-audit",
+      "bytes": 168520,
+      "sha256": "9fef4e2a34d6f59b826adc221a8ec60580c3fd773b34f5660a3688b55b813aec"
+    },
+    {
+      "path": "hardware/s3-carrier/reference/mechanical-observations.json",
+      "role": "pcb-source-and-audit",
+      "bytes": 965,
+      "sha256": "184e0d09d2c4e7001572c76667def002da23ac0e9a3972a8142c772271fda0ea"
+    },
+    {
+      "path": "hardware/s3-carrier/reference/upstream-pcb-v1.2.epro2",
+      "role": "pcb-source-and-audit",
+      "bytes": 167392,
+      "sha256": "332c12feab69aaecdbdde2aa5293da99279b9e755e1338a9e770b0cced18f5c1"
+    },
+    {
+      "path": "hardware/s3-carrier/tests/test_drc_guard.py",
+      "role": "pcb-source-and-audit",
+      "bytes": 2048,
+      "sha256": "733215becf2ef6df1db7408f2258e7492f0d1029c7f8021fcf6f2e7ebc4a70fa"
+    },
+    {
+      "path": "hardware/s3-carrier/tests/test_exports.py",
+      "role": "pcb-source-and-audit",
+      "bytes": 5231,
+      "sha256": "fdb02fec93866260b95e5a46620b6244ed8847dc434549e788f1d8096143c7a7"
+    },
+    {
+      "path": "hardware/s3-carrier/tests/test_gain_jumper.py",
+      "role": "pcb-source-and-audit",
+      "bytes": 3051,
+      "sha256": "e3381b9d1dd49e95ba0f08dfa764eefece351188a1d4bd16f1412e04ad15ba27"
+    },
+    {
+      "path": "hardware/s3-carrier/tests/test_schematic.py",
+      "role": "pcb-source-and-audit",
+      "bytes": 4061,
+      "sha256": "3fbcf11d9fe8fc218224f082eb5e5ee98c5067d93ee03cf0acaabf115b88c17b"
+    },
+    {
+      "path": "hardware/s3-carrier/tests/test_sources.py",
+      "role": "pcb-source-and-audit",
+      "bytes": 11133,
+      "sha256": "26fb15cca6c2691c7e7c98a8905940b77ed9ea57cc3fb394576056543dd249ff"
+    },
+    {
+      "path": "hardware/s3-carrier/tools/assembly_preview.py",
+      "role": "pcb-source-and-audit",
+      "bytes": 3562,
+      "sha256": "7a1ead967a06b0a1baeaf129eecd11872dd83fd3d545d55177768b91973ab182"
+    },
+    {
+      "path": "hardware/s3-carrier/tools/audit_native.py",
+      "role": "pcb-source-and-audit",
+      "bytes": 10015,
+      "sha256": "f634817f67e6328afe0a4f567bea25cacc426fc44ae8e8ad04f421ba6fccceaf"
+    },
+    {
+      "path": "hardware/s3-carrier/tools/build_design.py",
+      "role": "pcb-source-and-audit",
+      "bytes": 20716,
+      "sha256": "29c689bed0537f1c0a86278f30b2a24580e0e11772bb8e89faf966c0fdb9ffa3"
+    },
+    {
+      "path": "hardware/s3-carrier/tools/check_audit_faults.py",
+      "role": "pcb-source-and-audit",
+      "bytes": 2101,
+      "sha256": "1526e70d22187c69a5bcb8fdd58c506747f20e92a9bad2ccf25fdda09326d5ae"
+    },
+    {
+      "path": "hardware/s3-carrier/tools/check_clearances.py",
+      "role": "pcb-source-and-audit",
+      "bytes": 6399,
+      "sha256": "3e2451a9fedc318813ce5dd71e9554980b496be88b5e915f07089faef4a57e5f"
+    },
+    {
+      "path": "hardware/s3-carrier/tools/export_easyeda.py",
+      "role": "pcb-source-and-audit",
+      "bytes": 7214,
+      "sha256": "2536d7ad7a99645a0889b0fbb0f495e331405dbd03462040e5995294a52a886e"
+    },
+    {
+      "path": "hardware/s3-carrier/tools/generate_schematic.py",
+      "role": "pcb-source-and-audit",
+      "bytes": 12564,
+      "sha256": "a4337ff61149aded9614c7c8d55310605eebabb6f531b633a04318634ab0f451"
+    },
+    {
+      "path": "hardware/s3-carrier/tools/package_design.py",
+      "role": "pcb-source-and-audit",
+      "bytes": 8833,
+      "sha256": "afbd88ca11c638ea146d5e0f20828c2e7d3e4ea2874db1fdb11dd8d2ece28daa"
+    },
+    {
+      "path": "hardware/s3-carrier/tools/prepare_kicad.py",
+      "role": "pcb-source-and-audit",
+      "bytes": 4165,
+      "sha256": "5d508685dd71336c9aef083b93d32d52200a142cbf4e9cdbcfcb94b00b266393"
+    },
+    {
+      "path": "hardware/s3-carrier/tools/preview.py",
+      "role": "pcb-source-and-audit",
+      "bytes": 5440,
+      "sha256": "b592431b444d1291ca7928e5353c291a3e59ac674756d1c4a061c38ebd465260"
+    },
+    {
+      "path": "hardware/s3-carrier/tools/render_assembly.py",
+      "role": "pcb-source-and-audit",
+      "bytes": 15059,
+      "sha256": "7a27e382ecb1fe7e3f24afc7dbeeff88b85904b580d8a7d67de2639fa15c4dc4"
+    },
+    {
+      "path": "hardware/s3-carrier/tools/route_board.py",
+      "role": "pcb-source-and-audit",
+      "bytes": 13013,
+      "sha256": "01e6f0d29b33c39b45f646c049d23313876e5d56c3ac637e5ef2bf899243daf3"
+    },
+    {
+      "path": "hardware/s3-carrier/tools/schematic_audit.py",
+      "role": "pcb-source-and-audit",
+      "bytes": 4589,
+      "sha256": "14c0c8a95b4e7847a3a888fb94db87e6fcc9a6ec5433ceb3bb675cd8fe20585a"
+    },
+    {
+      "path": "hardware/s3-carrier/tools/source_geometry.py",
+      "role": "pcb-source-and-audit",
+      "bytes": 2590,
+      "sha256": "9a88557c7de4f9f8a90dadb84aa55e8021160ddec6ee55eb24ed541d0a514a76"
+    },
+    {
+      "path": "hardware/s3-carrier/tools/verify_drc.py",
+      "role": "pcb-source-and-audit",
+      "bytes": 2216,
+      "sha256": "9242b6c6fd9e92d5374f32e9b633ad637539be98ba8e1a9e4087100aa0faf0a3"
+    },
+    {
+      "path": "licenses/DEPENDENCY-LICENSE-NOTICE.md",
+      "role": "license-text",
+      "bytes": 6317,
+      "sha256": "357b4e159c983730eb6fda2b312226f52b511793a223189c8e991f79396c6782"
+    },
+    {
+      "path": "licenses/DESKTOP-RUNTIME-DEPENDENCIES.json",
+      "role": "license-text",
+      "bytes": 504295,
+      "sha256": "b740ea2887515870cd341b2eb790c57eece6ae774dbc9f4c9438892b67f2a2ac"
+    },
+    {
+      "path": "licenses/DESKTOP-RUNTIME-LICENSES.txt",
+      "role": "license-text",
+      "bytes": 4082355,
+      "sha256": "eb0b26369125089be9f247e42e2d99fa900714bcccffab18d85c100d76dd73c9"
+    },
+    {
+      "path": "licenses/Espressif-ESP-SR-LICENSE.txt",
+      "role": "license-text",
+      "bytes": 1188,
+      "sha256": "923e6274ea64b226c4f0cb9fc29bda915ae343fd6a8fc290ff5e0daaa85f8813"
+    },
+    {
+      "path": "licenses/Espressif-Waveshare-BSP-LICENSE.txt",
+      "role": "license-text",
+      "bytes": 11358,
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+    },
+    {
+      "path": "licenses/MPL-2.0.txt",
+      "role": "license-text",
+      "bytes": 16726,
+      "sha256": "3f3d9e0024b1921b067d6f7f88deb4a60cbe7a78e76c64e3f1d7fc3b779b9d04"
+    },
+    {
+      "path": "licenses/MiSans-Embedded-Fonts-NOTICE.txt",
+      "role": "license-text",
+      "bytes": 1139,
+      "sha256": "5511b1367b17f089d554b138c3a08e98e36ce5e5675dd049419492d65a282b11"
+    },
+    {
+      "path": "licenses/MiSans-Font-License-Agreement.pdf",
+      "role": "license-text",
+      "bytes": 79535,
+      "sha256": "4a93a27cd2bd81b3b5ecfd0a853144a876fa26938a93a68443c67d74172fcb86"
+    },
+    {
+      "path": "licenses/Node-26.7.0-LICENSE.txt",
+      "role": "license-text",
+      "bytes": 143299,
+      "sha256": "e991d81497a85bb24fc6bffae0a3637a6accd6c6bc5ce1f2c5698bd555cf9d49"
+    },
+    {
+      "path": "licenses/Xiaomi-Miloco-LICENSE.md",
+      "role": "license-text",
+      "bytes": 6009,
+      "sha256": "376dd562aa127c36a75f39887b1a1cd7c47859f21f097e8a8f1b7bab0ea79a27"
+    },
+    {
+      "path": "licenses/reviewed-supplemental-grants.json",
+      "role": "license-text",
+      "bytes": 87063,
+      "sha256": "835b4d056796ac1fe40becb9742d64a824261d3d592c25cc3bf6746abd539f87"
+    },
+    {
+      "path": "licenses/serialport-4.9.0-LICENSE-NOTICE.txt",
+      "role": "license-text",
+      "bytes": 195,
+      "sha256": "00a4d69750686b8fcd2369b17176b4389d67f275fd22b9eab6c66155b72bd4d2"
+    },
+    {
+      "path": "licenses/supplemental/02930215f07fb88b2ec9503a2a1b2345fdcbd351f525c652583fb9df6bc271b9.txt",
+      "role": "license-text",
+      "bytes": 724,
+      "sha256": "02930215f07fb88b2ec9503a2a1b2345fdcbd351f525c652583fb9df6bc271b9"
+    },
+    {
+      "path": "licenses/supplemental/0dcf41516e608bbcb6cdc5229feb7b86fe4a643b85e7df251133c93408fdac73.txt",
+      "role": "license-text",
+      "bytes": 1067,
+      "sha256": "0dcf41516e608bbcb6cdc5229feb7b86fe4a643b85e7df251133c93408fdac73"
+    },
+    {
+      "path": "licenses/supplemental/1af2d2b02d9c86030d29ed77117ca7a1b0e4b6ff35bcf8eeb124867d0f5cb59e.txt",
+      "role": "license-text",
+      "bytes": 15649,
+      "sha256": "1af2d2b02d9c86030d29ed77117ca7a1b0e4b6ff35bcf8eeb124867d0f5cb59e"
+    },
+    {
+      "path": "licenses/supplemental/1c70c91688d9850272e43cee9b189ffe3fe667151d7caf576a36a720f8b28194.txt",
+      "role": "license-text",
+      "bytes": 323,
+      "sha256": "1c70c91688d9850272e43cee9b189ffe3fe667151d7caf576a36a720f8b28194"
+    },
+    {
+      "path": "licenses/supplemental/23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3.txt",
+      "role": "license-text",
+      "bytes": 1023,
+      "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+    },
+    {
+      "path": "licenses/supplemental/24df2f33b48c9e756a4f864f882c1ab07a159b6c2b790f45af2e8162499b6719.txt",
+      "role": "license-text",
+      "bytes": 531,
+      "sha256": "24df2f33b48c9e756a4f864f882c1ab07a159b6c2b790f45af2e8162499b6719"
+    },
+    {
+      "path": "licenses/supplemental/2748c1a1fba7616917c61d455e8d715ab952671ead63f2026ad0124410596b09.txt",
+      "role": "license-text",
+      "bytes": 664,
+      "sha256": "2748c1a1fba7616917c61d455e8d715ab952671ead63f2026ad0124410596b09"
+    },
+    {
+      "path": "licenses/supplemental/3f3d9e0024b1921b067d6f7f88deb4a60cbe7a78e76c64e3f1d7fc3b779b9d04.txt",
+      "role": "license-text",
+      "bytes": 16726,
+      "sha256": "3f3d9e0024b1921b067d6f7f88deb4a60cbe7a78e76c64e3f1d7fc3b779b9d04"
+    },
+    {
+      "path": "licenses/supplemental/42f07fb23f8b37acf45914ccb71df077455a353850e148afeabb5c684f8ebaab.txt",
+      "role": "license-text",
+      "bytes": 564,
+      "sha256": "42f07fb23f8b37acf45914ccb71df077455a353850e148afeabb5c684f8ebaab"
+    },
+    {
+      "path": "licenses/supplemental/4fa4efc313594028ed59ca6e690ee936334dd83fc1def07cbc82a0ee1af97cd1.txt",
+      "role": "license-text",
+      "bytes": 465,
+      "sha256": "4fa4efc313594028ed59ca6e690ee936334dd83fc1def07cbc82a0ee1af97cd1"
+    },
+    {
+      "path": "licenses/supplemental/58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd.txt",
+      "role": "license-text",
+      "bytes": 11357,
+      "sha256": "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd"
+    },
+    {
+      "path": "licenses/supplemental/6d465c5e5a4b3e197049e9fb7393b2f996c1c654e6ded700afce046fac2f7969.txt",
+      "role": "license-text",
+      "bytes": 259,
+      "sha256": "6d465c5e5a4b3e197049e9fb7393b2f996c1c654e6ded700afce046fac2f7969"
+    },
+    {
+      "path": "licenses/supplemental/7523df2468fda84e4df377ee0cfd844a83742f39e0425e7c7819a82e3e25f840.txt",
+      "role": "license-text",
+      "bytes": 205,
+      "sha256": "7523df2468fda84e4df377ee0cfd844a83742f39e0425e7c7819a82e3e25f840"
+    },
+    {
+      "path": "licenses/supplemental/756c8d2ab2dc24f256e1455b5f03937f4933d83d7bc9f2d55009fc962377d512.txt",
+      "role": "license-text",
+      "bytes": 561,
+      "sha256": "756c8d2ab2dc24f256e1455b5f03937f4933d83d7bc9f2d55009fc962377d512"
+    },
+    {
+      "path": "licenses/supplemental/7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54.txt",
+      "role": "license-text",
+      "bytes": 1339,
+      "sha256": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54"
+    },
+    {
+      "path": "licenses/supplemental/86dd7f026f916daf7511e39951ad8ea8cf55a8db67ae64060dacf829761c18f3.txt",
+      "role": "license-text",
+      "bytes": 1076,
+      "sha256": "86dd7f026f916daf7511e39951ad8ea8cf55a8db67ae64060dacf829761c18f3"
+    },
+    {
+      "path": "licenses/supplemental/8edb7a912d295acf1e1cfeafdd19a6813a63b301c7bbfda3c67f65509bd8d8cc.txt",
+      "role": "license-text",
+      "bytes": 484,
+      "sha256": "8edb7a912d295acf1e1cfeafdd19a6813a63b301c7bbfda3c67f65509bd8d8cc"
+    },
+    {
+      "path": "licenses/supplemental/a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2.txt",
+      "role": "license-text",
+      "bytes": 10847,
+      "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+    },
+    {
+      "path": "licenses/supplemental/b05785f9f18e6716bab63424b11454513b9943a222595b70411009202fc592b5.txt",
+      "role": "license-text",
+      "bytes": 1078,
+      "sha256": "b05785f9f18e6716bab63424b11454513b9943a222595b70411009202fc592b5"
+    },
+    {
+      "path": "licenses/supplemental/b1d6df41ed3aa96806e74c729444d7c121d90e6660a6aed01d298e03fde475a0.txt",
+      "role": "license-text",
+      "bytes": 1087,
+      "sha256": "b1d6df41ed3aa96806e74c729444d7c121d90e6660a6aed01d298e03fde475a0"
+    },
+    {
+      "path": "licenses/supplemental/c0c56f26d9c051cac4d200c34c84e7ae9aaa853e01a982a1df08b09931e518ae.txt",
+      "role": "license-text",
+      "bytes": 1483,
+      "sha256": "c0c56f26d9c051cac4d200c34c84e7ae9aaa853e01a982a1df08b09931e518ae"
+    },
+    {
+      "path": "licenses/supplemental/c6b91503fc0a9852e688b56eef715dba9a1ab4b074e86875af2471ce0163b2e5.txt",
+      "role": "license-text",
+      "bytes": 422,
+      "sha256": "c6b91503fc0a9852e688b56eef715dba9a1ab4b074e86875af2471ce0163b2e5"
+    },
+    {
+      "path": "licenses/supplemental/d1c601ed68df4536b2edf7b9934a2c4a205b3515411b1a4e212abe91c5cee212.txt",
+      "role": "license-text",
+      "bytes": 1059,
+      "sha256": "d1c601ed68df4536b2edf7b9934a2c4a205b3515411b1a4e212abe91c5cee212"
+    },
+    {
+      "path": "licenses/supplemental/d8870d5e2ab20fc50915b711c5aa7588131c9abcc1bcb980da1efd7486522a46.txt",
+      "role": "license-text",
+      "bytes": 1086,
+      "sha256": "d8870d5e2ab20fc50915b711c5aa7588131c9abcc1bcb980da1efd7486522a46"
+    },
+    {
+      "path": "licenses/supplemental/f5c342c49f3ac804f3e8e7bb62a8040a44c50d47bb36902b1abd13f66a1adf8b.txt",
+      "role": "license-text",
+      "bytes": 608,
+      "sha256": "f5c342c49f3ac804f3e8e7bb62a8040a44c50d47bb36902b1abd13f66a1adf8b"
+    },
+    {
+      "path": "licenses/sysinfo-LICENSE.txt",
+      "role": "license-text",
+      "bytes": 1082,
+      "sha256": "666ccdb468b5fe0f408f90ebb563c95e4d453e89bd1660e93aa7463f2807ae36"
+    },
+    {
+      "path": "licenses/unescaper-0.1.8-MIT-LICENSE.txt",
+      "role": "license-text",
+      "bytes": 1065,
+      "sha256": "6e0bad263cbd2aa6235d78e3c26bcfa2668cf32f6b274ae21ce0dd620114c7b3"
+    },
+    {
+      "path": "pc/docs/linux-native.md",
+      "role": "documentation-and-license",
+      "bytes": 5461,
+      "sha256": "84e4f824c9da4604a118670418f92c30e9c2ec185bf4a9d51b7e308d63cd4e71"
+    },
+    {
+      "path": "tools/package_a4_hardware.py",
+      "role": "documentation-and-license",
+      "bytes": 5542,
+      "sha256": "6b132aeaf249f2a640eac2b4ca1fc040df0bff5f50173bc474f99f0f238ae904"
+    }
+  ],
+  "fileCount": 222,
+  "totalBytes": 38308517
+}

@@ -1,0 +1,325 @@
+{
+  "schema_version": 1,
+  "engine": "p4-bounded-runtime-v4",
+  "logic": "p4-logic-v1",
+  "vars": {
+    "score": {
+      "type": "int",
+      "init": 0
+    },
+    "outcome": {
+      "type": "string",
+      "init": "本局结束"
+    }
+  },
+  "states": [
+    "ready",
+    "playing",
+    "result"
+  ],
+  "initial_state": "ready",
+  "transitions": [
+    {
+      "from": "ready",
+      "on": "gomoku.place",
+      "to": "playing",
+      "set": {
+        "score": 0,
+        "outcome": "本局结束"
+      }
+    },
+    {
+      "from": "result",
+      "on": "gomoku.place",
+      "to": "playing",
+      "set": {
+        "score": 0,
+        "outcome": "本局结束"
+      }
+    },
+    {
+      "from": "playing",
+      "on": "gomoku.place"
+    },
+    {
+      "from": "playing",
+      "on": "gomoku.left"
+    },
+    {
+      "from": "playing",
+      "on": "gomoku.right"
+    },
+    {
+      "from": "playing",
+      "on": "gomoku.up"
+    },
+    {
+      "from": "playing",
+      "on": "gomoku.down"
+    },
+    {
+      "from": "playing",
+      "on": "gomoku.undo"
+    }
+  ],
+  "tick": [
+    {
+      "every_ms": 100,
+      "while_state": "result",
+      "when": {
+        "var": "score",
+        "op": "lt",
+        "value": 2000
+      },
+      "then": {
+        "set": {
+          "outcome": "黑棋获胜"
+        }
+      }
+    },
+    {
+      "every_ms": 100,
+      "while_state": "result",
+      "when": {
+        "all": [
+          {
+            "var": "score",
+            "op": "gte",
+            "value": 2000
+          },
+          {
+            "var": "score",
+            "op": "lt",
+            "value": 3000
+          }
+        ]
+      },
+      "then": {
+        "set": {
+          "outcome": "白棋获胜"
+        }
+      }
+    },
+    {
+      "every_ms": 100,
+      "while_state": "result",
+      "when": {
+        "var": "score",
+        "op": "gte",
+        "value": 3000
+      },
+      "then": {
+        "set": {
+          "outcome": "棋盘已满"
+        }
+      }
+    }
+  ],
+  "game": {
+    "type": "gomoku",
+    "tick_ms": 300,
+    "playing_state": "playing",
+    "result_state": "result",
+    "score_var": "score",
+    "actions": {
+      "place": "gomoku.place",
+      "left": "gomoku.left",
+      "right": "gomoku.right",
+      "up": "gomoku.up",
+      "down": "gomoku.down",
+      "undo": "gomoku.undo"
+    }
+  },
+  "dashboard": {
+    "title": "五子棋",
+    "eyebrow": "黑先 · 无禁手",
+    "headline": {
+      "switch_state": {
+        "ready": "主键开始",
+        "playing": "人机对弈",
+        "result": {
+          "var": "outcome"
+        }
+      }
+    },
+    "metricLabel": "落子数",
+    "metricValue": {
+      "var": "score"
+    },
+    "metricUnit": "",
+    "badge": "",
+    "note": {
+      "switch_state": {
+        "ready": "黑棋先行",
+        "playing": "红点为末手",
+        "result": "主键重开"
+      }
+    },
+    "footer": "摇杆选点 · 1键落子 · 2键悔棋 · 3键退出",
+    "visualStyle": "clean",
+    "visualPalette": "sunset",
+    "visualLayout": "arcade"
+  },
+  "surface": {
+    "engine": "p4-app-surface-v1",
+    "graphics": "p4-app-graphics-v1",
+    "background": 65436,
+    "game_view": {
+      "engine": "p4-game-surface-v1",
+      "x": 14,
+      "y": 14,
+      "w": 420,
+      "h": 420
+    },
+    "images": [
+      {
+        "id": "board",
+        "asset": "assets/board.png",
+        "frame_width": 220,
+        "frame_height": 220,
+        "frames": 1,
+        "fps": 1
+      }
+    ],
+    "elements": [
+      {
+        "type": "image",
+        "x": 4,
+        "y": 4,
+        "w": 440,
+        "h": 440,
+        "color": 0,
+        "image": "board"
+      },
+      {
+        "type": "text",
+        "x": 460,
+        "y": 16,
+        "w": 168,
+        "h": 43,
+        "color": 14659,
+        "font_size": 34,
+        "bind": "title"
+      },
+      {
+        "type": "text",
+        "x": 460,
+        "y": 68,
+        "w": 168,
+        "h": 35,
+        "color": 14659,
+        "font_size": 28,
+        "bind": "headline"
+      },
+      {
+        "type": "text",
+        "x": 460,
+        "y": 108,
+        "w": 168,
+        "h": 30,
+        "color": 29383,
+        "font_size": 24,
+        "bind": "note"
+      },
+      {
+        "type": "panel",
+        "x": 460,
+        "y": 169,
+        "w": 20,
+        "h": 20,
+        "radius": 10,
+        "color": 6372
+      },
+      {
+        "type": "text",
+        "x": 492,
+        "y": 160,
+        "w": 140,
+        "h": 33,
+        "color": 14659,
+        "font_size": 26,
+        "text": "黑棋 · 你"
+      },
+      {
+        "type": "panel",
+        "x": 460,
+        "y": 211,
+        "w": 20,
+        "h": 20,
+        "radius": 10,
+        "color": 65535,
+        "stroke": 29383,
+        "stroke_width": 2
+      },
+      {
+        "type": "text",
+        "x": 492,
+        "y": 202,
+        "w": 140,
+        "h": 33,
+        "color": 14659,
+        "font_size": 26,
+        "text": "白棋 · 设备"
+      },
+      {
+        "type": "text",
+        "x": 460,
+        "y": 272,
+        "w": 168,
+        "h": 33,
+        "color": 14659,
+        "font_size": 26,
+        "text": "摇杆选点"
+      },
+      {
+        "type": "text",
+        "x": 460,
+        "y": 312,
+        "w": 168,
+        "h": 33,
+        "color": 14659,
+        "font_size": 26,
+        "text": "1键落子"
+      },
+      {
+        "type": "text",
+        "x": 460,
+        "y": 352,
+        "w": 168,
+        "h": 33,
+        "color": 14659,
+        "font_size": 26,
+        "text": "2键悔棋"
+      },
+      {
+        "type": "text",
+        "x": 460,
+        "y": 402,
+        "w": 168,
+        "h": 30,
+        "color": 29383,
+        "font_size": 24,
+        "text": "3键退出"
+      },
+      {
+        "type": "text",
+        "x": 12,
+        "y": 448,
+        "w": 620,
+        "h": 30,
+        "color": 29383,
+        "font_size": 24,
+        "text": "15×15 · 连五或以上胜 · 无禁手"
+      }
+    ]
+  },
+  "input": {
+    "engine": "p4-input-v1",
+    "repeat": [
+      "gomoku.left",
+      "gomoku.right",
+      "gomoku.up",
+      "gomoku.down"
+    ]
+  }
+}

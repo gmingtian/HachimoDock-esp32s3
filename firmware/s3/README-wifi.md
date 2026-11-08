@@ -1,4 +1,4 @@
-# S3 LAN transport (0.7.103-s3-r3)
+# S3 LAN transport (A4 button/joystick)
 
 The fixed S3 hardware now supports either USB Serial/JTAG, USB-UART, or one
 TLS-authenticated Wi-Fi STA runtime owner. P4 does not link any S3 Wi-Fi sources.
@@ -62,10 +62,10 @@ frames each and the dynamic RX pool is eight frames. Wi-Fi IRAM optimizations
 are disabled to preserve internal task/I2S headroom. The line limit is 32768 bytes; TLS handshake and authentication each have a
 five-second deadline. Large framing, ingress and egress buffers use PSRAM.
 
-Three-key component menus contain “Wi-Fi 设置”, showing Chinese status/IP,
+A4 button/joystick component menus contain “Wi-Fi 设置”, showing Chinese status/IP,
 enable/disable, revoke all bindings, and clear configuration. Revocation and
 clearing require a separate confirmation with cancel selected by default.
-Existing three-key short/hold behavior and GPIO wiring remain unchanged.
+A4 uses SW1/SW2/SW3 plus a four-direction analog joystick and center press. The client sends the `s3-a4-buttons-joystick-v1` input model; legacy navigation-only configurations are rejected. GPIO wiring follows `pet_s3_board.h`.
 
 ## Validation
 
@@ -86,15 +86,17 @@ verification when an existing release must remain untouched. No board was
 flashed. RF reliability, real NVS power loss, audio latency/underflow, framebuffer
 rate, IP changes and prolonged connection stability require physical testing.
 
-## Three-key built-in component policy
+## A4 button/joystick built-in component policy
 
-The S3 catalog keeps `snake-turn`, `two-key-pong` and `flappy-bird`, which can be
-played directly with the three physical keys. `block-combo`, `fresh-fruit-slice`,
-`cloud-hop` and `bloomfrog_companion` are excluded from S3 factory defaults,
-embedded bootstrap and new installations. Existing upgraded catalogs hide these
-four IDs without deleting packages or saves. P4 defaults and original packages
-remain unchanged. The canonical list is `component-policy.json`; this policy
-covers reviewed built-ins and does not classify arbitrary custom applications.
+The A4 S3 board has three buttons and a four-way joystick with a center press.
+`block-combo`, `cloud-hop` and `bloomfrog_companion` are available with their
+official component controls, alongside the other button-compatible built-ins.
+Only the touch-only `fresh-fruit-slice` is excluded. `component-policy.json` is
+the canonical policy. Existing packages and saves are preserved; missing image
+resources require the explicit `repairResources` path, not deletion. The r15
+desktop repair keeps the validated native artwork instead of preparing it again
+through the generic image path. P4 and modified/custom package fallback remain
+supported. This policy covers reviewed built-ins, not arbitrary custom apps.
 
 Transport switching is also blocked while a capture request is accepted but its
 worker has not started, or while a playback stream is buffering before audible

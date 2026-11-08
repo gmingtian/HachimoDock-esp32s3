@@ -12,6 +12,8 @@ build/
 managed_components/
 src-tauri/gen/
 pc/src-tauri/gen/
+pc/src-tauri/preview-resource-manifest.json
+pc/src-tauri/preview-resource-manifest-SHA256SUMS
 __pycache__/
 .pytest_cache/
 .DS_Store
@@ -42,9 +44,46 @@ bundle-secrets.env
 .codex/
 .dev-logs/
 .tooling/
+# CAD application IPC and exploratory exports are local working state.
+/hardware/enclosure-a4/fusion/io/
+/hardware/enclosure-a4/fusion/.vscode/
+/hardware/enclosure-a4/**/.vscode/
+/hardware/enclosure-a4/fusion/*.json
+/hardware/enclosure-a4/fusion/insert-detail.png
+/hardware/enclosure-a4/parameters-standard-socket-r0.json
+/hardware/enclosure-a4/reference/esp32_s3_trial_v1/
+/hardware/enclosure-a4/reference/step-solids/
+/hardware/enclosure-a4/reference/user-3mf-inspection/
+/hardware/enclosure-a4/reference/user-p1s-white-orange-two-plates.3mf
+/hardware/enclosure-a4/output/*
+!/hardware/enclosure-a4/output/r4-original-copy/
+/hardware/enclosure-a4/output/r4-original-copy/*
+!/hardware/enclosure-a4/output/r4-original-copy/full-r4.4/
+/hardware/enclosure-a4/output/r4-original-copy/full-r4.4/*
+!/hardware/enclosure-a4/output/r4-original-copy/full-r4.4/a4-upper-r4.4-hachimo.stl
+!/hardware/enclosure-a4/output/r4-original-copy/full-r4.4/a4-lower-r4.4-speaker.stl
+!/hardware/enclosure-a4/output/r4-original-copy/full-r4.4/working-r4.4-full.step
+!/hardware/enclosure-a4/output/r4-original-copy/full-r4.4/complete-assembly.png
+!/hardware/enclosure-a4/output/r4-original-copy/full-r4.4/speaker-slot-inside.png
+!/hardware/enclosure-a4/output/r4-original-copy/full-r4.4/full-verification.json
+!/hardware/enclosure-a4/output/r4-original-copy/full-r4.4/speaker-verification.json
+!/hardware/enclosure-a4/output/r4-original-copy/full-r4.4/working-full.json
 firmware/sdkconfig.*
 !firmware/sdkconfig.defaults
 !firmware/sdkconfig.v3.defaults
 !firmware/sdkconfig.s3.defaults
 pc/public/terrier-clips/p4-ready/*
 !pc/public/terrier-clips/p4-ready/v9-640x480-15fps-225f-h264-crf27/
+
+# Local Vite dependency cache
+.vite/
+
+# Reproducible configurations referenced by source and SDK checks.
+!firmware/sdkconfig.esp32_p4_program_public_candidate
+!firmware/sdkconfig.esp32_p4_program_public_candidate_v3
+!firmware/sdkconfig.esp32_p4_main_frame_parent
+!firmware/sdkconfig.esp32_p4_framework_parent
+!firmware/sdkconfig.esp32_p4_capability_parent
+
+!firmware/sdkconfig.esp32_p4_evboard_v3
+!firmware/sdkconfig.esp32_p4_large_reply_parent

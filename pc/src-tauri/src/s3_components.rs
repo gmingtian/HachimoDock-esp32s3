@@ -8,9 +8,9 @@ pub(crate) fn allowed(runtime:&str,id:&str)->bool {
 mod tests {
     use super::*;
     #[test]
-    fn s3_three_key_policy_preserves_playable_games_custom_ids_and_p4() {
-        for id in ["snake-turn","two-key-pong","flappy-bird","custom-game"] { assert!(allowed("esp-s3",id)); }
-        for id in ["block-combo","fresh-fruit-slice","cloud-hop","bloomfrog_companion"] {
+    fn s3_a4_policy_preserves_playable_games_custom_ids_and_p4() {
+        for id in ["snake-turn","two-key-pong","flappy-bird","custom-game","block-combo","cloud-hop","bloomfrog_companion"] { assert!(allowed("esp-s3",id)); }
+        for id in ["fresh-fruit-slice"] {
             assert!(!allowed("esp-s3",id)); assert!(allowed("esp-p4",id));
         }
     }

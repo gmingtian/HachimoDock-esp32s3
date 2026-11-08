@@ -1,9 +1,6 @@
-# Pet Manager ESP32-P4 设备端固件
+# HachimoDock ESP32-P4 固件
 
-当前公开源码版本为 0.7.103-p4-r1，对应客户端 0.1.167；v1/v3 使用匹配的芯片镜像。功能与限制以本文、构建配置及相应源码为准，不将开发环境的单次验收记录作为所有设备的性能承诺。
-
-本工作副本正在验证 `0.7.103-p4-r1`：基于 PC 内置 0.7.103 的组件资源完整性修复，不合入 0.7.108。保留分区布局、音频/AEC、输入和渲染实现；使用应用分区 OTA，不能用工厂整片镜像覆盖已有设备。详细恢复状态与限制见 `protocol.md` 的资源完整性章节。静默检查不能代替声学验收。
-
+当前源码版本 **0.7.103-p4-r178**，配套桌面端 **0.1.197**。`main` 可包含发布后的修正；源码与已发布二进制的对应关系见 [Release 源码说明](https://github.com/YizhengWw/HachimoDock/releases/tag/v0.1.197)。默认公开构建和诊断/实验配置应分别看待，不将编译或主机测试作为实机与声学验收。
 
 本目录是 HachimoDock 当前使用的 ESP32-P4 固件源码，与 [PC 客户端](../pc/) 配合使用：PC 负责 Agent 状态监听、语音识别服务对接、素材预处理与传输；设备负责 USB 通信、按键与摇杆输入、屏幕渲染、形象播放及组件运行。
 
@@ -34,8 +31,8 @@ ESP32-P4-WIFI6-M 的 M 表示焊接排针，不代表芯片版本。v1 与 v3 �
 - **组件安装与恢复**：分块校验，文件与目录采用独立 A/B 代际提交，完整校验后生效；启动时选择有效版本，必要时回退。
 - **可配置输入**：按键、长按与摇杆动作可由 PC 配置并保存至 NVS，跨重启保留；组件退出始终遵循全局返回设置。
 - **设备麦克风输入**：通过 USB 传输 16 kHz、单声道 S16LE 音频；有 ES7210 时使用其采集，否则走 ES8311 路径。识别和 Agent 输入由 PC 完成。
-- **A/B 固件升级**：分块确认与重试、SHA-256 校验、ESP-IDF 项目标识校验、启动健康确认和回滚。
-- **传输异常恢复**：可查询、中止断线后残留的 OTA 事务；传输期间显示轻量传输画面，未完成的素材不会替换有效形象。
+- **A/B 固件升级**：分块确认、SHA-256 校验、ESP-IDF 项目标识校验、启动健康确认和回滚。回执超时不等于写入失败；未知结果只读核对，不自动重放写入。
+- **传输异常恢复**：可查询断线后残留的 OTA 事务，明确确认后再处理；传输期间显示轻量传输画面，未完成的素材不会替换有效形象。
 - **诊断与截图**：查询重启原因、堆内存、PSRAM、SPIFFS、输入及音频状态，并通过协议获取调试截图。
 
 ### 当前功能边界
@@ -48,14 +45,14 @@ ESP32-P4-WIFI6-M 的 M 表示焊接排针，不代表芯片版本。v1 与 v3 �
 
 ## 页面与默认操作
 
-宠物主界面 `main` 和组件中心 `components` 是同级页面，顶部用两个圆点表示位置；组件运行页 `app` 是组件中心的子页面，运行组件时不显示这组切换圆点。
+宠物主界面 `main` 和组件中心 `components` 是同级页面；组件运行页 `app` 是组件中心的子页面。宠物页面不显示顶部页面指示圆点。
 
 | 操作 | 默认行为 |
 | --- | --- |
 | SW1 短按 | 确认 / 进入 |
-| SW1 长按 | 语音输入；识别文字保留在 Agent 输入框中，不自动发送 |
+| 按住 SW1、松开 | 录音、结束并写入 Agent 草稿；确认后才发送 |
 | SW2 短按 | 切换宠物主界面与组件中心；组件运行中若绑定了 SW2，则执行组件动作 |
-| SW2 长按 | 不绑定 |
+| SW2 长按 | 开始 / 结束实时对话 |
 | SW3 短按 | 返回 / 取消；组件内按全局返回动作退出 |
 | SW3 长按 | 不绑定 |
 | 摇杆中键短按 | 确认 |
@@ -67,24 +64,51 @@ ESP32-P4-WIFI6-M 的 M 表示焊接排针，不代表芯片版本。v1 与 v3 �
 
 ## 默认组件
 
-默认顺序为：**双键接球、蛙蛙养成、Flappy Bird、方块游戏、贪吃蛇、番茄钟、喝水提醒、Token 仪表盘**。
+出厂配置包含 **29 个组件**，顺序及初始选择以 [factory-config.json](factory-config.json) 为准。当前初始选择为城市电台（`city-radio`），设备开机仍进入宠物主界面。
 
-双键接球是默认列表的第一项，**不是固定置顶项**；用户新安装的组件会排在默认组件前面。设备开机进入宠物主界面，组件中心初始选择双键接球。
+| 顺序 | 名称 | ID |
+| --- | --- | --- |
+| 1 | 城市电台 | `city-radio` |
+| 2 | 云端跳一跳 | `cloud-hop` |
+| 3 | 自选股行情 | `stock-watchlist` |
+| 4 | 静心木鱼 | `wooden-fish` |
+| 5 | 每日新鲜事 | `daily-news` |
+| 6 | 每天一本书 | `book-pocket` |
+| 7 | 像素方块 | `block-combo` |
+| 8 | 番茄钟 | `tomato-clock` |
+| 9 | 鲜果一刀 | `fresh-fruit-slice` |
+| 10 | 自然声景 | `hachimi-sounds` |
+| 11 | 像素贪吃蛇 | `snake-turn` |
+| 12 | 像素飞鸟 | `flappy-bird` |
+| 13 | 每日新知 | `hachimi-learn` |
+| 14 | 哈基米小屋 | `hachimi-home` |
+| 15 | 宠物旅行 | `hachimi-travel` |
+| 16 | 专注花园 | `hachimi-garden` |
+| 17 | 蛙蛙养成 | `bloomfrog_companion` |
+| 18 | 双键接球 | `two-key-pong` |
+| 19 | 今日气象 | `hachimi-weather` |
+| 20 | 每日黄历 | `daily-almanac` |
+| 21 | 近期待办 | `upcoming-todos` |
+| 22 | 电脑状态 | `computer-status` |
+| 23 | 喝水提醒 | `drink-reminder` |
+| 24 | 活力间歇 | `hachimi-break` |
+| 25 | 灵感胶囊 | `hachimi-notes` |
+| 26 | Token 仪表盘 | `token-usage` |
+| 27 | 纠结扭蛋机 | `decision-capsule` |
+| 28 | 答案之书 | `answer-book` |
+| 29 | 盼头列车 | `hope-train` |
 
-Token 仪表盘展示当前跟随 Agent 在本地自然日内的累计用量，不局限于单个前台会话。
-
-固件应用镜像内包含默认组件及其受限精灵素材。普通 PC 固件升级后，设备更新同 ID 的内置组件，在容量允许时补入缺失项，同时保留无关的用户组件；无需为此覆盖整个文件系统分区。
+普通 OTA 更新应用内的内置组件资源，尊重已持久化的用户卸载记录；不会为了恢复出厂列表而删除用户组件或自动补回用户主动移除项。完整烧录则重新初始化出厂资源。依赖 PC 数据或媒体的组件需要客户端保持运行，内容源与可用性以对应组件配置为准。
 
 ## 构建固件
 
-先安装 Git LFS、Python 3.10+、PlatformIO Core 6.1.19+ 和 Pillow；v3 不支持 Core 6.1.18。首次构建需要联网下载 ESP-IDF、编译器及锁定版本的依赖。详细工具版本、v3 命令与 DSI 接线要求见 [BUILD.md](BUILD.md)。完整烧录包的工具固定使用 esptool 5.4.0。
+先安装 Git、Python 3.10+、PlatformIO Core 6.1.19+ 和 Pillow；v3 不支持 Core 6.1.18。首次构建需要联网下载 ESP-IDF、编译器及锁定版本的依赖。详细工具版本、v3 命令与 DSI 接线要求见 [BUILD.md](BUILD.md)。完整烧录包的工具固定使用 esptool 5.4.0。
 
 ### macOS / Linux
 
 在仓库根目录执行：
 
 ```sh
-git lfs pull
 python -m pip install Pillow
 python firmware/tools/build_builtin_bundle.py --check
 cd firmware
@@ -96,7 +120,6 @@ python -m platformio run -e esp32_p4_evboard
 在仓库根目录执行：
 
 ```powershell
-git lfs pull
 cd firmware
 .\tools\p4.ps1 setup
 .\tools\p4.ps1 doctor
@@ -150,7 +173,7 @@ cd firmware
 .\tools\p4.ps1 factory-flash -Port COM5 -FactoryReset
 ```
 
-旧版单应用、16 MiB SPIFFS 分区设备不能直接用普通上传命令迁移。专用工具先验证旧分区，读取并校验备份，再重新初始化当前出厂布局：
+旧版单应用、16 MiB SPIFFS 分区设备不能直接用普通上传命令迁移。以下专用工具仅适用于其明确支持的旧布局；先验证布局、读取并校验备份，再重新初始化：
 
 ```powershell
 cd firmware
@@ -167,12 +190,14 @@ cd firmware
 | --- | --- | --- | --- |
 | `nvs` | `0x009000` | 24 KiB | 设备与输入配置 |
 | `phy_init` | `0x00F000` | 4 KiB | PHY 初始化数据 |
-| `ota_0` | `0x010000` | 2.5 MiB | A/B 应用镜像 |
-| `ota_1` | `0x290000` | 2.5 MiB | A/B 应用镜像 |
-| `otadata` | `0x510000` | 8 KiB | A/B 启动选择元数据 |
-| `storage` | `0x520000` | 6.875 MiB | SPIFFS 清单、音效、组件及元数据 |
-| `appearance0` | `0xC00000` | 10 MiB | 受保护的西高地内置动画 |
-| `appearance1` | `0x1600000` | 10 MiB | 可替换的自定义动画 |
+| `ota_0` | `0x010000` | 3 MiB | A/B 应用镜像 |
+| `ota_1` | `0x310000` | 3 MiB | A/B 应用镜像 |
+| `otadata` | `0x610000` | 8 KiB | A/B 启动选择元数据 |
+| `storage` | `0x620000` | 8.875 MiB | SPIFFS 清单、音效、组件及元数据 |
+| `appearance0` | `0xF00000` | 8.5 MiB | 受保护的西高地内置动画 |
+| `appearance1` | `0x1780000` | 8.5 MiB | 可替换的自定义动画 |
+
+旧20 MiB形象布局（storage大小`0x6E0000`、形象槽位于`0xC00000`/`0x1600000`）与旧18 MiB布局都需要显式 USB 重新部署分区。需要保全数据时先备份并迁移；用户明确允许清空的测试机可直接完整初始化。不能仅覆盖分区表或把旧 SPIFFS 镜像当成新文件系统。普通 OTA 只更新应用，不更新分区表，也不会自动迁移。新布局保持组件空间比原始布局多 2 MiB，双 OTA 各增加 512 KiB，形象合计 17 MiB；默认西高地所有 16 段原始视频均保留，不重编码。
 
 正常启动不会自动格式化 SPIFFS。挂载失败时保留数据并记录错误，避免暂时性故障造成素材和组件被静默删除。
 
@@ -185,7 +210,7 @@ cd firmware
 
 切换的是数据通路，不改变供电输入；实际操作请核对所用板卡说明。原生接口通过 Microsoft OS 2.0 描述符匹配系统 WinUSB，无需单独安装 INF 或 Zadig。
 
-Windows/macOS 共用 4 Mbaud 固件。macOS 保留 8 KiB 逻辑分块及分段节流；Windows 保留原有分片与发送间隔，可从较大的 raw 分块开始，完整性检查失败后以 2 KiB 分块重启传输。PC 仍可探测连接旧 2 Mbaud 固件。运行波特率与烧录波特率分别设置，实际吞吐以日志统计为准。
+Windows/macOS 共用 4 Mbaud 固件。macOS 保留 8 KiB 逻辑分块及分段节流；Windows 保留原有分片与发送间隔，可从较大的 raw 分块开始，按当前协商结果选择分块；超时或结果未知时不自动重启事务。PC 仍可探测连接旧 2 Mbaud 固件。运行波特率与烧录波特率分别设置，实际吞吐以日志统计为准。
 
 原生 USB 打开目标前使用随机挑战值核对设备身份和协议版本；身份不唯一、回复过期或不支持身份检查时拒绝写入，可改用 USB-UART。
 
@@ -263,3 +288,12 @@ Windows 也可使用 `.\tools\p4.ps1 test`，再运行 `build`。源代码测试
 项目自有源码采用根目录 [HachimoDock 项目许可证](../LICENSE)，仅限许可范围内的非商业用途；第三方驱动、字体与依赖继续遵循各自许可证，见 [第三方声明](../THIRD_PARTY_NOTICES.md)。
 
 媒体切图升级：0.7.79-p4 提供 widgetSurfaceImages=p4-surface-images-v1，支持有界调色板压缩图片与播放状态驱动旋转。图片由组件包提供，不内置电台专用美术。
+
+## Unreleased framework snapshot boundary
+
+The experimental r28 source uses one native runtime snapshot for App/media
+layout, changed images, side-scene state and confirmation overlays. Host bindings
+come from one captured reply. Render-only snapshots never authorize actions.
+Boot-lifetime stall counters supplement, not replace, the existing rolling
+window diagnostics. See [BUILD.md](BUILD.md) for disabled capabilities and gates;
+this does not update bundled/public firmware or establish hardware/AEC acceptance.

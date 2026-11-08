@@ -7,6 +7,22 @@
 *.bin binary
 # Engineering checksums cover exact bytes, including CSV line endings.
 /hardware/s3-carrier/** -text
+/hardware/s3-carrier/** whitespace=cr-at-eol
 /hardware/s3-carrier/output/*.csv whitespace=cr-at-eol
 # These SVG previews are generated; review source geometry and rendered PNGs.
 /hardware/s3-carrier/output/*.svg -diff
+# CAD and verification manifests bind exact export bytes on every host.
+/hardware/enclosure-a4/** -text
+/hardware/enclosure-a4/** whitespace=cr-at-eol
+/hardware/enclosure-a4/**/*.step -diff -whitespace
+/hardware/enclosure-a4/**/*.STEP -diff -whitespace
+# This acceptance record is included byte-for-byte in the hardware manifest.
+/docs/Gomoku-A4.md -text whitespace=cr-at-eol
+
+# Upstream legal and vendored files must retain their original bytes.
+licenses/** -text -whitespace
+**/licenses/** -text -whitespace
+**/LICENSE* -text -whitespace
+**/NOTICE* -text -whitespace
+**/THIRD_PARTY_NOTICES* -text -whitespace
+integrations/**/vendor/** -text -whitespace

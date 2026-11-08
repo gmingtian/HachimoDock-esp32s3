@@ -2,12 +2,11 @@
   "schemaVersion": 1,
   "target": "esp32s3",
   "unsupportedBuiltins": [
-    "block-combo",
-    "fresh-fruit-slice",
-    "cloud-hop",
-    "bloomfrog_companion"
+    "fresh-fruit-slice"
   ],
   "supportedGames": [
+    "block-combo",
+    "cloud-hop",
     "snake-turn",
     "two-key-pong",
     "flappy-bird"

@@ -4,7 +4,7 @@
 #if defined(CONFIG_IDF_TARGET_ESP32S3) && CONFIG_IDF_TARGET_ESP32S3
 #define PET_TARGET_RUNTIME "esp-s3"
 #define PET_TARGET_DEVICE_PREFIX "s3-"
-#define PET_TARGET_MODEL "ESP32-S3 N16R8 / ST7789 / Three buttons"
+#define PET_TARGET_MODEL "ESP32-S3 N16R8 / ST7789 / A4 buttons + joystick"
 #define PET_TARGET_SOC "ESP32-S3 Xtensa LX7 Dual-Core"
 #define PET_TARGET_CPU "240MHz"
 #define PET_TARGET_LP_CPU "ULP"

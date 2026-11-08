@@ -12,6 +12,7 @@ import {
   buildP4DeviceSessionTransportPayload,
   buildP4RoutingSessions,
   filterDismissedP4Sessions,
+  enqueueP4SessionBinding,
   mergeP4SessionEvent,
   mergeP4SessionSnapshot,
   p4SessionHasMeaningfulTitle,
@@ -38,6 +39,16 @@ test("routing sessions deduplicate by id, sort by activity, and exclude internal
     ["newer", "working"],
     ["older", "thinking"],
   ]);
+});
+
+test("Guardian review sources stay out of P4 routing while ordinary review conversations remain", () => {
+  const sessions = buildP4RoutingSessions([
+    { id: "guardian", threadSource: "guardian_review", name: "Guardian review", state: "thinking" },
+    { id: "guardian-raw", thread_source: "guardian_review", state: "thinking" },
+    { id: "user", name: "Guardian review", state: "working" },
+    { id: "worker", threadSource: "worker", state: "working" },
+  ]);
+  assert.deepEqual(sessions.map(session => session.id), ["user", "worker"]);
 });
 
 test("snapshots preserve event lifecycle fields while still removing omitted routing sessions", () => {
@@ -146,4 +157,58 @@ test("dismissed sessions return only after their activity signature changes", ()
       .map((session) => session.id),
     ["task"],
   );
+});
+
+
+test("a retired queued Agent binding never reaches native and is never replayed", async () => {
+  let unblock;
+  const pending = new Promise(resolve => { unblock = resolve; });
+  let current = true;
+  const calls = [];
+  const stale = enqueueP4SessionBinding(pending, () => current, () => { calls.push("old"); });
+  current = false;
+  const fresh = enqueueP4SessionBinding(stale, () => true, () => { calls.push("new"); return "new-result"; });
+  unblock();
+  assert.equal(await stale, undefined);
+  assert.equal(await fresh, "new-result");
+  assert.deepEqual(calls, ["new"]);
+});
+
+test("a failed binding is attempted once; only the next explicit queued request proceeds", async () => {
+  let oldCalls = 0, newCalls = 0;
+  const failed = enqueueP4SessionBinding(Promise.resolve(), () => true, () => { oldCalls++; throw new Error("unknown"); });
+  await assert.rejects(failed, /unknown/);
+  await enqueueP4SessionBinding(failed, () => true, () => { newCalls++; });
+  assert.equal(oldCalls, 1);
+  assert.equal(newCalls, 1);
+});
+
+for (const merge of [mergeP4SessionSnapshot, mergeP4SessionEvent]) {
+  test(`${merge.name} retains the newer lifecycle while accepting older metadata`, () => {
+    const latest = { id: "same", state: "unknown", status: "running", active: true,
+      activitySource: "live-agent-status", stateDetailUnknown: true, statusUpdatedAt: 200, displayContent: "current" };
+    const older = { id: "same", state: "idle", status: "idle", active: false, statusUpdatedAt: 100,
+      displayContent: "stale", summary: "metadata" };
+    const result = merge([latest], merge === mergeP4SessionSnapshot ? [older] : older)[0];
+    for (const key of ["state", "status", "active", "activitySource", "stateDetailUnknown", "statusUpdatedAt", "displayContent"]) {
+      assert.equal(result[key], latest[key], key);
+    }
+    assert.equal(result.summary, "metadata");
+    const terminal = { id: "same", state: "done", statusUpdatedAt: 300 };
+    assert.equal(merge([result], merge === mergeP4SessionSnapshot ? [terminal] : terminal)[0].state, "done");
+  });
+}
+
+test("a silent completed reply retains its card until the original deadline", () => {
+  const active = buildP4ConversationQueue(
+    [{ id: "chat", name: "Question", state: "working", statusUpdatedAt: 1000 }],
+    [], 1000,
+  );
+  const reply = { id: "chat", name: "Question", state: "reply_complete",
+    statusUpdatedAt: 1500, displayContent: "Answer" };
+  const completed = buildP4ConversationQueue([reply], active, 1500);
+  assert.equal(completed[0]?.state, "reply_complete");
+  assert.equal(completed[0]?.displayContent, "Answer");
+  assert.equal(buildP4ConversationQueue([reply], completed, 61_499).length, 1);
+  assert.deepEqual(buildP4ConversationQueue([reply], completed, 61_500), []);
 });

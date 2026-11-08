@@ -45,3 +45,27 @@ static inline void pet_s3_clean_video_background(uint16_t *row, int width) {
   int right = width - 1;
   while (right > left && pet_s3_clean_video_shadow(row + right)) --right;
 }
+
+/* Factory artwork is authored against black. Its compressed floor contains
+ * colored near-black blocks which must not fence off the rest of the background.
+ * Keep this policy separate: arbitrary custom colored artwork uses the above
+ * conservative rule. Pixels at/after a visible foreground edge stay intact. */
+static inline bool pet_s3_clean_builtin_shadow(uint16_t *pixel) {
+  unsigned r=(*pixel>>8)&248U,g=(*pixel>>3)&252U,b=(*pixel<<3)&248U;
+  unsigned peak=r>g?r:g;if(b>peak)peak=b;
+  if(peak>=40U)return false;
+  if(peak<=32U)*pixel=0;
+  else{
+    unsigned gain=peak-32U;r=r*gain/8U;g=g*gain/8U;b=b*gain/8U;
+    *pixel=(uint16_t)(((r&248U)<<8)|((g&252U)<<3)|(b>>3));
+  }
+  return true;
+}
+static inline void pet_s3_clean_builtin_black_matte(uint16_t *row,int width) {
+  if(!row||width<=0||pet_s3_video_peak(row[0])>32U
+      ||pet_s3_video_peak(row[width-1])>32U)return;
+  int left=0;
+  while(left<width&&pet_s3_clean_builtin_shadow(row+left))++left;
+  int right=width-1;
+  while(right>left&&pet_s3_clean_builtin_shadow(row+right))--right;
+}

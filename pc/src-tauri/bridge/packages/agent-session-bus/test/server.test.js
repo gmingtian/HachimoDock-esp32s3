@@ -194,6 +194,28 @@ test("GET /agent/session-events filters internal Codex approval reviews", async 
   }
 });
 
+test("Codex snapshot and event routes filter Guardian sources without filtering user review titles", async () => {
+  const sessions = [
+    { id: "guardian", threadSource: "guardian_review", state: "thinking", name: "Guardian review" },
+    { id: "guardian-raw", thread_source: "guardian_review", state: "thinking" },
+    { id: "user-review", name: "Guardian review", state: "working" },
+  ];
+  const adapter = new MockAdapter({ agentId: "codex" });
+  adapter.listSessions = async () => sessions;
+  const { bus, port } = await startBus({ agentId: "codex", adapter,
+    sessionEventProvider: () => ({ streamId: "guardian-test", cursor: 3,
+      events: sessions.map((session, index) => ({ cursor: index + 1, session })) }),
+  });
+  try {
+    const snapshot = await jsonRequest(port, "GET", "/agent/sessions?agentId=codex");
+    const events = await jsonRequest(port, "GET", "/agent/session-events?agentId=codex");
+    assert.equal(snapshot.status, 200);
+    assert.equal(events.status, 200);
+    assert.deepEqual(snapshot.body.sessions.map(session => session.id), ["user-review"]);
+    assert.deepEqual(events.body.events.map(event => event.session.id), ["user-review"]);
+  } finally { await bus.stop(); }
+});
+
 test("GET /agent/session-events validates agentId and cursor", async () => {
   const { bus, port } = await startBus();
   try {
@@ -798,6 +820,31 @@ test("SSE inject response carries CORS headers", async () => {
     assert.equal(status, 200);
     assert.equal(headers["access-control-allow-origin"], "tauri://localhost");
     assert.match(headers["content-type"] || "", /text\/event-stream/);
+  } finally {
+    await bus.stop();
+  }
+});
+
+test("Codex Desktop lists and merges multiple live sessions without a CLI", async () => {
+  const adapter = new MockAdapter({ agentId: "codex" });
+  adapter.isAvailable = async () => ({ ready: false, reason: "CLI unavailable" });
+  adapter.listSessions = async () => [
+    { id: "thread-a", name: "First Desktop task" },
+    { id: "thread-b", name: "Second Desktop task" },
+  ];
+  const { bus, port } = await startBus({
+    adapter,
+    sessionStatusProvider: () => [
+      { id: "codex:thread-a", state: "working", updatedAt: 10 },
+      { id: "codex:thread-b", state: "speaking", updatedAt: 11 },
+    ],
+  });
+  try {
+    const { body } = await jsonRequest(port, "GET", "/agent/sessions?agentId=codex");
+    assert.deepEqual(body.sessions.map(({ id, state }) => [id, state]), [
+      ["thread-b", "speaking"],
+      ["thread-a", "working"],
+    ]);
   } finally {
     await bus.stop();
   }

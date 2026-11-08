@@ -14,7 +14,7 @@ export const ACTIVE_DEVICE_SESSION_STATES = Object.freeze([
   "speaking",
   "waiting_user",
 ]);
-export const TERMINAL_DEVICE_SESSION_STATES = Object.freeze(["done", "error"]);
+export const TERMINAL_DEVICE_SESSION_STATES = Object.freeze(["done", "reply_complete", "error", "stopped"]);
 
 const DEVICE_SESSION_TERMINAL_UNTIL_KEY = "__p4TerminalUntilMs";
 const DEVICE_SESSION_TRANSITION_REVISION_KEY = "__p4TransitionRevision";
@@ -32,8 +32,15 @@ const normalizedSessionText = (value) => typeof value === "string"
   ? value.replace(/\s+/g, " ").trim()
   : "";
 
+export function hasVerifiedUnknownActivity(session) {
+  return normalizedSessionState(session) === "unknown" && session?.active === true
+    && session?.status === "running" && session?.activitySource === "live-agent-status"
+    && session?.stateDetailUnknown === true;
+}
+
 export function isActiveDeviceSession(session) {
-  return ACTIVE_DEVICE_SESSION_STATE_SET.has(normalizedSessionState(session));
+  return hasVerifiedUnknownActivity(session)
+    || ACTIVE_DEVICE_SESSION_STATE_SET.has(normalizedSessionState(session));
 }
 
 export function isTerminalDeviceSession(session) {
@@ -47,11 +54,15 @@ export function filterActiveDeviceSessions(sessions) {
 }
 
 function canonicalTerminalState(session) {
-  return ["error", "failed"].includes(normalizedSessionState(session)) ? "error" : "done";
+  const state = normalizedSessionState(session);
+  if (state === "stopped" || state === "reply_complete") return state;
+  return ["error", "failed"].includes(state) ? "error" : "done";
 }
 
 function isImplicitTerminalDeviceSession(session) {
-  return IMPLICIT_TERMINAL_DEVICE_SESSION_STATE_SET.has(normalizedSessionState(session));
+  // Registry inactivity is independent of lifecycle completion for DSH.
+  return session?.activitySource !== "live-agent-status"
+    && IMPLICIT_TERMINAL_DEVICE_SESSION_STATE_SET.has(normalizedSessionState(session));
 }
 
 function normalizedSessionId(session) {
@@ -259,7 +270,7 @@ export function reconcileDeviceSessionQueue(
           ...previous,
           [DEVICE_SESSION_SNAPSHOT_MISSING_SINCE_KEY]: missingSince,
         });
-      } else {
+      } else if (previous?.activitySource !== "live-agent-status") {
         // Some Agent surfaces remove a completed Session from their snapshot
         // without ever exposing done/error. Count the hold from its first
         // absence so a transient scan miss does not restart or extend the TTL.
@@ -297,6 +308,23 @@ export function reconcileDeviceSessionQueue(
   for (const session of incoming) {
     if (isActiveDeviceSession(session)) {
       append(withTransitionMetadata(null, session, currentTime));
+      continue;
+    }
+    if (normalizedSessionState(session) === "stopped") {
+      /* Admit a stopped card only while its stop timestamp is still inside the
+       * normal terminal hold. Host snapshots keep the stopped row forever, so
+       * admitting it unconditionally would recreate the card after every
+       * expiry and leave an old "已停止" bubble on screen. */
+      const stoppedAt = Number(session?.lastModified || session?.statusUpdatedAt || 0);
+      if (!Number.isFinite(stoppedAt) || stoppedAt <= 0) continue;
+      const terminalUntil = stoppedAt + DEVICE_SESSION_TERMINAL_HOLD_MS;
+      if (terminalUntil <= currentTime) continue;
+      append(withTransitionMetadata(
+        null,
+        { ...session, state: "stopped" },
+        currentTime,
+        terminalUntil,
+      ));
     }
   }
 

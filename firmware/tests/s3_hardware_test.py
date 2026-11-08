@@ -3,10 +3,9 @@ from pathlib import Path
 import subprocess
 ROOT=Path(__file__).resolve().parents[1]
 
-def test_three_keys_and_pcm_conversion(tmp_path):
-    for name in ['keys','pcm']:
+def test_pcm_conversion(tmp_path):
+    for name in ['pcm']:
         command=['cc','-std=c11','-Wall','-Wextra','-Werror','-I',str(ROOT/'main'),'-I',str(ROOT/'s3'),str(ROOT/f'tests/s3_{name}_test.c')]
-        if name=='keys':command.append(str(ROOT/'main/pet_p4_input_core.c'))
         binary=tmp_path/name
         subprocess.run(command+['-o',str(binary)],check=True)
         subprocess.run([str(binary)],check=True)

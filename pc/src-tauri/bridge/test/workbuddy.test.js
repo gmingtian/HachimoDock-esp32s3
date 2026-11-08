@@ -125,8 +125,22 @@ test("WorkBuddy transcript fallback is session, turn, path and role scoped", t =
   const outside = path.join(f.home, "session-a.jsonl");
   fs.writeFileSync(outside, JSON.stringify(answer));
   assert.equal(readCurrentReply({ ...payload, transcript_path: outside }, f.options), "");
-  fs.unlinkSync(file); fs.symlinkSync(outside, file);
-  assert.equal(readCurrentReply(payload, f.options), "");
+  fs.unlinkSync(file);
+  if (process.platform === "win32") {
+    // Junctions exercise real reparse-point traversal without requiring the
+    // optional Windows privilege for creating file symbolic links.
+    const outsideDir = path.join(f.home, "outside"), linkDir = path.join(dir, "linked");
+    fs.mkdirSync(outsideDir);
+    const escaped = path.join(outsideDir, "session-a.jsonl");
+    fs.writeFileSync(escaped, JSON.stringify(answer));
+    fs.symlinkSync(outsideDir, linkDir, "junction");
+    const linkedFile = path.join(linkDir, "session-a.jsonl");
+    assert.equal(fs.realpathSync(linkedFile), fs.realpathSync(escaped));
+    assert.equal(readCurrentReply({ ...payload, transcript_path: linkedFile }, f.options), "");
+  } else {
+    fs.symlinkSync(outside, file);
+    assert.equal(readCurrentReply(payload, f.options), "");
+  }
 });
 
 test("WorkBuddy transcript tail is bounded and ignores malformed/tool records", t => {

@@ -23,7 +23,7 @@ MIL = .0254
 FIXED_IO = {'LCD_CLK':21,'LCD_MOSI':47,'LCD_RST':45,'LCD_DC':40,'LCD_CS':41,
             'LCD_BL':42,'MIC_WS':4,'MIC_BCLK':5,'MIC_DIN':6,
             'SPEAKER_DOUT':7,'SPEAKER_BCLK':15,'SPEAKER_WS':16,
-            'PREVIOUS_GPIO':39,'NEXT_GPIO':38,'CONFIRM_GPIO':0}
+            'SW1_GPIO':39,'SW2_GPIO':38,'SW3_GPIO':0}
 
 
 def uid(value):
@@ -181,7 +181,7 @@ def build():
                 'bodyEnvelope':[min(xs)-1.27,min(ys)-1.27,max(xs)+1.27,max(ys)+1.27],
                 'heightVerified':False})
     design['amplifierSupplyUserConfirmed']='3V3'
-    design['joystickFirmwareStatus']='reserved-only; not initialized by current S3 code'
+    design['joystickFirmwareStatus']='A4 firmware: X=GPIO1, Y=GPIO2, press=GPIO8; official input semantics'
     design['microphoneMounting']={'source':'user-supplied pre-soldered module photo',
         'diameterMm':14.0,'socketRowPitchMm':7.62,
         'labelSide':'up/outward','longPins':'down/into-carrier-sockets',

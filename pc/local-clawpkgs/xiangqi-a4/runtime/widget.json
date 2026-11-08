@@ -1,0 +1,426 @@
+{
+  "schema_version": 1,
+  "engine": "p4-bounded-runtime-v4",
+  "logic": "p4-logic-v1",
+  "vars": {
+    "ui": {
+      "type": "int",
+      "init": 16
+    },
+    "level": {
+      "type": "int",
+      "init": 1
+    },
+    "phase": {
+      "type": "int",
+      "init": 0
+    }
+  },
+  "states": [
+    "ready",
+    "playing",
+    "result"
+  ],
+  "initial_state": "ready",
+  "transitions": [
+    {
+      "from": "*",
+      "on": "xiangqi.place"
+    },
+    {
+      "from": "*",
+      "on": "xiangqi.left"
+    },
+    {
+      "from": "*",
+      "on": "xiangqi.right"
+    },
+    {
+      "from": "*",
+      "on": "xiangqi.up"
+    },
+    {
+      "from": "*",
+      "on": "xiangqi.down"
+    },
+    {
+      "from": "*",
+      "on": "xiangqi.undo"
+    }
+  ],
+  "tick": [],
+  "game": {
+    "type": "xiangqi",
+    "tick_ms": 100,
+    "playing_state": "playing",
+    "result_state": "result",
+    "score_var": "ui",
+    "difficulty_var": "level",
+    "status_var": "phase",
+    "actions": {
+      "place": "xiangqi.place",
+      "left": "xiangqi.left",
+      "right": "xiangqi.right",
+      "up": "xiangqi.up",
+      "down": "xiangqi.down",
+      "undo": "xiangqi.undo"
+    }
+  },
+  "dashboard": {
+    "title": "中国象棋",
+    "eyebrow": "红方先行 · 离线人机",
+    "headline": {
+      "switch_state": {
+        "ready": "1键开始",
+        "playing": "人机对弈",
+        "result": "1键重开"
+      }
+    },
+    "metricLabel": "对手",
+    "metricValue": "普通",
+    "metricUnit": "",
+    "badge": "",
+    "note": "亮点可走 · 红圈可吃",
+    "footer": "摇杆选点 · 1键确认 · 2键取消/悔棋 · 3键退出",
+    "visualStyle": "clean",
+    "visualPalette": "sunset",
+    "visualLayout": "arcade",
+    "visualSprite": "target"
+  },
+  "surface": {
+    "engine": "p4-app-surface-v1",
+    "graphics": "p4-app-graphics-v1",
+    "bindings": "p4-variable-bindings-v1",
+    "typography": "p4-app-type-v1",
+    "interaction": "p4-app-interaction-v1",
+    "background": 65436,
+    "game_view": {
+      "engine": "p4-game-surface-v1",
+      "x": 8,
+      "y": 8,
+      "w": 396,
+      "h": 440
+    },
+    "images": [
+      {
+        "id": "board",
+        "asset": "assets/board.png",
+        "frame_width": 198,
+        "frame_height": 220,
+        "frames": 1,
+        "fps": 1
+      }
+    ],
+    "elements": [
+      {
+        "type": "image",
+        "x": 8,
+        "y": 8,
+        "w": 396,
+        "h": 440,
+        "color": 0,
+        "image": "board"
+      },
+      {
+        "type": "text",
+        "x": 424,
+        "y": 16,
+        "w": 204,
+        "h": 43,
+        "color": 14692,
+        "font_size": 34,
+        "line_height": 43,
+        "text": "中国象棋"
+      },
+      {
+        "type": "text",
+        "x": 424,
+        "y": 72,
+        "w": 204,
+        "h": 30,
+        "color": 31496,
+        "font_size": 24,
+        "line_height": 30,
+        "text": "对手难度"
+      },
+      {
+        "type": "text",
+        "x": 424,
+        "y": 108,
+        "w": 204,
+        "h": 38,
+        "color": 45445,
+        "font_size": 30,
+        "line_height": 38,
+        "text": "简单",
+        "show": {
+          "var": "level",
+          "min": 0,
+          "max": 0
+        }
+      },
+      {
+        "type": "text",
+        "x": 424,
+        "y": 108,
+        "w": 204,
+        "h": 38,
+        "color": 45445,
+        "font_size": 30,
+        "line_height": 38,
+        "text": "普通",
+        "show": {
+          "var": "level",
+          "min": 1,
+          "max": 1
+        }
+      },
+      {
+        "type": "text",
+        "x": 424,
+        "y": 108,
+        "w": 204,
+        "h": 38,
+        "color": 45445,
+        "font_size": 30,
+        "line_height": 38,
+        "text": "困难",
+        "show": {
+          "var": "level",
+          "min": 2,
+          "max": 2
+        }
+      },
+      {
+        "type": "text",
+        "x": 424,
+        "y": 164,
+        "w": 204,
+        "h": 35,
+        "color": 14692,
+        "font_size": 28,
+        "line_height": 35,
+        "text": "1键开始",
+        "show": {
+          "var": "phase",
+          "min": 0,
+          "max": 0
+        }
+      },
+      {
+        "type": "text",
+        "x": 424,
+        "y": 164,
+        "w": 204,
+        "h": 35,
+        "color": 14692,
+        "font_size": 28,
+        "line_height": 35,
+        "text": "红方走棋",
+        "show": {
+          "var": "phase",
+          "min": 1,
+          "max": 1
+        }
+      },
+      {
+        "type": "text",
+        "x": 424,
+        "y": 164,
+        "w": 204,
+        "h": 35,
+        "color": 14692,
+        "font_size": 28,
+        "line_height": 35,
+        "text": "请选择落点",
+        "show": {
+          "var": "phase",
+          "min": 2,
+          "max": 2
+        }
+      },
+      {
+        "type": "text",
+        "x": 424,
+        "y": 164,
+        "w": 204,
+        "h": 35,
+        "color": 14692,
+        "font_size": 28,
+        "line_height": 35,
+        "text": "设备思考中",
+        "show": {
+          "var": "phase",
+          "min": 3,
+          "max": 3
+        }
+      },
+      {
+        "type": "text",
+        "x": 424,
+        "y": 164,
+        "w": 204,
+        "h": 35,
+        "color": 45445,
+        "font_size": 28,
+        "line_height": 35,
+        "text": "你被将军",
+        "show": {
+          "var": "phase",
+          "min": 4,
+          "max": 4
+        }
+      },
+      {
+        "type": "text",
+        "x": 424,
+        "y": 164,
+        "w": 204,
+        "h": 35,
+        "color": 45445,
+        "font_size": 28,
+        "line_height": 35,
+        "text": "此处不可走",
+        "show": {
+          "var": "phase",
+          "min": 5,
+          "max": 5
+        }
+      },
+      {
+        "type": "text",
+        "x": 424,
+        "y": 164,
+        "w": 204,
+        "h": 35,
+        "color": 14692,
+        "font_size": 28,
+        "line_height": 35,
+        "text": "红方获胜",
+        "show": {
+          "var": "phase",
+          "min": 6,
+          "max": 6
+        }
+      },
+      {
+        "type": "text",
+        "x": 424,
+        "y": 164,
+        "w": 204,
+        "h": 35,
+        "color": 45445,
+        "font_size": 28,
+        "line_height": 35,
+        "text": "设备获胜",
+        "show": {
+          "var": "phase",
+          "min": 7,
+          "max": 7
+        }
+      },
+      {
+        "type": "text",
+        "x": 424,
+        "y": 164,
+        "w": 204,
+        "h": 35,
+        "color": 14692,
+        "font_size": 28,
+        "line_height": 35,
+        "text": "本局和棋",
+        "show": {
+          "var": "phase",
+          "min": 8,
+          "max": 8
+        }
+      },
+      {
+        "type": "text",
+        "x": 424,
+        "y": 224,
+        "w": 204,
+        "h": 33,
+        "color": 9263,
+        "font_size": 26,
+        "line_height": 33,
+        "text": "亮点可走"
+      },
+      {
+        "type": "text",
+        "x": 424,
+        "y": 258,
+        "w": 204,
+        "h": 33,
+        "color": 56103,
+        "font_size": 26,
+        "line_height": 33,
+        "text": "红圈可吃"
+      },
+      {
+        "type": "text",
+        "x": 424,
+        "y": 306,
+        "w": 204,
+        "h": 30,
+        "color": 14692,
+        "font_size": 24,
+        "line_height": 30,
+        "text": "摇杆切换落点"
+      },
+      {
+        "type": "text",
+        "x": 424,
+        "y": 340,
+        "w": 204,
+        "h": 33,
+        "color": 14692,
+        "font_size": 26,
+        "line_height": 33,
+        "text": "1键确认"
+      },
+      {
+        "type": "text",
+        "x": 424,
+        "y": 374,
+        "w": 204,
+        "h": 30,
+        "color": 14692,
+        "font_size": 24,
+        "line_height": 30,
+        "text": "2键取消/悔棋"
+      },
+      {
+        "type": "text",
+        "x": 424,
+        "y": 408,
+        "w": 204,
+        "h": 30,
+        "color": 31496,
+        "font_size": 24,
+        "line_height": 30,
+        "text": "3键退出"
+      },
+      {
+        "type": "text",
+        "x": 12,
+        "y": 450,
+        "w": 620,
+        "h": 30,
+        "color": 31496,
+        "font_size": 24,
+        "line_height": 30,
+        "text": "开局前上下选难度 · 红方先行 · 休闲规则"
+      }
+    ]
+  },
+  "input": {
+    "engine": "p4-input-v1",
+    "repeat": [
+      "xiangqi.left",
+      "xiangqi.right",
+      "xiangqi.up",
+      "xiangqi.down"
+    ]
+  }
+}

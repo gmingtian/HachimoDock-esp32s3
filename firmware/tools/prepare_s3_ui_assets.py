@@ -105,7 +105,7 @@ def generate(output):
 
     def source(path):
         path = Path(path)
-        sources[str(path.relative_to(REPO))] = digest(path.read_bytes())
+        sources[path.relative_to(REPO).as_posix()] = digest(path.read_bytes())
         return path
 
     def write(name,data):
@@ -179,7 +179,7 @@ def generate(output):
             raw.extend(struct.pack('<HB',(r>>3)<<11|(g>>2)<<5|(b>>3),a))
         write(Path(f'instruments/wooden_fish_{name}.deflate'),zlib.compress(raw,9))
         images.append({'role':'instrument','source':str(src.relative_to(REPO)),'size':list(size)})
-    files = {str(p.relative_to(output)):digest(p.read_bytes()) for p in sorted(output.rglob('*'))
+    files = {p.relative_to(output).as_posix():digest(p.read_bytes()) for p in sorted(output.rglob('*'))
              if p.is_file() and p.name != 'inventory.json'}
     inventory = {'format':'s3-native-ui-v1','display':[320,240],'logicalCanvas':[640,480],
                  'components':identifiers,'images':images,'sources':sources,'files':files}

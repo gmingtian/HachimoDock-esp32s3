@@ -22,6 +22,9 @@ static esp_err_t g_backlight_status=ESP_ERR_INVALID_STATE;
 static bool g_revealed;
 #define PET_S3_LCD_STRIPE_ROWS 16
 #define PET_S3_LCD_STRIPE_BUFFERS 2
+#ifndef PET_S3_LCD_SPI_HZ
+#define PET_S3_LCD_SPI_HZ 40000000
+#endif
 
 static bool IRAM_ATTR pet_s3_lcd_done(esp_lcd_panel_io_handle_t io,
     esp_lcd_panel_io_event_data_t *event,void *ctx) {
@@ -50,7 +53,7 @@ esp_err_t pet_p4_lcd_init(void) {
     .max_transfer_sz=PET_S3_LCD_WIDTH*PET_S3_LCD_STRIPE_ROWS*2};
   ESP_RETURN_ON_ERROR(spi_bus_initialize(SPI2_HOST,&bus,SPI_DMA_CH_AUTO),TAG,"SPI bus");
   esp_lcd_panel_io_spi_config_t io={.dc_gpio_num=PET_S3_LCD_DC,.cs_gpio_num=PET_S3_LCD_CS,
-    .pclk_hz=40000000,.spi_mode=0,.trans_queue_depth=1,.lcd_cmd_bits=8,.lcd_param_bits=8,
+    .pclk_hz=PET_S3_LCD_SPI_HZ,.spi_mode=0,.trans_queue_depth=1,.lcd_cmd_bits=8,.lcd_param_bits=8,
     .on_color_trans_done=pet_s3_lcd_done,.user_ctx=g_transfer_done};
   ESP_RETURN_ON_ERROR(esp_lcd_new_panel_io_spi(SPI2_HOST,&io,&g_io),TAG,"panel SPI IO");
   esp_lcd_panel_dev_config_t panel={.reset_gpio_num=PET_S3_LCD_RST,

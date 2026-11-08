@@ -126,7 +126,7 @@ for(const [id,checks] of Object.entries(mechanisms)){
   if(id==="city-radio"){
     r.surface.input="p4-media-touch-v1";
     for(const n of r.surface.elements){
-      if(n.type==="transport")n.action="media.toggle";
+      if(n.type==="transport")Object.assign(n,{action:"media.toggle",x:445,y:325});
       if(n.text==="上一台")Object.assign(n,{action:"media.previous",y:330,h:54});
       if(n.text==="下一台")Object.assign(n,{action:"media.next",y:330,h:54});
       if(n.bind==="message")Object.assign(n,{y:54});

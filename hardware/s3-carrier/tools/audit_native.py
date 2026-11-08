@@ -24,7 +24,8 @@ def main():
     args=parser.parse_args()
     repo=ROOT.parents[1]
     files=[repo/'firmware/s3'/name for name in
-           ['pet_s3_board.h','pet_s3_audio_codec.h','pet_s3_input_task.inc','pet_s3_lcd.inc']]
+           ['pet_s3_board.h','pet_s3_audio_codec.h','pet_s3_lcd.inc']]
+    files.append(repo/'firmware/main/pet_p4_input.c')
     code={k:int(v) for k,v in re.findall(r'^#define PET_S3_(\w+) (\d+)$',files[0].read_text(),re.M)}
     board=pcbnew.LoadBoard(str(args.board))
     native=[]
@@ -57,7 +58,7 @@ def main():
         ('LCD_CS','28','J1','7'),('LCD_BL','27','J1','8'),
         ('MIC_WS','4','U3','5'),('MIC_BCLK','5','U3','6'),('MIC_DIN','6','U3','3'),
         ('SPEAKER_DOUT','7','U2','5'),('SPEAKER_BCLK','8','U2','6'),('SPEAKER_WS','9','U2','7'),
-        ('PREVIOUS_GPIO','30','SW1','1'),('NEXT_GPIO','31','SW2','1'),('CONFIRM_GPIO','35','SW3','1')]
+        ('SW1_GPIO','30','SW1','1'),('SW2_GPIO','31','SW2','1'),('SW3_GPIO','35','SW3','1')]
     for macro,devpin,ref,pin in connections:
         net=f'GPIO{code[macro]}'
         actual=Counter((p['ref'],p['pin']) for p in native if p['net']==net)
@@ -89,10 +90,11 @@ def main():
             assert p['drill']>=1.19,f'Socket tail hole too small: {p}'
         if p['ref']=='U1' and p['pin'] in ['13','14','32','33','34']:
             assert p['net']=='','USB or PSRAM pins must not connect to carrier peripherals'
-    audio=files[1].read_text();inputs=files[2].read_text();lcd=files[3].read_text()
+    audio=files[1].read_text();inputs=files[3].read_text();lcd=files[2].read_text()
     assert 'I2S_STD_SLOT_LEFT' in audio,'Recheck INMP441 LR=GND for changed audio slot config'
-    assert 'GPIO_PULLUP_ENABLE' in inputs and 'gpio_get_level(pins[key])==0' in inputs,'Recheck key polarity'
-    assert 'no ADC/encoder' in inputs,'Review joystick firmware status after driver changes'
+    assert 'GPIO_PULLUP_ENABLE' in inputs and 'gpio_get_level(buttons[i].gpio) == 0' in inputs,'Recheck key polarity'
+    assert 'ADC1_GPIO1_CHANNEL' in inputs and 'ADC1_GPIO2_CHANNEL' in inputs
+    assert code['JOYSTICK_X_GPIO']==1 and code['JOYSTICK_Y_GPIO']==2 and code['JOYSTICK_PRESS_GPIO']==8
     assert 'gpio_set_level(PET_S3_LCD_BL,1)' in lcd,'Recheck BL active-high polarity'
     assert positions_match,'Native pad coordinates differ from reviewed design'
     report={'revision':REVISION,'result':'PASS','boardSha256':sha(args.board),'codeSha256':{p.name:sha(p) for p in files},
@@ -100,7 +102,7 @@ def main():
             'filledGroundLayers':['F.Cu','B.Cu'],'nativeAntennaKeepoutVerified':True,
             'existingFirmwareSignalsVerified':rows,'powerPadMappingsVerified':power,
             'micChannel':'left; LR grounded','keys':'active-low with firmware internal pull-ups',
-            'joystick':'GPIO1/2/8 reserved only; current S3 code does not initialize joystick',
+            'joystick':'X=GPIO1/B2, Y=GPIO2/A2, press=GPIO8/B+D; official input semantics',
             'amplifierSupply':'3V3; confirmed by user; SD tied to 3V3; GAIN through JP1',
             'gainSelector':{'nativePinOrderVerified':True,'pins':{'1':'+3V3','2':'AMP_GAIN','3':'GND'},
                             'singleShuntModesDb':{'1-2':6,'open':9,'2-3':12},
@@ -121,7 +123,7 @@ def main():
     md += ['', '麦克风 L/R 接地匹配当前左声道采集；按键另一端接地匹配内部上拉、低电平按下逻辑。',
         '功放 VIN 保持用户确认的 3V3，SD 接 3V3；GAIN 连接 JP1 中间2脚，1脚接3V3、3脚接GND。I²S模式下单帽1-2为6dB，拔帽为9dB，2-3为12dB（模块自身若有增益电阻需先核实）。喇叭直接接模块端子。',
         'JP1仅使用一个2.54mm跳线帽，断电后切换；禁止同时跨接1-2和2-3，否则短接3V3与GND。不占用GPIO，不新增电阻电容。',
-        'GPIO1/2/8 只预留给摇杆，当前 S3 固件不采集摇杆。',
+        '摇杆 X=GPIO1（B2）、Y=GPIO2（A2）、按压=GPIO8（B/D），固件启用官方按钮/摇杆操作。',
         '果云使用两条 1×21P 排母；功放 1×7P；圆形麦克风两条 1×3P、排距 7.62mm。模块按元件面安装，不能照背面视图把引脚顺序镜像。',
         '麦克风预焊照片已核对：带字面朝外、长针向下；元件面左列由上到下 SD/3V3/GND，右列 SCK/WS/L/R。',
         '屏幕接口由左到右 GND/VCC/SCL/SDA/RES/DC/CS/BLK，VCC=3V3；与用户屏幕图片同序。',

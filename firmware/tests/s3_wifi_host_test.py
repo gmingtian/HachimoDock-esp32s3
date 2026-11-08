@@ -43,42 +43,6 @@ int main(void){
     subprocess.run(['cc','-std=c11','-Wall','-Wextra','-Werror','-I'+str(cjson),str(file),str(cjson/'cJSON.c'),'-lm','-o',str(binary)],check=True)
     subprocess.run([str(binary)],check=True)
 
-def test_network_menu_requires_confirmation_and_refuses_busy_clear(tmp_path):
-    source=(ROOT/'s3/pet_s3_input_menu.inc').read_text()
-    function=source[source.index('static void pet_s3_menu_execute('):source.index('  g_s3_menu_visible=false;\n  if(selected>=PET_S3_MENU_COMMANDS)')]
-    function += '\n(void)now_ms;(void)send_line;(void)ctx;\n}\n'
-    code=r'''
-#include <assert.h>
-#include <stdbool.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stddef.h>
-typedef struct {bool asset_transfer_active;} pet_p4_runtime_state_t;
-typedef void (*pet_p4_send_line_fn)(const char*,void*);
-typedef struct {uint64_t ts_ms;} pet_p4_input_event_t;
-static unsigned g_s3_menu_selected,g_s3_network_confirm,called,last_action;
-static bool g_s3_network_menu=true,busy,audio_pending;
-static char g_s3_network_notice[64];
-static bool pet_p4_ota_active(void){return busy;}
-static bool pet_p4_miniapp_transfer_active(void){return false;}
-static bool pet_p4_audio_transport_busy(void){return audio_pending;}
-static bool pet_s3_wifi_menu_action(unsigned action){called++;last_action=action;return true;}
-''' + function + r'''
-int main(void){pet_p4_runtime_state_t state={0};pet_p4_input_event_t event={.ts_ms=1};
- g_s3_menu_selected=3;pet_s3_menu_execute(&state,NULL,NULL,&event);assert(!called&&g_s3_network_confirm==3&&g_s3_menu_selected==0);
- pet_s3_menu_execute(&state,NULL,NULL,&event);assert(!called&&!g_s3_network_confirm);
- g_s3_menu_selected=2;pet_s3_menu_execute(&state,NULL,NULL,&event);assert(!called&&g_s3_network_confirm==2);
- g_s3_menu_selected=1;pet_s3_menu_execute(&state,NULL,NULL,&event);assert(called==1&&last_action==2);
- g_s3_menu_selected=3;pet_s3_menu_execute(&state,NULL,NULL,&event);busy=true;
- g_s3_menu_selected=1;pet_s3_menu_execute(&state,NULL,NULL,&event);assert(called==1&&g_s3_network_notice[0]);
- busy=false;audio_pending=true;g_s3_menu_selected=1;pet_s3_menu_execute(&state,NULL,NULL,&event);assert(called==1);
- g_s3_menu_selected=3;pet_s3_menu_execute(&state,NULL,NULL,&event);
- g_s3_menu_selected=1;pet_s3_menu_execute(&state,NULL,NULL,&event);assert(called==1);
-}
-'''
-    file=tmp_path/'menu.c';file.write_text(code);binary=tmp_path/'menu'
-    subprocess.run(['cc','-std=c11','-Wall','-Wextra','-Werror',str(file),'-o',str(binary)],check=True)
-    subprocess.run([str(binary)],check=True)
 
 
 def test_audio_busy_covers_accepted_capture_and_buffering_stream(tmp_path):

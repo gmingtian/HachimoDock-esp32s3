@@ -1,10 +1,12 @@
 {
   "components": [
     "city-radio",
+    "cloud-hop",
     "stock-watchlist",
     "wooden-fish",
     "daily-news",
     "book-pocket",
+    "block-combo",
     "tomato-clock",
     "hachimi-sounds",
     "snake-turn",
@@ -13,6 +15,7 @@
     "hachimi-home",
     "hachimi-travel",
     "hachimi-garden",
+    "bloomfrog_companion",
     "two-key-pong",
     "hachimi-weather",
     "daily-almanac",
@@ -35,139 +38,158 @@
     "instruments/wooden_fish_mallet.deflate": "cb5a7b000360b706867ce2bf8b493ef3c5c1c8b1bfbfce46b0f19e430455e0c0",
     "launcher/center_background.jpg": "8060ec2240502eca0974ec76b8a1e36997f59e69b20d2df8a5f5d9fe440cb13f",
     "launcher/center_thumbs.deflate": "f918a096bef778c6a363affc99ccbbb27c555b17c5423529c78b1c8c20b470f4",
-    "packages/answer-book/assets/background.png": "bf9f28a77755194fd463a366c7e90cb7129944d44f47e0eb4ea6322a0bef17bb",
-    "packages/answer-book/assets/type0.png": "bfb28bfc1a1679b297ac02b41155542d8305e9b8b37c709a4d16bda5e33ba201",
+    "packages/answer-book/assets/background.png": "563c76b8c1b36f6c7c2229c47959ac2ca6be9e1f14b0a2e3c317031db0079f94",
+    "packages/answer-book/assets/type0.png": "f39826da657d2e5358540b923fc8496e9b04deb0ed7705751ea1508f35c8c8bd",
     "packages/answer-book/buttons.json": "cab9eba2c007c24042cc170ec61dfa2535581328c9cb8be999516552b16d71a3",
     "packages/answer-book/component.json": "c02f47a2b84611da3d13cdee83671e63be16ff6cecfaaea4a3dfd1ea12a422fd",
     "packages/answer-book/runtime/widget.json": "9b921476bead1ce56d6c93123255928400127bee3ddc76c2fadad00b1cdc1922",
-    "packages/book-pocket/assets/background.png": "fd11321c1b29e16f514efc03a794d8649b148c68c6a461034462e69845b67c37",
-    "packages/book-pocket/assets/digits.png": "abf01391e717dba4cd9533e4454e639acc5c7d3d0eb1bbe321b5c81e9906816b",
-    "packages/book-pocket/assets/labels.png": "8902b1512493b1264947c91f7ec9ed9bc51265be2bd4fe5baf822d1743636404",
+    "packages/block-combo/assets/background.png": "a867fe6aab0160cc2ab7f8e9a623c7384f97a2f16c129b36043e12bf1ce8324f",
+    "packages/block-combo/assets/type0.png": "d4635bd7fa8b1244a1a53c498113132f79fd1d694583ff9bdab5d8d05d7a1971",
+    "packages/block-combo/assets/type1.png": "f836e53c932b2de3765753496dd30ae8658ab8aed42d9fa4d98c34daf2180c2d",
+    "packages/block-combo/buttons.json": "0c86c19362e47ce31c48c2642cdba8c9b275ae7ff5777e11a989ca2d56265c5e",
+    "packages/block-combo/component.json": "b71385f548273c1f28e2428eb352874c0f7a97170a293a603790236b1721339d",
+    "packages/block-combo/runtime/widget.json": "da6ba3635b942f28eeb9c35feeb53827c00cc20096711f3cac638b6b20689c87",
+    "packages/bloomfrog_companion/assets/background.png": "d9cfd23350df6c9464e8544143a26b48d64129842e795aaff16f808c894e863d",
+    "packages/bloomfrog_companion/assets/bloomfrog.png": "2052d8697f1114694d66579375dde0e56e21cb991aa056bff7ff88da351b05c9",
+    "packages/bloomfrog_companion/assets/type0.png": "9d9557dbb998322035f6d5d235be01c506ae9d4746cdc4d9a83c81e6e5ac05c9",
+    "packages/bloomfrog_companion/buttons.json": "68f0881c5ad02b46b972d54edd89bea775a797382ddcaaf6ac39c0455fb19296",
+    "packages/bloomfrog_companion/component.json": "7d0d694d6c195282cb49eead7bb36d64950eeb676c55c1c3dbc0eed811ab2809",
+    "packages/bloomfrog_companion/runtime/widget.json": "d90a91324f796e2963e97b50aecce071fc3c9f0b509edbd51daf856298a268e0",
+    "packages/book-pocket/assets/background.png": "107830f7b51c088d2dcdabef2f4eff2efd7e71d3261cce26897ee2bcf907c9f5",
+    "packages/book-pocket/assets/digits.png": "17cb95e005a039e1abb10c88fb574d1bbb6a755cbaf24c523aaf3300a66f7132",
+    "packages/book-pocket/assets/labels.png": "d826f3705e205b428765f80a5349999610cf3aedcc9773d5f3dfff361639f745",
     "packages/book-pocket/buttons.json": "45f8e2de377dde508706435ed88670667a86020e61bb1d0f5d0f6c1bc08ed09a",
     "packages/book-pocket/component.json": "8dbb12ddb89f81eae1cf3c7c2e764555d12a9827c8c6765d8a4e112b3cea4fc4",
     "packages/book-pocket/runtime/widget.json": "84fea5ca87de6262223100b9d58d7e508ae0f4d1939bb8859c8ca319a2b96881",
-    "packages/city-radio/assets/background.png": "c23a57ab3862876dd11c7761ea28d2d175e101bf5611eb64c755882e949f3683",
-    "packages/city-radio/assets/vinyl.png": "c75e4088bc23ca6d5f1c41bdbe4a76e5b6a71bf8555df2845b6f478a5f8399c7",
+    "packages/city-radio/assets/background.png": "11b4cd26d587ce138bfa37d8494afe78fdc8d0cfde909dc346512a9e16d33ec3",
+    "packages/city-radio/assets/vinyl.png": "88a88b2f9ed7c034d177d822449c496856f01a66d799f0540441dfc92375b5b4",
     "packages/city-radio/buttons.json": "55f179d145919a3f71a490ff96dac53afd6f8b109d3cab5c72f268cb3785b56d",
-    "packages/city-radio/component.json": "f21c13e4db72ae98fdeff2648474da75f34dbf2777e9fb47823b3f0b343be954",
-    "packages/city-radio/runtime/widget.json": "c987c7678063886e3edfaa6bb9ede532109ad8fa84fbbcdb384f126cc89b9d28",
-    "packages/computer-status/assets/background.png": "4a7186fa5f3110ea19acea25c15e36210823849908b58ef314c9ea2b93c04d88",
-    "packages/computer-status/assets/type0.png": "1561cddaed82c1457bcca21cd4347491093cf7de7fab61742e07d15e5e9bd127",
-    "packages/computer-status/assets/type1.png": "49e6f82ee1a2a59390410799b693188d99d0ce1368c0c07002e108e78cb2797d",
+    "packages/city-radio/component.json": "1bf159fe130ae4893af956cad0e0d724752b6f70726da85d70e02712ae0d8c99",
+    "packages/city-radio/runtime/widget.json": "b4c19fdfbe7e934a637ba0857762cc756e259d288f090b2b20e69686bd949489",
+    "packages/cloud-hop/assets/background.png": "f4a87ef3e8f3bd12806c94bdeeb9f518abd882226b879dd9156abe3b6fb0a171",
+    "packages/cloud-hop/assets/digits.png": "17cb95e005a039e1abb10c88fb574d1bbb6a755cbaf24c523aaf3300a66f7132",
+    "packages/cloud-hop/assets/hero.png": "d33e0d8683240d47ed0f255e50a5f7015bb495676dfe66af512f1220429626fd",
+    "packages/cloud-hop/assets/labels.png": "c23f2ef3a86d77cf5e292806787b847e1ffb34d806c37ca327b18ff4f43e3896",
+    "packages/cloud-hop/buttons.json": "682f984504dfc2306e45041754b040ee759bc713ee9af89e0d76045ad130ae1e",
+    "packages/cloud-hop/component.json": "b2cb9445fb9e4b11e29dc7f6b6d74f3575ea8ac2d4ec8bd2d55b732d6c493958",
+    "packages/cloud-hop/runtime/widget.json": "fcde2e6d72a9d24229f3e473bca801edf42bc2c3cb047696f56d7cd36ff2734e",
+    "packages/computer-status/assets/background.png": "685ce66927ea66a5f8b2eca4bee9aeead19a901f0ae1013220fcbb81592828a1",
+    "packages/computer-status/assets/type0.png": "f5a7840408d1162d93ffe21e0fbdc99ea266ab7b8f038ad08b9bdd577af0cd40",
+    "packages/computer-status/assets/type1.png": "e25ab6e9a5b431b69ceefb5e2ca012c120d08aa50dcfd1bd7278a946d0fab5f3",
     "packages/computer-status/buttons.json": "e01d8a010a0eefe3ba8a882733f54fd21efc2557a25bb22b0e0e38141ef83e91",
     "packages/computer-status/component.json": "2077e1704448337f27129ad5289ef695c37bd3e75a18d2a0dc8d43debec9286f",
     "packages/computer-status/runtime/widget.json": "cf95a0e0e4e92dd46103b44ab26aba75451a9b9b022b3942df346b2934d8d35b",
-    "packages/daily-almanac/assets/background.png": "18d963eb33b462038a783bfbc706be87704975575727ece334813185ef293e93",
-    "packages/daily-almanac/assets/digits.png": "abf01391e717dba4cd9533e4454e639acc5c7d3d0eb1bbe321b5c81e9906816b",
-    "packages/daily-almanac/assets/labels.png": "4d5bc27df00503d56c63e5de5f1b9a59995d2de7776692673e00e05f5e17ba69",
+    "packages/daily-almanac/assets/background.png": "52df01ea82701c1d0acd84b101386b8fb96a5d18ad7fb9245409b1cb491560d8",
+    "packages/daily-almanac/assets/digits.png": "17cb95e005a039e1abb10c88fb574d1bbb6a755cbaf24c523aaf3300a66f7132",
+    "packages/daily-almanac/assets/labels.png": "bd69a21ee5e2b9385c1ee0b4a46846b7f41abab9fce40fd5715cdfe33dce752e",
     "packages/daily-almanac/buttons.json": "0a400cb586f76cc3ac6efe38e785a80028f8b1dd0642954eb68848f3ac9e50a8",
     "packages/daily-almanac/component.json": "ff1293d71685001a7956c474bb920fb743ceac03b1ef5549994da4145c2099a7",
     "packages/daily-almanac/runtime/widget.json": "203a76a8c5f7d50b943a81a598b9648c7cda0cee941b99ab85f80151e7f47f7c",
     "packages/daily-news/assets/background.png": "74bdc161d4b27b60555a375b94b279232d1c025e347dfba238e9bb378a550ac0",
-    "packages/daily-news/assets/labels.png": "6cc309a3493a949ec1cd9a79b9657b13961c80edb6c154d04219105bea9cf679",
+    "packages/daily-news/assets/labels.png": "56aa269119faa5890fbfb61321196984aff3dbaf942d87b71f191990922ba2eb",
     "packages/daily-news/buttons.json": "1facb73f2275bd60ee8159cddce5c4927533d29aa700004f25d49c62c81065b1",
     "packages/daily-news/component.json": "f6d9a73a54e7e6680f51ed1576446788d5f3a3c927dadaecd81fd94d4ff28df6",
     "packages/daily-news/runtime/widget.json": "aeb6e00c57ab5793d9badeb964b36362edaca60834b685335b1cc7e3fc363192",
-    "packages/decision-capsule/assets/background.png": "e449a77c5dfa6ecd4c357c83107ca8b02aabf9ea20dea953ae17beb30e34ec45",
-    "packages/decision-capsule/assets/type0.png": "675072a921d03b0069ce1922bd2c6f90eb0b9300357cee568882cecba60319f6",
+    "packages/decision-capsule/assets/background.png": "cfa80529448dda6e0a7b9c05242b40e652f99f7e69a36a74bea1b7af59e40f10",
+    "packages/decision-capsule/assets/type0.png": "2bd6933381fafa4e6a4e48a501004d00c50dc25a4a173402de8fa36c029a215f",
     "packages/decision-capsule/buttons.json": "129b0b254f6c1458ddd73ee56a79eebd5668a956e93d6686dfee556e5a4d8c94",
     "packages/decision-capsule/component.json": "b30ee5f6c20344ee19430c886238234c5c2dd9b3eebd7a17e32e756e323f4ee7",
     "packages/decision-capsule/runtime/widget.json": "f8c22fdab35242e1974d1250c27424d03dc31236bb05903111997c2946fb9441",
-    "packages/drink-reminder/assets/background.png": "6c90387fb11153cca2a7810a429112fd5a3b3d6a9798a923aa8a4cc0ae111de0",
-    "packages/drink-reminder/assets/type0.png": "e49530f709f977fb033a0b56d0b750150334d549de097580bda205ccd123b8bb",
-    "packages/drink-reminder/assets/type1.png": "f01fa423e617795a32431d3538fd509518f3fb5778dc926a6e4966ef418931c9",
+    "packages/drink-reminder/assets/background.png": "88f60ffef6b2db4fd59370f5ffeff1f9e5b85138801f5e6f3e0d06afa1fc8ef0",
+    "packages/drink-reminder/assets/type0.png": "b61ac9f6a8a84615e41bdb8eda155673e897a2abf17e2b537ccac7b7d2b1daa7",
+    "packages/drink-reminder/assets/type1.png": "ff50f488985347fc64d3f8791c7ccd39a9b55384e57a684e06a508fa270ab17f",
     "packages/drink-reminder/buttons.json": "e7ae2bc13a86a14eab0733cc63710bc887dc98a357a9eba43c37b083c4dde632",
     "packages/drink-reminder/component.json": "53c77b190c65cd5934c21b5fc70045117ca9ece579077f8793a4a3c6beefffdc",
     "packages/drink-reminder/runtime/widget.json": "bb075475d9d21ccb3728cc6994a06aeedac1ba6829d0ab867cdbe0b1937c94f0",
-    "packages/flappy-bird/assets/background.png": "78a089e6390f75d1bde00af36e6a539a31477231a2a051ef532ea0140b5b348b",
-    "packages/flappy-bird/assets/type0.png": "0da8ccf1252c0165b18efc8f07ccdfd92fe7db88187f12988717f493a1586d8e",
-    "packages/flappy-bird/assets/type1.png": "bd4c183bb0ad7b50e2c958b98824b22a3ae4c115d64933a83bde8e3145b94bad",
+    "packages/flappy-bird/assets/background.png": "1fe41da7c277a1f105d6c0528ce093ac6cdeec3922687497781861ddf31bcb11",
+    "packages/flappy-bird/assets/type0.png": "64bb186c6edd406697c351225464dcb57f1f6bf939fbc5d3f03daed6745a8f2b",
+    "packages/flappy-bird/assets/type1.png": "dd2bd40e44a704ff96f9dd58e38df131b969c6a70658d85a47bd2098659215ca",
     "packages/flappy-bird/buttons.json": "2cfe61aeac2ee3a8cdc7c0d04d2da643ffdddd783f3f8872a75d422684553618",
     "packages/flappy-bird/component.json": "8241d29d0135c26a3203eb4494150b4e9a393cdc8b1abd18d58a1a82eb591926",
     "packages/flappy-bird/runtime/widget.json": "9201f5c670806f2515c7b4214590adb50b6f7851a702e7ed4fbf4d178c47c915",
-    "packages/hachimi-break/assets/background.png": "d7f09f46270c545635884707505d02206049ce8d39f3ad258eaf4e44b2d201f7",
-    "packages/hachimi-break/assets/type0.png": "e49530f709f977fb033a0b56d0b750150334d549de097580bda205ccd123b8bb",
-    "packages/hachimi-break/assets/type1.png": "ca749dba65bf962c7dd6535ac72db80234455a690f3e4f738ee29507c404b04f",
+    "packages/hachimi-break/assets/background.png": "0e58d9b06d727414ff0f9fc7f3f3a5b64bb12f3384d3d324b619be4941284392",
+    "packages/hachimi-break/assets/type0.png": "b61ac9f6a8a84615e41bdb8eda155673e897a2abf17e2b537ccac7b7d2b1daa7",
+    "packages/hachimi-break/assets/type1.png": "f7e31d69594a90e95718256569091e118d487cf794574fe38711c4adb5ab17ef",
     "packages/hachimi-break/buttons.json": "6f75e78ba13e988d30432feba0c14683b336d7e8c32d7fe6db219cf180664541",
     "packages/hachimi-break/component.json": "c0f110b6ff69b0350eda91371ce1a274d5a59d559b2f44a92ad310c00acf287d",
     "packages/hachimi-break/runtime/widget.json": "c7d33790da90f8739fb7dcc03dd819de5b3cb3f4e098d76256e893f8f133e612",
-    "packages/hachimi-garden/assets/background.png": "e7f91f7d8d3a14f8b478e698bce560745d2885c5c44734be0ac7397f51b9dd42",
-    "packages/hachimi-garden/assets/decor.png": "9fc8db20afc24293c10041d3735d90e11c704940cc6ca9f893bba3e5af138ae3",
-    "packages/hachimi-garden/assets/type0.png": "e49530f709f977fb033a0b56d0b750150334d549de097580bda205ccd123b8bb",
+    "packages/hachimi-garden/assets/background.png": "0b14f62c688d3ab0e0bde7deacd99b207978e2ede0bf4c58f1852d147a25368b",
+    "packages/hachimi-garden/assets/decor.png": "5c9ebbf2d9ce7b8c1277863d1f415693a0de53a0b0382edbb0c3a62c173b641f",
+    "packages/hachimi-garden/assets/type0.png": "b61ac9f6a8a84615e41bdb8eda155673e897a2abf17e2b537ccac7b7d2b1daa7",
     "packages/hachimi-garden/buttons.json": "24e94c4ae7e40a9660b37fa95cbbe94bdc05cd15cb8be4ee21322d62baeb267f",
     "packages/hachimi-garden/component.json": "c4ebf175d6b252999e330cb5f64e23c54e737652540d36bd5f82fed2170b3b04",
     "packages/hachimi-garden/runtime/widget.json": "a15a32294f7293ed56fe0def08ccef73cf17ca137feb9db813ab6eef029c7e70",
-    "packages/hachimi-home/assets/background.png": "ab9e9f99610bab8e2901cd90c901a921a0ee71b160cd4ec7c82d60e44552f57c",
-    "packages/hachimi-home/assets/decor.png": "5876b08d2bcfa29f62e7c66f4cd0c9a99e108d98ac7cab366fcc669b0a734627",
-    "packages/hachimi-home/assets/type0.png": "d4d6db77bab08cdfe39f76cf2f557d047189243c39370c1cbdf685b70bb0ed7b",
+    "packages/hachimi-home/assets/background.png": "af93a902e5ca2fbfebe50b5b389c42293329e8187f812cf2ffde077c1001a763",
+    "packages/hachimi-home/assets/decor.png": "c3f12b7a5fa36a06fc650d134037d8c15f03b4f80deec1f3f0d86c03e2eca7cd",
+    "packages/hachimi-home/assets/type0.png": "9f164acf0a2a609cc39ce94e0a64b95b3e00492bf2cb7e0a938673b67ebf12ec",
     "packages/hachimi-home/buttons.json": "a737931c5d09ae9154acb0d7a27a28625d36fbc274d860454728f68b25fc1287",
     "packages/hachimi-home/component.json": "e7928eb612196f76ca2ca2364c21d68fc14d8bfaa87e07616b6be7954cf1440f",
     "packages/hachimi-home/runtime/widget.json": "83ea26f53bb9ec426b85bf4ec05813e09e8e0fa224cc914936e73a62da48a95e",
-    "packages/hachimi-learn/assets/background.png": "84ee711870b4db61b0624d80b03b3dd7c2700ed8ba1b2bf700269396330d7ce7",
-    "packages/hachimi-learn/assets/type0.png": "2790b219f259b6156741d5daa63f1bb4340c8c2d0d3dc5cfbb4d891fba55ef7f",
-    "packages/hachimi-learn/assets/type1.png": "83fdccf0c439acbd982c489706b9ef0beed29cde0c91e4fc9c7b709ffa7adb27",
+    "packages/hachimi-learn/assets/background.png": "f30c1828ce2943ffb36d47985e39769a43984cdb585793edb66e098fb2999d2d",
+    "packages/hachimi-learn/assets/type0.png": "ef0182209ebcf0fc8b2b2b7a085273ef56ef50bcdea6918a7a25bfe50299bfdc",
+    "packages/hachimi-learn/assets/type1.png": "53b0ae23279ab34733f099d78e4a836f2df5dee16f66d5cdeb72fab0b29aec49",
     "packages/hachimi-learn/buttons.json": "21ceb0ac0defddbd3f044cf0ae93e9fac07aab680a1e37a624b2eab23813312f",
     "packages/hachimi-learn/component.json": "2a0a122c787483f4d51da8d8fc3a753f1447f4962fba22f722b0b59f80a91eb3",
     "packages/hachimi-learn/runtime/widget.json": "16832e1c26baf77a3d9709bc5a0e9a5162282df0630fc450ab3634c5716f89a7",
-    "packages/hachimi-notes/assets/background.png": "babb861af7e73cdf9e573ec8dac34d4327f12548427a446c9a4b778504c657d4",
-    "packages/hachimi-notes/assets/type0.png": "bf02f4ac90aefe4a72e4efda7533bab6fc641c08a9565ca9ada7b23f3f9e453d",
-    "packages/hachimi-notes/assets/type1.png": "350ff31538548eaf450f88fdfad0d1efc69a955d9eee379fe158713bb3e264d8",
+    "packages/hachimi-notes/assets/background.png": "cfadcf86d2a76f8217ed63f03cdf2409444beb17a7de1e5e7c9cfd0b0769bfd5",
+    "packages/hachimi-notes/assets/type0.png": "1cdde0d32c21df81643bfbe5e43bdbe70d5f6753800a31698e400ad765ba731e",
+    "packages/hachimi-notes/assets/type1.png": "ec91fe1d5aa846d92c25839b9548427db70eb102a5171ea92fd3eef94b016b86",
     "packages/hachimi-notes/buttons.json": "858f31cd6c008630550d76db7c1766f2632e1902a1ea68d41ee1616762fb367a",
     "packages/hachimi-notes/component.json": "e00af6c5c03dc8e2b74dac68fb234162e3c41c5d314d5453817a7d174c1faa51",
     "packages/hachimi-notes/runtime/widget.json": "dbcf540da1f1c43be328e4e4172fb9c2557f9d73ab1dc9778f8226d820ef28b8",
-    "packages/hachimi-sounds/assets/background.png": "93880f9e06c528a73bade5a88edd5fdba8cff771ee7aadf08f807c184aa1acc4",
-    "packages/hachimi-sounds/assets/type0.png": "709a90b6731431aefd538f1bf6c59198a107c31e25342f07637e0668bd950a8f",
-    "packages/hachimi-sounds/assets/type1.png": "25cfbb8b998cfced659059339333e46cc678c575fabe070b86a051bb47aba4f0",
+    "packages/hachimi-sounds/assets/background.png": "c73b91524aece7702ed4fea59bf747cdd0c4ae8089d0bae59c69d7fb6fa3ca96",
+    "packages/hachimi-sounds/assets/type0.png": "274aa20fe82caea3e0bcd709bf3acebf2441c07ab0574ba5c37a222de7541e30",
+    "packages/hachimi-sounds/assets/type1.png": "5c6f798ecfcb77c8777ddce5aa2bd1357c4e0055c117c3225edda99df5228181",
     "packages/hachimi-sounds/buttons.json": "9a6757a1f2290828b833c66e954e31a5494f26f113a87fc03fe9b7a8795a0647",
     "packages/hachimi-sounds/component.json": "9ba20a08f1c77e408cd947a74c670311a1a805bf821894af04dc82c667cb4e4f",
     "packages/hachimi-sounds/runtime/widget.json": "92ebc1ee0b81d7df02e361c9e8113d1c17758e9fd6f492cb161751d9fc3b7010",
     "packages/hachimi-travel/assets/background.png": "2742f6884bd6b1e1eaf2659ddec4f252ed61f980695fafe13d69defcfa0f875e",
-    "packages/hachimi-travel/assets/type0.png": "2ff7ea12e6dfe0704a504968efcde1715f279eb8fa1b5a69d54866fde2d6c503",
-    "packages/hachimi-travel/assets/type1.png": "f263dde568da22c2a2c8621f3d91f0b8b04ef91565d0b0fc92fb108f40d514e0",
+    "packages/hachimi-travel/assets/type0.png": "f4333c5c86ec2f13083ceb9f922b3100fe18c15f402d82209be4486c158f1a93",
+    "packages/hachimi-travel/assets/type1.png": "4d51327fb8c3ad741141c6dcc163456ea5311502c259474b86f9f09bbc9dbaaf",
     "packages/hachimi-travel/buttons.json": "2cf304311aaaac853674254fe103678969521509ff4f902dbc6e6c30679cbf08",
     "packages/hachimi-travel/component.json": "0d9820e4bee0a93f80ec6573c121042c393ade29104c7e3f0d2251facc074922",
     "packages/hachimi-travel/runtime/widget.json": "daf4b685f70b11f788cf31676dcf102eb5ec580c73a4d8b090603ec90f454b2d",
-    "packages/hachimi-weather/assets/background.png": "8ef0ea0acc526bb34564db73908b46aac7250884f71df8e6a4d704f3071c3fcc",
-    "packages/hachimi-weather/assets/type0.png": "2771d34b6f7e2476d4ab70b1eb03f7a2a285ef16ef358d564ab6c93f9a0e191a",
-    "packages/hachimi-weather/assets/type1.png": "8433dfcc971f60e903791f7907a3b95ed4a7b4eec35e74577339a2ffd5999046",
+    "packages/hachimi-weather/assets/background.png": "f4a15d15881930ee1f4de5a261efa2f153f07f8573737d0722ec0915a425e7cb",
+    "packages/hachimi-weather/assets/type0.png": "e525862c36d6779d9d609f2ab5a5c3dd09d29042e91d4e61ab4ae86e8cfe98b5",
+    "packages/hachimi-weather/assets/type1.png": "2a0345b42ea9b96e301acda2b6729dd44cc6f60642e76d61c287cfd54478fbe8",
     "packages/hachimi-weather/buttons.json": "11efc8ad22fbf7b0936d90cdd02ee33ba776ac2d8cfe903405eff9bcbcba0976",
     "packages/hachimi-weather/component.json": "917360c705c66620e08a09e933a19f1d23c24da8dce285ec3caef9b664915ba5",
     "packages/hachimi-weather/runtime/widget.json": "88f5d00d81dabd2bcfe1f3213886d527dd8647b823c6c0823722ded7d4a96118",
-    "packages/hope-train/assets/background.png": "8d7e0a3ff55d61ef82c7f3c0df8ec0826b1745a9c4dd0e3abe09ff097b7e6876",
-    "packages/hope-train/assets/type0.png": "9ae414df0ff8d85e4243738630765931aaa9ebb354263e1d6b4911a679d1bfc2",
+    "packages/hope-train/assets/background.png": "0f78b9a1daa65702129489ed6c9c11e78502c09ea67efeb05392033492915f0f",
+    "packages/hope-train/assets/type0.png": "b59cec8b6e770c62d5427f5c25c640dd7a4c3281514ef40310d1bd71c17d61f3",
     "packages/hope-train/buttons.json": "e75067f3f2af4d740f1be5e66c71b01680497e53d53bcd98f0780918da80ec1f",
     "packages/hope-train/component.json": "c60691812a980a1318dfd41d9948063fba94b6b6e113ea7dc6784dcee5c44339",
     "packages/hope-train/runtime/widget.json": "269fdd69177d33c7360ace2a5dff77cc4d882736b17ec43dd26661649b3a8365",
-    "packages/snake-turn/assets/background.png": "ca3dc9580be636dcd7dcb13ca0ffeb2599b8b9e90b64fb6190a3c801f8f8c605",
-    "packages/snake-turn/assets/type0.png": "3a95da800140347ad65a8c63cb4e691735f870afc1ef6d1433d979414f9b1526",
-    "packages/snake-turn/assets/type1.png": "58e92e13c189bac6d21806e090b8761819a16d22c1fa34ebc1f88b9a37b25e89",
+    "packages/snake-turn/assets/background.png": "fa3177a1472a29132a3c7d8085f8ae49dc6ad1bfca84f63164a159553e610055",
+    "packages/snake-turn/assets/type0.png": "7f7cbddb9857ccfc555120cd23b4ed3ad902152bdc700511c697691e3c15b8ff",
+    "packages/snake-turn/assets/type1.png": "146d71df82cce86b65db34276bf421068b9c9249c802795fa5f3d798c46fe37a",
     "packages/snake-turn/buttons.json": "1802e0cc7176821a4cbeec1782dc218a872ac50f2efc0d4e7b0616b35628e563",
     "packages/snake-turn/component.json": "b178956ff1c4661803fcac6fd9ca285c5391de042a4e1a7e7a2e27070a30e466",
     "packages/snake-turn/runtime/widget.json": "7ca0ff7a6c63e377d4d67b660cd99a26cf4a48ee9dc7b6e46c2e303248fe43db",
     "packages/stock-watchlist/buttons.json": "04578184bd608e7cb672c62027e49ee9e479586433f99110dca82e82516087ac",
     "packages/stock-watchlist/component.json": "9c186681c46dae6f6c3353b7fa238029583049c7c05620bea27f21cec4e2bf3a",
     "packages/stock-watchlist/runtime/widget.json": "f4d63db7d15c69ecaf69e6d44f545d4876664f6ab00df00a73fde68f84e5795b",
-    "packages/token-usage/assets/background.png": "a9c69fd6ca3755e62792ace500366faf34899f6d696d6f8128c2a37b1dff985a",
-    "packages/token-usage/assets/type0.png": "e49530f709f977fb033a0b56d0b750150334d549de097580bda205ccd123b8bb",
-    "packages/token-usage/assets/type1.png": "8b19992d3802845f6ad4e094e813fe721ad9edcac86b307c76f7a61ee226c9a8",
+    "packages/token-usage/assets/background.png": "2a6a93cba3ef59ac0cdf38ccb8c4b7bc18441608b477bb2332cc7214d516c6ed",
+    "packages/token-usage/assets/type0.png": "b61ac9f6a8a84615e41bdb8eda155673e897a2abf17e2b537ccac7b7d2b1daa7",
+    "packages/token-usage/assets/type1.png": "9d96721742b5b42ff6ac2c3b0bee367bb255386dfb045b502c61b645824eff5f",
     "packages/token-usage/buttons.json": "1af3889dcbf5cfd6028048354a53f05263806b8f4c62d402d27c79073134d1f3",
     "packages/token-usage/component.json": "ca7cffe99fc3a4a915f96652a6fdbf9e90b3b21f58d8dccd1493ef6904f8839d",
     "packages/token-usage/runtime/widget.json": "d158c47427a240c6fa1f4569e51cbfc1430d6b975aedd255ffa8ae75740d67e6",
-    "packages/tomato-clock/assets/background.png": "9da7f04155c98212247c3ede2f98743dd8cc44e3d5a6dfd72dcf06e7ec78e186",
-    "packages/tomato-clock/assets/type0.png": "e49530f709f977fb033a0b56d0b750150334d549de097580bda205ccd123b8bb",
-    "packages/tomato-clock/assets/type1.png": "da3ca8377d1531fce4ff078fbc6b12542f35fbff4991cfbfea3a966962d84855",
+    "packages/tomato-clock/assets/background.png": "29097540de33e33143e10eb0116651c6c6ab3f3d20cacb6ed28c4c3215b83953",
+    "packages/tomato-clock/assets/type0.png": "b61ac9f6a8a84615e41bdb8eda155673e897a2abf17e2b537ccac7b7d2b1daa7",
+    "packages/tomato-clock/assets/type1.png": "7304c182ce305630f22547a819cff3ec126c74c56df2bb5fcdd59f6f603bb0f8",
     "packages/tomato-clock/buttons.json": "998b4ed4b28930406e616e60f6e955a4ccf3927405fe88b60cdb92a0c2e7d678",
     "packages/tomato-clock/component.json": "ec3d1d4a5df70cc41162a88f6e01849e670d128aa7bb4c0cc737e8fc742e17e8",
     "packages/tomato-clock/runtime/widget.json": "2f0d394a1d79fd4b7eb0bf9d4138fa179436226f7bf27a18b08dc7125c78bc34",
-    "packages/two-key-pong/assets/background.png": "3a87682d8957c6ffecb5ee4198ed43be6c12599a81ff7281e8afefec99dc9cd6",
-    "packages/two-key-pong/assets/type0.png": "26bd55d2ca5409103bc9fb5822a921b2e95dc8f59089b45895ac2038c073bf1f",
-    "packages/two-key-pong/assets/type1.png": "9fca47bf8346b132c14a9d2602f867018d30fc5cb9277089c35647bcef7a6356",
+    "packages/two-key-pong/assets/background.png": "bcb85f914c59107ea1b50eb47fe3b8e4e3bc7f92dbe3c6d501409c1b7037a4a9",
+    "packages/two-key-pong/assets/type0.png": "895216533e714448b93271fe70434b0f0d6ecde9f7d12101002a308416263f0b",
+    "packages/two-key-pong/assets/type1.png": "6dbaa6de0c0e68de78701dc0c109019fea655c5d0590b3906274188bc1e0e391",
     "packages/two-key-pong/buttons.json": "62084a8317b311adfae649a6bc14ffeac45cfdf10d1d9af81655882b718c2b7c",
     "packages/two-key-pong/component.json": "c710f80a3f0bbed9dc2f218f4faf5f522e1439b61d2fc75fd45ea29847bc46e9",
     "packages/two-key-pong/runtime/widget.json": "04017698666abe0a9436f3f1e65e2343c2501af72021f95112786d81818de065",
     "packages/upcoming-todos/assets/background.png": "a2effc0c08cbc7d32e88068798d2ae7a912f2656c007fd52551b9f49b95d07cd",
-    "packages/upcoming-todos/assets/type0.png": "161fec09ed7c891ec4788aae63cf4a1c45d38f344800ab08471fdb32a40b000c",
-    "packages/upcoming-todos/assets/type1.png": "e731377866527b6eb1aa4d36b2014306a9de62b51d7e6d8b8384b5783f9aafe9",
+    "packages/upcoming-todos/assets/type0.png": "3b410a8941d86cc4a3b0bff1f9eca4e731c38a5ebd437be36ca62342afe5cb2e",
+    "packages/upcoming-todos/assets/type1.png": "2a30cc7880d4370408c362e214919487a5268c380c2c3cd2da547e1fae6c6747",
     "packages/upcoming-todos/buttons.json": "9318639d12f77424b631d965a1ae884645a063f34bdc9dd67da6a951c04e5da6",
     "packages/upcoming-todos/component.json": "b43197e7f3dabe0f7483987b93d786a12e25d7a81011c5e242a1a78e18a67f59",
     "packages/upcoming-todos/runtime/widget.json": "a2780401281b82d135b4121a4617b4afd78e8c8d1e65213af7a1ff0d9d4ca303",
@@ -175,90 +197,103 @@
     "packages/wooden-fish/component.json": "85c0d14a2f50e461724aa02c9d960f9f3fb038c178bef922d1e6e3503db40f8b",
     "packages/wooden-fish/runtime/widget.json": "d2e28002ae932a1a838829b56174b739aa35364cbeb97473c1b508ca23b13b8f",
     "surfaces/answer-book/bg.p4i": "a4c55b7b08f0a74244bee8070f4b139dfc97529fb9f240622966f69849cc06b8",
-    "surfaces/answer-book/index.json": "cf5594015c5e605a155ead27f76e3c160354390e894b6e98629dd1429e0aa3c7",
+    "surfaces/answer-book/index.json": "6b4625eebe0a3f517b40b3904da0fb11af663d002fde191d67f66cb0acae7014",
     "surfaces/answer-book/type0.p4i": "fa44555afc99b8841b429963d697614adfc5ab0e2f9deedb8b8eaa583b083642",
+    "surfaces/block-combo/background.p4i": "b3a2d7f11b0d0e1af0749c1a7e8c648c593960e460522388a02f44d32c87cdf1",
+    "surfaces/block-combo/index.json": "cd944545ae4acd55cbb4a6a69a5e721d43a01c39f2bed41b8ff4de266f74ad20",
+    "surfaces/block-combo/type0.p4i": "86fde00fee7bee0e3e31d3f215769072f127b02ad0ce81544bdf4743ce9b9dec",
+    "surfaces/block-combo/type1.p4i": "1228d4b3e427b3da6658082fac5f521e95df5452ea9d159e307eb8c97a47bff3",
+    "surfaces/bloomfrog_companion/background.p4i": "6d088aab37c9399debabd6d13bc7672db7b5ad300e7f9ed07bfe3cccb8f0ad05",
+    "surfaces/bloomfrog_companion/frog.p4i": "4d8654c0db597e44a7451f9e0a134d22dcba718aa92d5a992c0f231eb80c1e22",
+    "surfaces/bloomfrog_companion/index.json": "af76fbf41f8bf65a721387f2ed2ca1c2d6aa1989dc66c95ac12ddb9f87cb076b",
+    "surfaces/bloomfrog_companion/type0.p4i": "584fbc456d8f91742dc7f50066cca552d5dafe633e62ebbf77c1f5035bb8c494",
     "surfaces/book-pocket/background.p4i": "8c234ae7e9e8db31247c7579182cc2925822cbffbe5fb383e875ef57a98e1ddd",
     "surfaces/book-pocket/digits.p4i": "e103b4dfa340cd72ca7ab85369512d70b6678b29bb1c1e8cdbd8b34e4c95c50e",
-    "surfaces/book-pocket/index.json": "0ee7e56fb59013eb0582cf2c64b945165586bdadd0cfd4388158524410747467",
+    "surfaces/book-pocket/index.json": "748a8e8c36ccd0eb0380e5a89e8a215d4e51aefb65b51a65254a802f47a73f53",
     "surfaces/book-pocket/labels.p4i": "29d9b569e8f872257e09a96bbb5b55324f898e40b1b770a8ce6218fb65d80097",
-    "surfaces/city-radio/background.p4i": "95d346639875b5893efb26a9d0edb558b5939b6650f9d2ce98f0b14008e87bcb",
-    "surfaces/city-radio/index.json": "c4a7d65c7d0fc0c981c3980b57c51f831dc303e72c21a1a849abed5b0040954d",
-    "surfaces/city-radio/vinyl.p4i": "597c5b6b9e43d81f21b2ffeb40f6dc9caf833b58c5ba52162c94cd6426be4dab",
+    "surfaces/city-radio/background.p4i": "23ea476c694724e00da4ebf45938ea0ff083546c19b1807fd0d78656bd9f1712",
+    "surfaces/city-radio/index.json": "a41c8a05f3800d019a039d859fb8bec426ca369852b7d8e2fb76a04819e487a2",
+    "surfaces/city-radio/vinyl.p4i": "5a0cd22c90e6ca515924e1ce849d853c1126e0a1fedd86e4d31fd5250f2c0d68",
+    "surfaces/cloud-hop/background.p4i": "c20a704a581ebcba60be5ad3f0e51701a553a946d5dc5f3c2d12c3d563682efb",
+    "surfaces/cloud-hop/digits.p4i": "e103b4dfa340cd72ca7ab85369512d70b6678b29bb1c1e8cdbd8b34e4c95c50e",
+    "surfaces/cloud-hop/hero.p4i": "8f5df77c08df2eede2cd8ba4e8aa882f0616b526f6c77efce25546d315bbf63c",
+    "surfaces/cloud-hop/index.json": "3fe5c9cd2c6f78135ffd2722500615b7d0151dff4c173075bfa36083e9c589d8",
+    "surfaces/cloud-hop/labels.p4i": "d86be646e89a46dcda0450f26b1916749c0d13e05f9385c8206462a65a4471e3",
     "surfaces/computer-status/background.p4i": "fc1333789b4766c0c8a44c15c1f0fc848177d069e26de0e25d622829f8e5f1ee",
-    "surfaces/computer-status/index.json": "d33abc0784665eed4c1d0b4e28db45232d575f1ea62ba57a168783e55870e9ed",
+    "surfaces/computer-status/index.json": "1855784237d9fa9841d2179f3b4cce5fc38d16a1728c0532d8b5a2e2651b69c9",
     "surfaces/computer-status/type0.p4i": "3837e1ba397963658d1895b978355a8c0f9bb17ad753e22eee1cd0a3ad4416f9",
     "surfaces/computer-status/type1.p4i": "11e877a181f88685ac079b676d3af66750211af7322a6fd65a64da94f70fa52d",
     "surfaces/daily-almanac/background.p4i": "f5e10e9871c4c4fcdb60596ed177226154202029fa537516f34bb57c86a75d2b",
     "surfaces/daily-almanac/digits.p4i": "e103b4dfa340cd72ca7ab85369512d70b6678b29bb1c1e8cdbd8b34e4c95c50e",
-    "surfaces/daily-almanac/index.json": "54e1a9ef42524b00991e8cdd79549e5d8e58b8bf79a90199182c54997a2db528",
+    "surfaces/daily-almanac/index.json": "7c0233721c9b28d862077a69ba309586804deae9b2ddf32f1d26d080b9efcb54",
     "surfaces/daily-almanac/labels.p4i": "33d026c8361ed0598b25d0f1ebe42ab2236882fd64e034e6ebf570c8c6605ee2",
     "surfaces/daily-news/background.p4i": "fcf88ea005c50c7a22fa853ee27bc2678514dd3a87e84836d509bea1d3e9cfb8",
-    "surfaces/daily-news/index.json": "33e9c8d69f9aeedc38c8b119e7d9ff651b7a572603c2c0c71a847e8da12a7bcc",
+    "surfaces/daily-news/index.json": "1baf729d4db877dc01f8b78c2598eacac5d5ccabcecfdc58fce5529259519d3f",
     "surfaces/daily-news/labels.p4i": "56f76455f93afe667283655aedbe97b13646a50416f71c4802f55b7757693b0c",
     "surfaces/decision-capsule/bg.p4i": "775d304466ea06d8588e7fe6688415bec545502caff649e31c61479fc5b156a0",
-    "surfaces/decision-capsule/index.json": "8d745c863796e8217e7c367ad347917c3998364cd41b7f2e0aeedf854fe97bb6",
+    "surfaces/decision-capsule/index.json": "bda61b88b739df7e43711b7f96667e974c7350ce8071069a79805ae08d322bdd",
     "surfaces/decision-capsule/type0.p4i": "5ff0b3e1a111fb97c8279947052d7a52804bae13c9ec4b0ec06b932a306c6fca",
     "surfaces/drink-reminder/background.p4i": "1b1959bf4364feaea06bc3b9bfc0d51dc85b160999fbaf54710ab36a62d8af6e",
-    "surfaces/drink-reminder/index.json": "37531b8166671bbbe6b72c609269001805b652ad402413a6a68d0af6fbd9de50",
+    "surfaces/drink-reminder/index.json": "2235d9bf54a57630faab6ec6c9e1868e93f6f20d130a1c4bdbd5d8ab8b34dfe4",
     "surfaces/drink-reminder/type0.p4i": "3a7a196aaabb93271a4501d73690761a139e9baa42a34e1e3c9ab577ba434cc7",
     "surfaces/drink-reminder/type1.p4i": "585a7690fca03ef9d8f803b6da4752b41d0b8b72093e63656ae7fce5f17f10a5",
     "surfaces/flappy-bird/background.p4i": "6d39ac8ddf799a2eae2fdefabac1b27b145dff5e2c2b1b7635bf4fb60d2bfb52",
-    "surfaces/flappy-bird/index.json": "70e127e52f2e2365642cb6f81a606715eae5a5d8287ed3d1b2e680074bd0582c",
+    "surfaces/flappy-bird/index.json": "ee6a20c662dd907a63f62843b2c327d82b19e2a90ab01b84a55e291b72375f78",
     "surfaces/flappy-bird/type0.p4i": "cd431c7c24beafbd2ceb103b7103c3d190127e690d16a9ceff535d15a3179263",
     "surfaces/flappy-bird/type1.p4i": "73fba2081969f412880c0f0a3d2dac4be4adc13c7589904657c75523d1a89826",
     "surfaces/hachimi-break/background.p4i": "d68fa70fb72ba748e8a11d9eec8db7b2e6e6457d9171c3d67ea5a95f419a57d4",
-    "surfaces/hachimi-break/index.json": "b30d4b0d09a5737f7eb0ebdc2a43315cfdfdcd6ffc02ea4d3b498f00325d99fe",
+    "surfaces/hachimi-break/index.json": "68370ebfa25eda177111461ed492cfd2fb7a227ccc18ac437b497b675fd1d6f1",
     "surfaces/hachimi-break/type0.p4i": "3a7a196aaabb93271a4501d73690761a139e9baa42a34e1e3c9ab577ba434cc7",
     "surfaces/hachimi-break/type1.p4i": "4dcd2595425082a7981603465608194ba8e0505cd0a8cdff1d84220787392c39",
     "surfaces/hachimi-garden/background.p4i": "6dfec8e99d3ef09000841aca8c5f612c0d4ae5d56c6295054b2a3b9871a72402",
-    "surfaces/hachimi-garden/decor.p4i": "f84aedf82e76347bd6775e7ad3a584697e8ccb360f6d85767d482af97b6b82d7",
-    "surfaces/hachimi-garden/index.json": "d2132b0c445b47d3e70c5a33cfd0f9403d24abce73940a4fd02aa20388197e40",
+    "surfaces/hachimi-garden/decor.p4i": "6dc74367003f13869e1847f43578019201e0c422a9803832ad8f28c86e1669e3",
+    "surfaces/hachimi-garden/index.json": "f4c28678df370bf065eae7722df7f3984f5c015be6341e7a7d46b953f325108b",
     "surfaces/hachimi-garden/type0.p4i": "3a7a196aaabb93271a4501d73690761a139e9baa42a34e1e3c9ab577ba434cc7",
     "surfaces/hachimi-home/background.p4i": "0594c589ff762774d5bbe9c3b2c096afb287c8d4b70c4b0e5202354616b8381c",
-    "surfaces/hachimi-home/decor.p4i": "11cb37fa9e887e7465615810c5afb729ecceca9c3bcb4c420454fb6246b6d263",
-    "surfaces/hachimi-home/index.json": "119bac46bee0057d2473e0dd248f55285c798de643d99ce59839fabb309f6624",
+    "surfaces/hachimi-home/decor.p4i": "d647bf7602585c380cb461521f0611e642081ff03210efb6612e0d894eb5ebba",
+    "surfaces/hachimi-home/index.json": "e793f59eb66c894c97e41304af9b7ca6126045d47a7950657f54463108b89b52",
     "surfaces/hachimi-home/type0.p4i": "0c4f03b0ea30988df356b8da9b7be85580d04e00621f2ddd20983e5b23a6d666",
     "surfaces/hachimi-learn/background.p4i": "d1df4ea2cf689044e14b2a57025e8e2f55b9abca43b3ad96704a2c93cad11fdd",
-    "surfaces/hachimi-learn/index.json": "08b5cfb76166ad53ca1b7ea630c4f950fd8bf9e9a3b85917b9b5b6e631b793da",
+    "surfaces/hachimi-learn/index.json": "b908b12f432656dc078474bcc916d35965ffbdb2c709f2cd85575007cb937525",
     "surfaces/hachimi-learn/type0.p4i": "ca5bfb4e56de2eaaf3420f97b5b2d887537c64ff4ad52d5d9068db31751214ce",
     "surfaces/hachimi-learn/type1.p4i": "5764ad112d4efabd889f495f7ded43610051787d9536a9dcf09a11174029b112",
     "surfaces/hachimi-notes/background.p4i": "625c148fdc8ba0f487b2a57be4af03e3555d5c73e534b1beab490227934cab9c",
-    "surfaces/hachimi-notes/index.json": "300c44493b4602531f85fd54ee04b1be9a5d7abfc3b8b06f3bd9b8ba566abd82",
+    "surfaces/hachimi-notes/index.json": "9ddc9088329a5c7717956783ef6897b534324cdf944662ac958ec6881d1d6c1e",
     "surfaces/hachimi-notes/type0.p4i": "ea9bba13af2e92c2661828f78035c27a8134707950b7fb7c4e0f7491677a9e22",
     "surfaces/hachimi-notes/type1.p4i": "90146876076f397e741d0b614782d3d74c10342efa3e1bf0bdd78b85da9c6001",
     "surfaces/hachimi-sounds/background.p4i": "8b4c1ff63e126d7a597d2be59ee643762f4be320e2c00c387b16774e95626212",
-    "surfaces/hachimi-sounds/index.json": "41b6794001e645e6cb21349fc51f6d0f7d0d035362d606f5b1b1892961bc05d8",
+    "surfaces/hachimi-sounds/index.json": "b0b561f0e5a7fb21a87521fec9c909fa3f83878667ab5f0828fcb6d43ea22a87",
     "surfaces/hachimi-sounds/type0.p4i": "0914273539d551ae6474f47888df955a93a1dff0d733babebac91fdd964bdab2",
     "surfaces/hachimi-sounds/type1.p4i": "79d84b01a6fbee7349d621398f32deec44631a672e1ef6d041444d05cbf86d49",
     "surfaces/hachimi-travel/background.p4i": "b3866693a552c213d6696c7a4694d4e947174cbb6ef92e62f1f728b9056e05f3",
-    "surfaces/hachimi-travel/index.json": "52304859ebf0216f4fee5f48fb6b4e049a1e94ccd9086a81c1b35a62acac9300",
+    "surfaces/hachimi-travel/index.json": "92ba0a79e8eb7ea5292ad6886bc20ac5fa88ad098220dbcd9041947b03501bb8",
     "surfaces/hachimi-travel/type0.p4i": "0ca113950f0226ecc0cfa23b99e0b04b093e1b4a0b35e1bd3f413c5521303591",
     "surfaces/hachimi-travel/type1.p4i": "d24d2f87cc2a19620d95134b6bcbda56b33f8ba2d7a267342850367e5d5091a4",
     "surfaces/hachimi-weather/background.p4i": "60686e8384207cf689187d0b8a69a8a75751b94a214859170a80cd3c74bc9411",
-    "surfaces/hachimi-weather/index.json": "f8b6cc9a34d9fdd03f4e578f15c6d4ca9cc3b0b773c0938a5b3bed325f05b82d",
+    "surfaces/hachimi-weather/index.json": "a14bd2289122b4594a8f8b008e7621fc8abec90a411e5728346868c20d988565",
     "surfaces/hachimi-weather/type0.p4i": "ed2054b193abdb2b87bb00d6aa9a715b3a65d319190d613d630b01e48d4e5591",
     "surfaces/hachimi-weather/type1.p4i": "f72a291408976772bf5a61a8b0e0aaecab11f06f5cd71ad8ee51eafe4a432946",
     "surfaces/hope-train/bg.p4i": "d03daa465a455c72db8bbbf37879df129a1c34b10b462e22b7a500a254e3377e",
-    "surfaces/hope-train/index.json": "f00b02943aa3868699b8a15307ac68d3b8d2316e015ff00f0dcac51f3e62e6e4",
+    "surfaces/hope-train/index.json": "fb6f7c00a06ac7c106ba8e46d0ec956b4ceff20e7de59deae242cfa1ac525bec",
     "surfaces/hope-train/type0.p4i": "2098fabfc79ac43084d5a489f72d03c8f9252873e34d07de9d4c49ff6941e87f",
     "surfaces/snake-turn/background.p4i": "cefc29cc27db421297c7c09c39a47dbda158413ea6563d3390b84695ea5b39ea",
-    "surfaces/snake-turn/index.json": "85a882547dcedccfb8cc9ab34ac14fd9ea5f25ff0011948b84a3796a4bea88d0",
+    "surfaces/snake-turn/index.json": "6f8361732aafb5b96dd0a3e09addc673937e8ab5f6ea8865b9d0f67c75d95156",
     "surfaces/snake-turn/type0.p4i": "5857bd63a0041f5380f4303ae9a61cff83a53ece7686f16a3524daa309a13994",
     "surfaces/snake-turn/type1.p4i": "965eda50d4801b5265e26bb4ab7f8ccd4b9a2959fcc52e7405a67b854a032829",
     "surfaces/token-usage/background.p4i": "85895f881d40107c29b9fbc716b357d15882c8d5a53617f783574ed8b41ef5a5",
-    "surfaces/token-usage/index.json": "682028a8a9391ccf5c14128f4774f097df405860f4b30d27224cd816cb6efb12",
+    "surfaces/token-usage/index.json": "2f45b9ab78a76138118621a75d119911388ae207008ec27b936481c0c2e443ab",
     "surfaces/token-usage/type0.p4i": "3a7a196aaabb93271a4501d73690761a139e9baa42a34e1e3c9ab577ba434cc7",
     "surfaces/token-usage/type1.p4i": "6945dccc92631e0e8066a91b6af670138d02c1602802105a60d866c2eae8fd9a",
     "surfaces/tomato-clock/background.p4i": "78c4312d5cd965e340789fa49c73faccc8f07e2da7fe6925cbba75350c888472",
-    "surfaces/tomato-clock/index.json": "5216dbb4c1a8278139f215751f7f4f994bc163aeb6e0b2741a9166b05bddd8ab",
+    "surfaces/tomato-clock/index.json": "dca3c1c83b61b9252f226d3a97d2c8f58fc626570c0184c90c5e595505550bea",
     "surfaces/tomato-clock/type0.p4i": "3a7a196aaabb93271a4501d73690761a139e9baa42a34e1e3c9ab577ba434cc7",
     "surfaces/tomato-clock/type1.p4i": "03d70e4a2baa6a67e8cbcdf16a9ca34ebdb81bd4eb7cf2c25c5738bdec2426f7",
     "surfaces/two-key-pong/background.p4i": "1d9135f82f6297d051489df37095b4b655a912faf4bc8303ad4ced027c6a85af",
-    "surfaces/two-key-pong/index.json": "24468b00d6d8a5e7fec0e700acea003ea4b7b59688120447a77f7bec72152594",
+    "surfaces/two-key-pong/index.json": "ed928aaeffa7f1010336ee8be7b11ffcc20682da30d296fe9ba55bc0c388a882",
     "surfaces/two-key-pong/type0.p4i": "d5cb736ed611dcc93700ce4d09598adced6aba6260afa3696369ef591bb15d73",
     "surfaces/two-key-pong/type1.p4i": "e99064a7b3583925af5b3e42cb51180b5c222d29884d65980ac77a09e7ef2cf4",
     "surfaces/upcoming-todos/background.p4i": "5761527237d132134ab1bf98babdc6de371454d79407a13a22800599baccc07e",
-    "surfaces/upcoming-todos/index.json": "c77df646b641b4c87d85eadae4955c2b119037355735f9d26be59e125363b073",
+    "surfaces/upcoming-todos/index.json": "1226b2f4b08ccec1232271a5a2090d4c40072f51cd3785d7d348318b7407d2e2",
     "surfaces/upcoming-todos/type0.p4i": "87defcec36bd6cc3e7d23cb7e858f6834ce5669372a6a0e501d4726e3fe81ce0",
     "surfaces/upcoming-todos/type1.p4i": "ff5e4a0de9b28d7901955ce686b62e74bd97f6996a921f1558d67ccd870ce861"
   },
@@ -273,7 +308,7 @@
         320,
         240
       ],
-      "source": "pc/builtin-clawpkgs/city-radio/assets/background.png",
+      "source": "pc\\builtin-clawpkgs\\city-radio\\assets\\background.png",
       "sourceSize": [
         128,
         96
@@ -288,10 +323,70 @@
         152,
         152
       ],
-      "source": "pc/builtin-clawpkgs/city-radio/assets/vinyl.png",
+      "source": "pc\\builtin-clawpkgs\\city-radio\\assets\\vinyl.png",
       "sourceSize": [
         240,
         240
+      ]
+    },
+    {
+      "component": "cloud-hop",
+      "image": "background",
+      "method": "native-lanczos",
+      "role": "component",
+      "size": [
+        320,
+        240
+      ],
+      "source": "pc\\builtin-clawpkgs\\cloud-hop\\assets\\background.png",
+      "sourceSize": [
+        640,
+        480
+      ]
+    },
+    {
+      "component": "cloud-hop",
+      "image": "hero",
+      "method": "native-lanczos",
+      "role": "component",
+      "size": [
+        40,
+        40
+      ],
+      "source": "pc\\builtin-clawpkgs\\cloud-hop\\assets\\hero.png",
+      "sourceSize": [
+        80,
+        80
+      ]
+    },
+    {
+      "component": "cloud-hop",
+      "image": "digits",
+      "method": "lossless-glyph-A8",
+      "role": "component",
+      "size": [
+        160,
+        128
+      ],
+      "source": "pc\\builtin-clawpkgs\\cloud-hop\\assets\\digits.png",
+      "sourceSize": [
+        160,
+        128
+      ]
+    },
+    {
+      "component": "cloud-hop",
+      "image": "labels",
+      "method": "lossless-glyph-A8",
+      "role": "component",
+      "size": [
+        224,
+        192
+      ],
+      "source": "pc\\builtin-clawpkgs\\cloud-hop\\assets\\labels.png",
+      "sourceSize": [
+        224,
+        192
       ]
     },
     {
@@ -303,7 +398,7 @@
         320,
         240
       ],
-      "source": "pc/builtin-clawpkgs/daily-news/assets/background.png",
+      "source": "pc\\builtin-clawpkgs\\daily-news\\assets\\background.png",
       "sourceSize": [
         640,
         480
@@ -318,7 +413,7 @@
         224,
         128
       ],
-      "source": "pc/builtin-clawpkgs/daily-news/assets/labels.png",
+      "source": "pc\\builtin-clawpkgs\\daily-news\\assets\\labels.png",
       "sourceSize": [
         224,
         128
@@ -333,7 +428,7 @@
         320,
         240
       ],
-      "source": "pc/builtin-clawpkgs/book-pocket/assets/background.png",
+      "source": "pc\\builtin-clawpkgs\\book-pocket\\assets\\background.png",
       "sourceSize": [
         640,
         480
@@ -348,7 +443,7 @@
         160,
         128
       ],
-      "source": "pc/builtin-clawpkgs/book-pocket/assets/digits.png",
+      "source": "pc\\builtin-clawpkgs\\book-pocket\\assets\\digits.png",
       "sourceSize": [
         160,
         128
@@ -363,7 +458,52 @@
         224,
         192
       ],
-      "source": "pc/builtin-clawpkgs/book-pocket/assets/labels.png",
+      "source": "pc\\builtin-clawpkgs\\book-pocket\\assets\\labels.png",
+      "sourceSize": [
+        224,
+        192
+      ]
+    },
+    {
+      "component": "block-combo",
+      "image": "background",
+      "method": "native-lanczos",
+      "role": "component",
+      "size": [
+        320,
+        240
+      ],
+      "source": "pc\\builtin-clawpkgs\\block-combo\\assets\\background.png",
+      "sourceSize": [
+        640,
+        480
+      ]
+    },
+    {
+      "component": "block-combo",
+      "image": "type0",
+      "method": "lossless-glyph-A8",
+      "role": "component",
+      "size": [
+        224,
+        224
+      ],
+      "source": "pc\\builtin-clawpkgs\\block-combo\\assets\\type0.png",
+      "sourceSize": [
+        224,
+        224
+      ]
+    },
+    {
+      "component": "block-combo",
+      "image": "type1",
+      "method": "lossless-glyph-A8",
+      "role": "component",
+      "size": [
+        224,
+        192
+      ],
+      "source": "pc\\builtin-clawpkgs\\block-combo\\assets\\type1.png",
       "sourceSize": [
         224,
         192
@@ -378,7 +518,7 @@
         320,
         240
       ],
-      "source": "pc/builtin-clawpkgs/tomato-clock/assets/background.png",
+      "source": "pc\\builtin-clawpkgs\\tomato-clock\\assets\\background.png",
       "sourceSize": [
         640,
         480
@@ -393,7 +533,7 @@
         128,
         144
       ],
-      "source": "pc/builtin-clawpkgs/tomato-clock/assets/type0.png",
+      "source": "pc\\builtin-clawpkgs\\tomato-clock\\assets\\type0.png",
       "sourceSize": [
         128,
         144
@@ -408,7 +548,7 @@
         224,
         160
       ],
-      "source": "pc/builtin-clawpkgs/tomato-clock/assets/type1.png",
+      "source": "pc\\builtin-clawpkgs\\tomato-clock\\assets\\type1.png",
       "sourceSize": [
         224,
         160
@@ -423,7 +563,7 @@
         320,
         240
       ],
-      "source": "pc/builtin-clawpkgs/hachimi-sounds/assets/background.png",
+      "source": "pc\\builtin-clawpkgs\\hachimi-sounds\\assets\\background.png",
       "sourceSize": [
         640,
         480
@@ -438,7 +578,7 @@
         224,
         224
       ],
-      "source": "pc/builtin-clawpkgs/hachimi-sounds/assets/type0.png",
+      "source": "pc\\builtin-clawpkgs\\hachimi-sounds\\assets\\type0.png",
       "sourceSize": [
         224,
         224
@@ -453,7 +593,7 @@
         224,
         160
       ],
-      "source": "pc/builtin-clawpkgs/hachimi-sounds/assets/type1.png",
+      "source": "pc\\builtin-clawpkgs\\hachimi-sounds\\assets\\type1.png",
       "sourceSize": [
         224,
         160
@@ -468,7 +608,7 @@
         320,
         240
       ],
-      "source": "pc/builtin-clawpkgs/snake-turn/assets/background.png",
+      "source": "pc\\builtin-clawpkgs\\snake-turn\\assets\\background.png",
       "sourceSize": [
         640,
         480
@@ -483,7 +623,7 @@
         224,
         224
       ],
-      "source": "pc/builtin-clawpkgs/snake-turn/assets/type0.png",
+      "source": "pc\\builtin-clawpkgs\\snake-turn\\assets\\type0.png",
       "sourceSize": [
         224,
         224
@@ -498,7 +638,7 @@
         224,
         160
       ],
-      "source": "pc/builtin-clawpkgs/snake-turn/assets/type1.png",
+      "source": "pc\\builtin-clawpkgs\\snake-turn\\assets\\type1.png",
       "sourceSize": [
         224,
         160
@@ -513,7 +653,7 @@
         320,
         240
       ],
-      "source": "pc/builtin-clawpkgs/flappy-bird/assets/background.png",
+      "source": "pc\\builtin-clawpkgs\\flappy-bird\\assets\\background.png",
       "sourceSize": [
         640,
         480
@@ -528,7 +668,7 @@
         224,
         224
       ],
-      "source": "pc/builtin-clawpkgs/flappy-bird/assets/type0.png",
+      "source": "pc\\builtin-clawpkgs\\flappy-bird\\assets\\type0.png",
       "sourceSize": [
         224,
         224
@@ -543,7 +683,7 @@
         224,
         64
       ],
-      "source": "pc/builtin-clawpkgs/flappy-bird/assets/type1.png",
+      "source": "pc\\builtin-clawpkgs\\flappy-bird\\assets\\type1.png",
       "sourceSize": [
         224,
         64
@@ -558,7 +698,7 @@
         320,
         240
       ],
-      "source": "pc/builtin-clawpkgs/hachimi-learn/assets/background.png",
+      "source": "pc\\builtin-clawpkgs\\hachimi-learn\\assets\\background.png",
       "sourceSize": [
         640,
         480
@@ -573,7 +713,7 @@
         224,
         224
       ],
-      "source": "pc/builtin-clawpkgs/hachimi-learn/assets/type0.png",
+      "source": "pc\\builtin-clawpkgs\\hachimi-learn\\assets\\type0.png",
       "sourceSize": [
         224,
         224
@@ -588,7 +728,7 @@
         224,
         192
       ],
-      "source": "pc/builtin-clawpkgs/hachimi-learn/assets/type1.png",
+      "source": "pc\\builtin-clawpkgs\\hachimi-learn\\assets\\type1.png",
       "sourceSize": [
         224,
         192
@@ -603,7 +743,7 @@
         320,
         240
       ],
-      "source": "pc/builtin-clawpkgs/hachimi-home/assets/background.png",
+      "source": "pc\\builtin-clawpkgs\\hachimi-home\\assets\\background.png",
       "sourceSize": [
         640,
         480
@@ -618,7 +758,7 @@
         123,
         123
       ],
-      "source": "pc/builtin-clawpkgs/hachimi-home/assets/decor.png",
+      "source": "pc\\builtin-clawpkgs\\hachimi-home\\assets\\decor.png",
       "sourceSize": [
         192,
         192
@@ -633,7 +773,7 @@
         224,
         224
       ],
-      "source": "pc/builtin-clawpkgs/hachimi-home/assets/type0.png",
+      "source": "pc\\builtin-clawpkgs\\hachimi-home\\assets\\type0.png",
       "sourceSize": [
         224,
         224
@@ -648,7 +788,7 @@
         320,
         240
       ],
-      "source": "pc/builtin-clawpkgs/hachimi-travel/assets/background.png",
+      "source": "pc\\builtin-clawpkgs\\hachimi-travel\\assets\\background.png",
       "sourceSize": [
         640,
         480
@@ -663,7 +803,7 @@
         224,
         224
       ],
-      "source": "pc/builtin-clawpkgs/hachimi-travel/assets/type0.png",
+      "source": "pc\\builtin-clawpkgs\\hachimi-travel\\assets\\type0.png",
       "sourceSize": [
         224,
         224
@@ -678,7 +818,7 @@
         224,
         192
       ],
-      "source": "pc/builtin-clawpkgs/hachimi-travel/assets/type1.png",
+      "source": "pc\\builtin-clawpkgs\\hachimi-travel\\assets\\type1.png",
       "sourceSize": [
         224,
         192
@@ -693,7 +833,7 @@
         320,
         240
       ],
-      "source": "pc/builtin-clawpkgs/hachimi-garden/assets/background.png",
+      "source": "pc\\builtin-clawpkgs\\hachimi-garden\\assets\\background.png",
       "sourceSize": [
         640,
         480
@@ -708,7 +848,7 @@
         267,
         89
       ],
-      "source": "pc/builtin-clawpkgs/hachimi-garden/assets/decor.png",
+      "source": "pc\\builtin-clawpkgs\\hachimi-garden\\assets\\decor.png",
       "sourceSize": [
         480,
         160
@@ -723,10 +863,55 @@
         128,
         144
       ],
-      "source": "pc/builtin-clawpkgs/hachimi-garden/assets/type0.png",
+      "source": "pc\\builtin-clawpkgs\\hachimi-garden\\assets\\type0.png",
       "sourceSize": [
         128,
         144
+      ]
+    },
+    {
+      "component": "bloomfrog_companion",
+      "image": "background",
+      "method": "native-lanczos",
+      "role": "component",
+      "size": [
+        320,
+        240
+      ],
+      "source": "pc\\builtin-clawpkgs\\bloomfrog_companion\\assets\\background.png",
+      "sourceSize": [
+        640,
+        480
+      ]
+    },
+    {
+      "component": "bloomfrog_companion",
+      "image": "frog",
+      "method": "native-lanczos",
+      "role": "component",
+      "size": [
+        96,
+        96
+      ],
+      "source": "pc\\builtin-clawpkgs\\bloomfrog_companion\\assets\\bloomfrog.png",
+      "sourceSize": [
+        192,
+        192
+      ]
+    },
+    {
+      "component": "bloomfrog_companion",
+      "image": "type0",
+      "method": "lossless-glyph-A8",
+      "role": "component",
+      "size": [
+        224,
+        224
+      ],
+      "source": "pc\\builtin-clawpkgs\\bloomfrog_companion\\assets\\type0.png",
+      "sourceSize": [
+        224,
+        224
       ]
     },
     {
@@ -738,7 +923,7 @@
         320,
         240
       ],
-      "source": "pc/builtin-clawpkgs/two-key-pong/assets/background.png",
+      "source": "pc\\builtin-clawpkgs\\two-key-pong\\assets\\background.png",
       "sourceSize": [
         640,
         480
@@ -753,7 +938,7 @@
         224,
         224
       ],
-      "source": "pc/builtin-clawpkgs/two-key-pong/assets/type0.png",
+      "source": "pc\\builtin-clawpkgs\\two-key-pong\\assets\\type0.png",
       "sourceSize": [
         224,
         224
@@ -768,7 +953,7 @@
         224,
         128
       ],
-      "source": "pc/builtin-clawpkgs/two-key-pong/assets/type1.png",
+      "source": "pc\\builtin-clawpkgs\\two-key-pong\\assets\\type1.png",
       "sourceSize": [
         224,
         128
@@ -783,7 +968,7 @@
         320,
         240
       ],
-      "source": "pc/builtin-clawpkgs/hachimi-weather/assets/background.png",
+      "source": "pc\\builtin-clawpkgs\\hachimi-weather\\assets\\background.png",
       "sourceSize": [
         640,
         480
@@ -798,7 +983,7 @@
         224,
         224
       ],
-      "source": "pc/builtin-clawpkgs/hachimi-weather/assets/type0.png",
+      "source": "pc\\builtin-clawpkgs\\hachimi-weather\\assets\\type0.png",
       "sourceSize": [
         224,
         224
@@ -813,7 +998,7 @@
         224,
         96
       ],
-      "source": "pc/builtin-clawpkgs/hachimi-weather/assets/type1.png",
+      "source": "pc\\builtin-clawpkgs\\hachimi-weather\\assets\\type1.png",
       "sourceSize": [
         224,
         96
@@ -828,7 +1013,7 @@
         320,
         240
       ],
-      "source": "pc/builtin-clawpkgs/daily-almanac/assets/background.png",
+      "source": "pc\\builtin-clawpkgs\\daily-almanac\\assets\\background.png",
       "sourceSize": [
         640,
         480
@@ -843,7 +1028,7 @@
         160,
         128
       ],
-      "source": "pc/builtin-clawpkgs/daily-almanac/assets/digits.png",
+      "source": "pc\\builtin-clawpkgs\\daily-almanac\\assets\\digits.png",
       "sourceSize": [
         160,
         128
@@ -858,7 +1043,7 @@
         224,
         192
       ],
-      "source": "pc/builtin-clawpkgs/daily-almanac/assets/labels.png",
+      "source": "pc\\builtin-clawpkgs\\daily-almanac\\assets\\labels.png",
       "sourceSize": [
         224,
         192
@@ -873,7 +1058,7 @@
         320,
         240
       ],
-      "source": "pc/builtin-clawpkgs/upcoming-todos/assets/background.png",
+      "source": "pc\\builtin-clawpkgs\\upcoming-todos\\assets\\background.png",
       "sourceSize": [
         640,
         480
@@ -888,7 +1073,7 @@
         224,
         224
       ],
-      "source": "pc/builtin-clawpkgs/upcoming-todos/assets/type0.png",
+      "source": "pc\\builtin-clawpkgs\\upcoming-todos\\assets\\type0.png",
       "sourceSize": [
         224,
         224
@@ -903,7 +1088,7 @@
         224,
         160
       ],
-      "source": "pc/builtin-clawpkgs/upcoming-todos/assets/type1.png",
+      "source": "pc\\builtin-clawpkgs\\upcoming-todos\\assets\\type1.png",
       "sourceSize": [
         224,
         160
@@ -918,7 +1103,7 @@
         320,
         240
       ],
-      "source": "pc/builtin-clawpkgs/computer-status/assets/background.png",
+      "source": "pc\\builtin-clawpkgs\\computer-status\\assets\\background.png",
       "sourceSize": [
         640,
         480
@@ -933,7 +1118,7 @@
         224,
         224
       ],
-      "source": "pc/builtin-clawpkgs/computer-status/assets/type0.png",
+      "source": "pc\\builtin-clawpkgs\\computer-status\\assets\\type0.png",
       "sourceSize": [
         224,
         224
@@ -948,7 +1133,7 @@
         224,
         32
       ],
-      "source": "pc/builtin-clawpkgs/computer-status/assets/type1.png",
+      "source": "pc\\builtin-clawpkgs\\computer-status\\assets\\type1.png",
       "sourceSize": [
         224,
         32
@@ -963,7 +1148,7 @@
         320,
         240
       ],
-      "source": "pc/builtin-clawpkgs/drink-reminder/assets/background.png",
+      "source": "pc\\builtin-clawpkgs\\drink-reminder\\assets\\background.png",
       "sourceSize": [
         640,
         480
@@ -978,7 +1163,7 @@
         128,
         144
       ],
-      "source": "pc/builtin-clawpkgs/drink-reminder/assets/type0.png",
+      "source": "pc\\builtin-clawpkgs\\drink-reminder\\assets\\type0.png",
       "sourceSize": [
         128,
         144
@@ -993,7 +1178,7 @@
         224,
         224
       ],
-      "source": "pc/builtin-clawpkgs/drink-reminder/assets/type1.png",
+      "source": "pc\\builtin-clawpkgs\\drink-reminder\\assets\\type1.png",
       "sourceSize": [
         224,
         224
@@ -1008,7 +1193,7 @@
         320,
         240
       ],
-      "source": "pc/builtin-clawpkgs/hachimi-break/assets/background.png",
+      "source": "pc\\builtin-clawpkgs\\hachimi-break\\assets\\background.png",
       "sourceSize": [
         640,
         480
@@ -1023,7 +1208,7 @@
         128,
         144
       ],
-      "source": "pc/builtin-clawpkgs/hachimi-break/assets/type0.png",
+      "source": "pc\\builtin-clawpkgs\\hachimi-break\\assets\\type0.png",
       "sourceSize": [
         128,
         144
@@ -1038,7 +1223,7 @@
         224,
         224
       ],
-      "source": "pc/builtin-clawpkgs/hachimi-break/assets/type1.png",
+      "source": "pc\\builtin-clawpkgs\\hachimi-break\\assets\\type1.png",
       "sourceSize": [
         224,
         224
@@ -1053,7 +1238,7 @@
         320,
         240
       ],
-      "source": "pc/builtin-clawpkgs/hachimi-notes/assets/background.png",
+      "source": "pc\\builtin-clawpkgs\\hachimi-notes\\assets\\background.png",
       "sourceSize": [
         640,
         480
@@ -1068,7 +1253,7 @@
         224,
         224
       ],
-      "source": "pc/builtin-clawpkgs/hachimi-notes/assets/type0.png",
+      "source": "pc\\builtin-clawpkgs\\hachimi-notes\\assets\\type0.png",
       "sourceSize": [
         224,
         224
@@ -1083,7 +1268,7 @@
         224,
         160
       ],
-      "source": "pc/builtin-clawpkgs/hachimi-notes/assets/type1.png",
+      "source": "pc\\builtin-clawpkgs\\hachimi-notes\\assets\\type1.png",
       "sourceSize": [
         224,
         160
@@ -1098,7 +1283,7 @@
         320,
         240
       ],
-      "source": "pc/builtin-clawpkgs/token-usage/assets/background.png",
+      "source": "pc\\builtin-clawpkgs\\token-usage\\assets\\background.png",
       "sourceSize": [
         640,
         480
@@ -1113,7 +1298,7 @@
         128,
         144
       ],
-      "source": "pc/builtin-clawpkgs/token-usage/assets/type0.png",
+      "source": "pc\\builtin-clawpkgs\\token-usage\\assets\\type0.png",
       "sourceSize": [
         128,
         144
@@ -1128,7 +1313,7 @@
         224,
         224
       ],
-      "source": "pc/builtin-clawpkgs/token-usage/assets/type1.png",
+      "source": "pc\\builtin-clawpkgs\\token-usage\\assets\\type1.png",
       "sourceSize": [
         224,
         224
@@ -1143,7 +1328,7 @@
         320,
         240
       ],
-      "source": "pc/builtin-clawpkgs/decision-capsule/assets/background.png",
+      "source": "pc\\builtin-clawpkgs\\decision-capsule\\assets\\background.png",
       "sourceSize": [
         640,
         480
@@ -1158,7 +1343,7 @@
         224,
         224
       ],
-      "source": "pc/builtin-clawpkgs/decision-capsule/assets/type0.png",
+      "source": "pc\\builtin-clawpkgs\\decision-capsule\\assets\\type0.png",
       "sourceSize": [
         224,
         224
@@ -1173,7 +1358,7 @@
         320,
         240
       ],
-      "source": "pc/builtin-clawpkgs/answer-book/assets/background.png",
+      "source": "pc\\builtin-clawpkgs\\answer-book\\assets\\background.png",
       "sourceSize": [
         640,
         480
@@ -1188,7 +1373,7 @@
         224,
         224
       ],
-      "source": "pc/builtin-clawpkgs/answer-book/assets/type0.png",
+      "source": "pc\\builtin-clawpkgs\\answer-book\\assets\\type0.png",
       "sourceSize": [
         224,
         224
@@ -1203,7 +1388,7 @@
         320,
         240
       ],
-      "source": "pc/builtin-clawpkgs/hope-train/assets/background.png",
+      "source": "pc\\builtin-clawpkgs\\hope-train\\assets\\background.png",
       "sourceSize": [
         640,
         480
@@ -1218,7 +1403,7 @@
         224,
         224
       ],
-      "source": "pc/builtin-clawpkgs/hope-train/assets/type0.png",
+      "source": "pc\\builtin-clawpkgs\\hope-train\\assets\\type0.png",
       "sourceSize": [
         224,
         224
@@ -1230,7 +1415,7 @@
         320,
         240
       ],
-      "source": "firmware/assets/component-center/background.png"
+      "source": "firmware\\assets\\component-center\\background.png"
     },
     {
       "component": "city-radio",
@@ -1239,7 +1424,7 @@
         32,
         24
       ],
-      "source": "pc/builtin-clawpkgs/city-radio/assets/background.png"
+      "source": "pc\\builtin-clawpkgs\\city-radio\\assets\\background.png"
     },
     {
       "component": "cloud-hop",
@@ -1248,7 +1433,7 @@
         32,
         24
       ],
-      "source": "pc/builtin-clawpkgs/cloud-hop/assets/background.png"
+      "source": "pc\\builtin-clawpkgs\\cloud-hop\\assets\\background.png"
     },
     {
       "component": "daily-news",
@@ -1257,7 +1442,7 @@
         32,
         24
       ],
-      "source": "pc/builtin-clawpkgs/daily-news/assets/background.png"
+      "source": "pc\\builtin-clawpkgs\\daily-news\\assets\\background.png"
     },
     {
       "component": "book-pocket",
@@ -1266,7 +1451,7 @@
         32,
         24
       ],
-      "source": "pc/builtin-clawpkgs/book-pocket/assets/background.png"
+      "source": "pc\\builtin-clawpkgs\\book-pocket\\assets\\background.png"
     },
     {
       "component": "block-combo",
@@ -1275,7 +1460,7 @@
         32,
         24
       ],
-      "source": "pc/builtin-clawpkgs/block-combo/assets/background.png"
+      "source": "pc\\builtin-clawpkgs\\block-combo\\assets\\background.png"
     },
     {
       "component": "tomato-clock",
@@ -1284,7 +1469,7 @@
         32,
         24
       ],
-      "source": "pc/builtin-clawpkgs/tomato-clock/assets/background.png"
+      "source": "pc\\builtin-clawpkgs\\tomato-clock\\assets\\background.png"
     },
     {
       "component": "hachimi-sounds",
@@ -1293,7 +1478,7 @@
         32,
         24
       ],
-      "source": "pc/builtin-clawpkgs/hachimi-sounds/assets/background.png"
+      "source": "pc\\builtin-clawpkgs\\hachimi-sounds\\assets\\background.png"
     },
     {
       "component": "snake-turn",
@@ -1302,7 +1487,7 @@
         32,
         24
       ],
-      "source": "pc/builtin-clawpkgs/snake-turn/assets/background.png"
+      "source": "pc\\builtin-clawpkgs\\snake-turn\\assets\\background.png"
     },
     {
       "component": "flappy-bird",
@@ -1311,7 +1496,7 @@
         32,
         24
       ],
-      "source": "pc/builtin-clawpkgs/flappy-bird/assets/background.png"
+      "source": "pc\\builtin-clawpkgs\\flappy-bird\\assets\\background.png"
     },
     {
       "component": "hachimi-learn",
@@ -1320,7 +1505,7 @@
         32,
         24
       ],
-      "source": "pc/builtin-clawpkgs/hachimi-learn/assets/background.png"
+      "source": "pc\\builtin-clawpkgs\\hachimi-learn\\assets\\background.png"
     },
     {
       "component": "hachimi-home",
@@ -1329,7 +1514,7 @@
         32,
         24
       ],
-      "source": "pc/builtin-clawpkgs/hachimi-home/assets/background.png"
+      "source": "pc\\builtin-clawpkgs\\hachimi-home\\assets\\background.png"
     },
     {
       "component": "hachimi-travel",
@@ -1338,7 +1523,7 @@
         32,
         24
       ],
-      "source": "pc/builtin-clawpkgs/hachimi-travel/assets/background.png"
+      "source": "pc\\builtin-clawpkgs\\hachimi-travel\\assets\\background.png"
     },
     {
       "component": "hachimi-garden",
@@ -1347,7 +1532,7 @@
         32,
         24
       ],
-      "source": "pc/builtin-clawpkgs/hachimi-garden/assets/background.png"
+      "source": "pc\\builtin-clawpkgs\\hachimi-garden\\assets\\background.png"
     },
     {
       "component": "bloomfrog_companion",
@@ -1356,7 +1541,7 @@
         32,
         24
       ],
-      "source": "pc/builtin-clawpkgs/bloomfrog_companion/assets/background.png"
+      "source": "pc\\builtin-clawpkgs\\bloomfrog_companion\\assets\\background.png"
     },
     {
       "component": "two-key-pong",
@@ -1365,7 +1550,7 @@
         32,
         24
       ],
-      "source": "pc/builtin-clawpkgs/two-key-pong/assets/background.png"
+      "source": "pc\\builtin-clawpkgs\\two-key-pong\\assets\\background.png"
     },
     {
       "component": "hachimi-weather",
@@ -1374,7 +1559,7 @@
         32,
         24
       ],
-      "source": "pc/builtin-clawpkgs/hachimi-weather/assets/background.png"
+      "source": "pc\\builtin-clawpkgs\\hachimi-weather\\assets\\background.png"
     },
     {
       "component": "daily-almanac",
@@ -1383,7 +1568,7 @@
         32,
         24
       ],
-      "source": "pc/builtin-clawpkgs/daily-almanac/assets/background.png"
+      "source": "pc\\builtin-clawpkgs\\daily-almanac\\assets\\background.png"
     },
     {
       "component": "upcoming-todos",
@@ -1392,7 +1577,7 @@
         32,
         24
       ],
-      "source": "pc/builtin-clawpkgs/upcoming-todos/assets/background.png"
+      "source": "pc\\builtin-clawpkgs\\upcoming-todos\\assets\\background.png"
     },
     {
       "component": "computer-status",
@@ -1401,7 +1586,7 @@
         32,
         24
       ],
-      "source": "pc/builtin-clawpkgs/computer-status/assets/background.png"
+      "source": "pc\\builtin-clawpkgs\\computer-status\\assets\\background.png"
     },
     {
       "component": "drink-reminder",
@@ -1410,7 +1595,7 @@
         32,
         24
       ],
-      "source": "pc/builtin-clawpkgs/drink-reminder/assets/background.png"
+      "source": "pc\\builtin-clawpkgs\\drink-reminder\\assets\\background.png"
     },
     {
       "component": "hachimi-break",
@@ -1419,7 +1604,7 @@
         32,
         24
       ],
-      "source": "pc/builtin-clawpkgs/hachimi-break/assets/background.png"
+      "source": "pc\\builtin-clawpkgs\\hachimi-break\\assets\\background.png"
     },
     {
       "component": "hachimi-notes",
@@ -1428,7 +1613,7 @@
         32,
         24
       ],
-      "source": "pc/builtin-clawpkgs/hachimi-notes/assets/background.png"
+      "source": "pc\\builtin-clawpkgs\\hachimi-notes\\assets\\background.png"
     },
     {
       "component": "token-usage",
@@ -1437,7 +1622,7 @@
         32,
         24
       ],
-      "source": "pc/builtin-clawpkgs/token-usage/assets/background.png"
+      "source": "pc\\builtin-clawpkgs\\token-usage\\assets\\background.png"
     },
     {
       "component": "decision-capsule",
@@ -1446,7 +1631,7 @@
         32,
         24
       ],
-      "source": "pc/builtin-clawpkgs/decision-capsule/assets/background.png"
+      "source": "pc\\builtin-clawpkgs\\decision-capsule\\assets\\background.png"
     },
     {
       "component": "answer-book",
@@ -1455,7 +1640,7 @@
         32,
         24
       ],
-      "source": "pc/builtin-clawpkgs/answer-book/assets/background.png"
+      "source": "pc\\builtin-clawpkgs\\answer-book\\assets\\background.png"
     },
     {
       "component": "hope-train",
@@ -1464,7 +1649,7 @@
         32,
         24
       ],
-      "source": "pc/builtin-clawpkgs/hope-train/assets/background.png"
+      "source": "pc\\builtin-clawpkgs\\hope-train\\assets\\background.png"
     },
     {
       "role": "instrument",
@@ -1472,7 +1657,7 @@
         160,
         122
       ],
-      "source": "pc/public/instruments/wooden-fish/body.png"
+      "source": "pc\\public\\instruments\\wooden-fish\\body.png"
     },
     {
       "role": "instrument",
@@ -1480,7 +1665,7 @@
         80,
         82
       ],
-      "source": "pc/public/instruments/wooden-fish/mallet.png"
+      "source": "pc\\public\\instruments\\wooden-fish\\mallet.png"
     }
   ],
   "logicalCanvas": [
@@ -1490,16 +1675,24 @@
   "sources": {
     "firmware/assets/component-center/background.png": "c730626d76c923f964ebcbc53ee3386c111061a8c50f7418bcac05ffa3cb23fe",
     "firmware/factory-config.json": "ca43743ccd4aa4bebbfdcb43fb44464fe098383b6b2fa32f986fccc55e146475",
-    "firmware/s3/component-policy.json": "fde433258628e5c241cd124e6fccf2deb09b079daa55fd6f2343da83ffc74c0e",
-    "firmware/tools/prepare_s3_ui_assets.py": "d657ae2c76e19c4b3f75c73e8e4160b2b64aa48b5ced2ffbb136ace2bc4b67c1",
+    "firmware/s3/component-policy.json": "5a828e18e540dbb569d9641920c6d5b7e94b11c33617064ce49ab0da989a9560",
+    "firmware/tools/prepare_s3_ui_assets.py": "3e3de0d88e466547a0a77443b8d73097fc047b5b95ec9a89bc883e6414bbb688",
     "pc/builtin-clawpkgs/answer-book/assets/background.png": "fe1261bc2efee15b20b40d9491d4b8731ed56de0629568ff3a83b878624c062b",
     "pc/builtin-clawpkgs/answer-book/assets/type0.png": "f39826da657d2e5358540b923fc8496e9b04deb0ed7705751ea1508f35c8c8bd",
     "pc/builtin-clawpkgs/answer-book/buttons.json": "cab9eba2c007c24042cc170ec61dfa2535581328c9cb8be999516552b16d71a3",
     "pc/builtin-clawpkgs/answer-book/component.json": "c02f47a2b84611da3d13cdee83671e63be16ff6cecfaaea4a3dfd1ea12a422fd",
     "pc/builtin-clawpkgs/answer-book/runtime/widget.json": "e00e3109dfc13e3452bcfc856040b8e7d6a24a48bf5cf0613509e29bbcbb33ac",
     "pc/builtin-clawpkgs/block-combo/assets/background.png": "b11aeb3c5fa670eec5a374fd334eb24af5a2566896a766481f81f334523d2084",
+    "pc/builtin-clawpkgs/block-combo/assets/type0.png": "d4635bd7fa8b1244a1a53c498113132f79fd1d694583ff9bdab5d8d05d7a1971",
+    "pc/builtin-clawpkgs/block-combo/assets/type1.png": "f836e53c932b2de3765753496dd30ae8658ab8aed42d9fa4d98c34daf2180c2d",
+    "pc/builtin-clawpkgs/block-combo/buttons.json": "0c86c19362e47ce31c48c2642cdba8c9b275ae7ff5777e11a989ca2d56265c5e",
+    "pc/builtin-clawpkgs/block-combo/component.json": "b71385f548273c1f28e2428eb352874c0f7a97170a293a603790236b1721339d",
     "pc/builtin-clawpkgs/block-combo/runtime/widget.json": "782e52713df7cbf9b2b5526b6c3c131e210f8b36ff1dbef28929203e005a6534",
     "pc/builtin-clawpkgs/bloomfrog_companion/assets/background.png": "ae9546a1bd3a8eb2c0a07c3e63896346a4895a656ddc4341b565afa041d00e40",
+    "pc/builtin-clawpkgs/bloomfrog_companion/assets/bloomfrog.png": "f27161767a180e2e24cbd8b41a7064ab6b877965745f6266e1a7ba9d7fd5a8c0",
+    "pc/builtin-clawpkgs/bloomfrog_companion/assets/type0.png": "9d9557dbb998322035f6d5d235be01c506ae9d4746cdc4d9a83c81e6e5ac05c9",
+    "pc/builtin-clawpkgs/bloomfrog_companion/buttons.json": "68f0881c5ad02b46b972d54edd89bea775a797382ddcaaf6ac39c0455fb19296",
+    "pc/builtin-clawpkgs/bloomfrog_companion/component.json": "7d0d694d6c195282cb49eead7bb36d64950eeb676c55c1c3dbc0eed811ab2809",
     "pc/builtin-clawpkgs/bloomfrog_companion/runtime/widget.json": "969e070c645ff24aaa9573a593a02a2b15d13901628d8dee51dfa736010a0832",
     "pc/builtin-clawpkgs/book-pocket/assets/background.png": "2b3de0137e1f3cd393971c9fa549b04959bab2361d77e199c6b0220a02f0127e",
     "pc/builtin-clawpkgs/book-pocket/assets/digits.png": "17cb95e005a039e1abb10c88fb574d1bbb6a755cbaf24c523aaf3300a66f7132",
@@ -1510,9 +1703,14 @@
     "pc/builtin-clawpkgs/city-radio/assets/background.png": "a888f8edeb200a8ba71ed075753a95ce553b3bd19eff9402c27e489dcdb8ea7e",
     "pc/builtin-clawpkgs/city-radio/assets/vinyl.png": "852e529288aa4f1bd49e702a66a4062cb40fc28065b919af8801fa955d832907",
     "pc/builtin-clawpkgs/city-radio/buttons.json": "55f179d145919a3f71a490ff96dac53afd6f8b109d3cab5c72f268cb3785b56d",
-    "pc/builtin-clawpkgs/city-radio/component.json": "f21c13e4db72ae98fdeff2648474da75f34dbf2777e9fb47823b3f0b343be954",
-    "pc/builtin-clawpkgs/city-radio/runtime/widget.json": "196001a9242dae1959da23de2b8ee8c5e16b1f0bdc27494d7f07b12b23745553",
+    "pc/builtin-clawpkgs/city-radio/component.json": "1bf159fe130ae4893af956cad0e0d724752b6f70726da85d70e02712ae0d8c99",
+    "pc/builtin-clawpkgs/city-radio/runtime/widget.json": "59634523ed6e37542a7ed04b55cbc2bcde3b9c6dc5f0c4b997aafe9b9233d64e",
     "pc/builtin-clawpkgs/cloud-hop/assets/background.png": "0769155e7bc949b37b66de87b65011d54fe4c3ffcb0b35393bbfc292f7662e24",
+    "pc/builtin-clawpkgs/cloud-hop/assets/digits.png": "17cb95e005a039e1abb10c88fb574d1bbb6a755cbaf24c523aaf3300a66f7132",
+    "pc/builtin-clawpkgs/cloud-hop/assets/hero.png": "e5377f671634c62c719a06adef3cd224f43c42bd82b90e3788a25d52c7c44296",
+    "pc/builtin-clawpkgs/cloud-hop/assets/labels.png": "c23f2ef3a86d77cf5e292806787b847e1ffb34d806c37ca327b18ff4f43e3896",
+    "pc/builtin-clawpkgs/cloud-hop/buttons.json": "682f984504dfc2306e45041754b040ee759bc713ee9af89e0d76045ad130ae1e",
+    "pc/builtin-clawpkgs/cloud-hop/component.json": "b2cb9445fb9e4b11e29dc7f6b6d74f3575ea8ac2d4ec8bd2d55b732d6c493958",
     "pc/builtin-clawpkgs/cloud-hop/runtime/widget.json": "b21ef4930b4bfe353f69fd7f9a5b50c258f7477f1a56b640bb84c53158325429",
     "pc/builtin-clawpkgs/computer-status/assets/background.png": "c858b5bd6a2229491bf72cc8369ed8a798c797491834eaccd111fe95f4bcd330",
     "pc/builtin-clawpkgs/computer-status/assets/type0.png": "f5a7840408d1162d93ffe21e0fbdc99ea266ab7b8f038ad08b9bdd577af0cd40",

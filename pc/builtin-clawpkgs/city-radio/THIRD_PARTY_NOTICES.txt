@@ -93,3 +93,10 @@ SOFTWARE.
 随身听的在线搜索及音源解析使用 [GD 音乐台 API](https://music-api.gdstudio.xyz/api.php)，来源标识为 [GD音乐台](https://music.gdstudio.xyz/)。服务文档标注 CC BY-NC 4.0，并说明仅供学习参考，禁止下载、传播或商用；具体服务限制以提供方说明为准。
 
 本项目不打包歌曲、不提供歌曲下载/导出，也不绕过登录、付费或 DRM。用户选择播放时仅进行受限流式解码与设备播放；本地音频由用户自行提供。服务可访问不代表已取得相关音乐作品的使用或再分发许可。
+
+## china-radio 电台表 — MIT License
+
+- Upstream project: <https://github.com/haoweigem/china-radio>
+- License: MIT License (Copyright (c) 2026 haoweigem)
+
+城市电台组件的 `pc/catalog.json` 由该数据集的 `data/stations.json` 筛选生成：只保留中国内地（不含港澳台、对外广播与境外来源）的公开直播流地址，发布前逐条做过连通性复测。该文件只是地址索引，不存储、不转码、不分发任何音频内容；节目版权归各广播电台所有，流地址可能随时失效。上游原始 MIT 许可全文见 licenses/china-radio-MIT.txt，适用于电台地址数据集。

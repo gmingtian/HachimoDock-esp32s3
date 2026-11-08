@@ -1,0 +1,22 @@
+{
+  "background": {
+    "encoded": "c20a704a581ebcba60be5ad3f0e51701a553a946d5dc5f3c2d12c3d563682efb",
+    "source": "f4a87ef3e8f3bd12806c94bdeeb9f518abd882226b879dd9156abe3b6fb0a171",
+    "spec": "8940ab07a2efa17c97d991bb3c9f7b017341f13e275655d03c983c0b5e4b084b"
+  },
+  "digits": {
+    "encoded": "e103b4dfa340cd72ca7ab85369512d70b6678b29bb1c1e8cdbd8b34e4c95c50e",
+    "source": "17cb95e005a039e1abb10c88fb574d1bbb6a755cbaf24c523aaf3300a66f7132",
+    "spec": "b5dfbec0808d9b20f6461035166575b331841e89a52c0d754da3ba73fe279315"
+  },
+  "hero": {
+    "encoded": "8f5df77c08df2eede2cd8ba4e8aa882f0616b526f6c77efce25546d315bbf63c",
+    "source": "d33e0d8683240d47ed0f255e50a5f7015bb495676dfe66af512f1220429626fd",
+    "spec": "fa22c17f42977225a7a5a263c042c83b63f1929bd2eb36f2e7925f9ce59bf3db"
+  },
+  "labels": {
+    "encoded": "d86be646e89a46dcda0450f26b1916749c0d13e05f9385c8206462a65a4471e3",
+    "source": "c23f2ef3a86d77cf5e292806787b847e1ffb34d806c37ca327b18ff4f43e3896",
+    "spec": "7d5ac67afabc747eae2496b77fc78c15f5974f37830c7c2d815b8dcece29d2e7"
+  }
+}

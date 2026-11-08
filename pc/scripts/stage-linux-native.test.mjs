@@ -1,6 +1,24 @@
 import test from 'node:test';import assert from 'node:assert/strict';import {mkdtempSync,mkdirSync,writeFileSync,readFileSync,existsSync,rmSync} from 'node:fs';import {tmpdir} from 'node:os';import {join} from 'node:path';
 import {stageLinuxNative} from './stage-linux-native.mjs';
 import {fileURLToPath} from 'node:url';
+test('nonempty output is rejected before old files can enter a release',()=>{
+ const root=mkdtempSync(join(tmpdir(),'hachimo-stale-stage-'));
+ try{
+ const output=join(root,'out');mkdirSync(output);writeFileSync(join(output,'private-stale.txt'),'do not ship');
+ writeFileSync(join(root,'resource.txt'),'fresh');writeFileSync(join(root,'app'),Buffer.from([127,69,76,70]));
+ assert.throws(()=>stageLinuxNative({tauriRoot:root,resources:{'resource.txt':'tools/resource.txt'},outputRoot:output,binaryPath:join(root,'app')}),/nonempty.*backup.*rerun/i);
+ assert.equal(readFileSync(join(output,'private-stale.txt'),'utf8'),'do not ship');
+ assert.equal(existsSync(join(output,'usr')),false);
+ }finally{rmSync(root,{recursive:true,force:true});}
+});
+test('an existing empty output directory can be staged safely',()=>{
+ const root=mkdtempSync(join(tmpdir(),'hachimo-empty-stage-'));
+ try{
+ const output=join(root,'out');mkdirSync(output);writeFileSync(join(root,'resource.txt'),'fresh');writeFileSync(join(root,'app'),Buffer.from([127,69,76,70]));
+ stageLinuxNative({tauriRoot:root,resources:{'resource.txt':'tools/resource.txt'},outputRoot:output,binaryPath:join(root,'app')});
+ assert.equal(readFileSync(join(output,'usr/lib/pet-manager-tauri/tools/resource.txt'),'utf8'),'fresh');
+ }finally{rmSync(root,{recursive:true,force:true});}
+});
 test('native Linux layout keeps resources beside the installed library path',()=>{
  const root=mkdtempSync(join(tmpdir(),'hachimo-stage-'));
  try{mkdirSync(join(root,'sources'));writeFileSync(join(root,'sources/data.txt'),'ready');writeFileSync(join(root,'app'),Buffer.from([127,69,76,70]));
@@ -31,7 +49,7 @@ test('desktop resource maps stage the S3 firmware and the independent native UI'
  stageLinuxNative({tauriRoot,resources,binaryPath:join(root,'app'),packageName:base.productName,outputRoot:join(root,'out')});
  const installed=join(root,'out/usr/lib',base.productName);
  const inventory=JSON.parse(readFileSync(join(installed,'s3-landscape-ui/inventory.json')));
- assert.equal(inventory.components.length,25);
+ assert.equal(inventory.components.length,28);
  for(const logical of Object.keys(inventory.files))assert.ok(existsSync(join(installed,'s3-landscape-ui',logical)),logical);
  assert.deepEqual(readFileSync(join(installed,'firmware/esp32-s3/firmware.bin')),readFileSync(join(tauriRoot,'firmware/esp32-s3/firmware.bin')));
  assert.ok(existsSync(join(installed,'tools/prepare_s3_assets.py')));

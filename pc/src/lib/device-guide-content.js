@@ -183,12 +183,13 @@ export const P4_CARDS = [
 
 
 export const S3_CARDS = [
- {id:"controls", title:"ESP32-S3 三键操作", shortTitle:"三键导航", controls:[
-  {control:"sw1",rows:[{gesture:"GPIO39 短按",action:"上一个"},{gesture:"长按",action:"返回 / 主界面"}]},
-  {control:"sw2",rows:[{gesture:"GPIO38 短按",action:"下一个"},{gesture:"长按",action:"组件菜单"}]},
-  {control:"sw3",rows:[{gesture:"GPIO0 短按",action:"确认"},{gesture:"按住后松开",action:"录音 / 结束录音"}]}]},
- {id:"widget-takeover",title:"组件与游戏",shortTitle:"组件按键",headline:"组件动作可分配到三颗按键。长按上一个始终保留返回路径。",example:{name:"操作方式",rows:[
-  {control:"sw1",gesture:"短按",action:"上一个 / 组件动作"},
-  {control:"sw2",gesture:"短按",action:"下一个 / 组件动作"},
-  {control:"sw3",gesture:"短按",action:"确认 / 组件动作"}]},footnotes:["本设备无触屏和摇杆；可在组件中心调整支持的按键动作。","GPIO0 同时是启动引脚，设备上电时请松开确认键。"]}
+ {id:"controls",title:"ESP32-S3 A4 按钮与摇杆",shortTitle:"按钮与摇杆",controls:[
+  {control:"sw1",rows:[{gesture:"GPIO39 短按",action:"确认 / 进入"},{gesture:"按住后松开",action:"录音 / 结束录音"}]},
+  {control:"sw2",rows:[{gesture:"GPIO38 短按",action:"组件中心"},{gesture:"长按",action:"语音聊天"}]},
+  {control:"sw3",rows:[{gesture:"GPIO0 短按",action:"返回 / 退出"}]},
+  {control:"joystick",rows:[{gesture:"GPIO1/2 四方向",action:"上一项 / 下一项 / 组件方向动作"},{gesture:"GPIO8 中按",action:"确认 / 组件动作"}]}]},
+ {id:"widget-takeover",title:"组件与游戏",shortTitle:"组件操作",headline:"采用官方按钮与四方向摇杆事件，组件页面按组件自身定义响应。",footnotes:[
+  "上电和复位时松开所有按键，并让摇杆保持居中，以便校准。GPIO0 同时是启动引脚。",
+  "当前无触屏；触屏专用项目仍不支持。Wi-Fi 配网与绑定通过桌面客户端完成。",
+  "摇杆校准无效时停止方向输入，按钮仍可用；可在诊断页查看 ADC 采样后居中重启。"]}
 ];

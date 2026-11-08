@@ -1,0 +1,14 @@
+Fusion 外壳本地桥接插件
+
+1. 在 Fusion 新建空设计，关闭打开/保存等对话框。
+2. 按 Shift+S 打开“脚本和附加模块”。
+3. 从设备添加本仓库内 hardware/enclosure-a4/fusion/FusionEnclosureBridge 文件夹。
+4. 选择 FusionEnclosureBridge，点击“运行”，无需设置启动时运行。
+
+插件使用相邻的 fusion/io/ 目录收发本机会话请求，路径由脚本位置计算。
+运行时队列、session/body/design 标识不是可移植工程输入，不能直接复用历史会话。
+插件不联网、不设开机自启；点击插件“停止”或退出 Fusion 即结束。
+
+本次可移植几何输入是 reference/original-assembly.STEP，以及当前 full-r4.4/working-r4.4-full.step。
+正式打印使用 README 指定的 R4.4 两份 STL；当前未提供 F3D/3MF。
+过程脚本用于查阅设计与校验方法，启动插件不意味着历史会话已恢复或可一键重建。

@@ -74,12 +74,12 @@ int main(int argc,char **argv){
  (void)argv;
  for(count=0;count<=32;++count){
    for(selected=0;selected<(count?count:1);++selected){
-     reads=0;render_component_center_page();
+     reads=0;render_component_center_page(false);
      size_t remaining=count-selected/4*4;assert(reads==(remaining<4?remaining:4));
    }
  }
- count=0;selected=99;render_component_center_page();
- if(argc>1){preview=true;count=12;selected=0;render_component_center_page();}
+ count=0;selected=99;render_component_center_page(true);
+ if(argc>1){preview=true;count=12;selected=0;render_component_center_page(false);}
  return 0;
 }
 '''

@@ -1,117 +1,50 @@
 # HachimoDock-esp32s3
 
-An ESP32-S3, three-button adaptation of [YizhengWw/HachimoDock](https://github.com/YizhengWw/HachimoDock), retaining the N16R8 board and GPIO wiring with a 320×240 landscape ST7789 display, I2S microphone and MAX98357A speaker.
+An unofficial ESP32-S3 A4 adaptation with **three buttons and a four-way joystick with center press**, a landscape 320×240 display, a desktop pet and offline games.
 
-**Attribution:** The original HachimoDock project is created by **Yizheng Wang ([@YizhengWw](https://github.com/YizhengWw))**. This modified repository is maintained by [gmingtian](https://github.com/gmingtian) for ESP32-S3 and Linux compatibility. It is not an official upstream release or endorsement. Original copyrights, the [project license](LICENSE) and [third-party notices](THIRD_PARTY_NOTICES.md) are retained.
+Maintained by [gmingtian](https://github.com/gmingtian), based on **Yizheng Wang / [YizhengWw/HachimoDock](https://github.com/YizhengWw/HachimoDock)**. Original attribution, [LICENSE](LICENSE) and [third-party notices](THIRD_PARTY_NOTICES.md) are retained. This fork is not endorsed by the upstream project.
 
-[简体中文](README.md) · [S3 downloads](https://github.com/gmingtian/HachimoDock-esp32s3/releases) · [Wiring and firmware](docs/ESP32-S3-Linux.md) · [Linux build](pc/docs/linux-native.md) · [Installation](docs/INSTALLATION.md) · [Upstream feature comparison](docs/FEATURE-COMPARISON.md) · [Compatibility](docs/COMPATIBILITY.md)
+[Release downloads](https://github.com/gmingtian/HachimoDock-esp32s3/releases/tag/v0.1.202-s3-a4-r16c) · [Installation](docs/INSTALLATION.md) · [A4 controls](docs/ESP32-S3-A4-Controls.md) · [PCB and enclosure](hardware/README.md) · [Compatibility](docs/COMPATIBILITY.md) · [中文](README.md)
 
-Current source versions are landscape firmware **0.7.103-s3-r6-l320** and desktop **0.1.170**.
-The S3 client now uniformly prepares 320×240/15fps appearances and installs native
-artwork for all 25 bundled components. It no longer selects a square-screen profile;
-the older square firmware sources remain for later removal. Application-only firmware
-updates preserve existing artwork until appearances/components are synced again.
-They support 15fps assets, re-encode all 16 default animation families, preserve
-10fps compatibility and fix rounding when deriving an omitted duration.
-Re-sync the appearance after updating firmware to replace existing animations.
-15fps describes the assets: one roughly ten-second sample on the 240×240 S3
-idle home screen measured about **3.15 submitted FPS**, not stable 15 FPS.
-The [240×320 ST7789 landscape profile](docs/ESP32-S3-Landscape.md) uses a 320×240 output with the FPC on the left and the original UI at half scale. This release selects landscape uniformly; the older square sources remain for later removal. Joystick adaptation is still pending.
-Download the matching Windows x64, macOS Apple Silicon and Linux x86_64 clients
-from [Desktop 0.1.170](https://github.com/gmingtian/HachimoDock-esp32s3/releases/tag/v0.1.170).
+Current release sources: desktop **0.1.202**, firmware **0.7.103-s3-r16c-80m-l320**. Desktop build targets are Windows x64, Apple Silicon macOS arm64 and Linux x86_64. Available installers and checksums are listed in the Release attachments; Intel Mac and Linux ARM builds are not advertised.
 
+## The assembled device
 
-S3 r1 / desktop 0.1.168 adds paired TLS Wi-Fi alongside USB. Provision and pair
-once over USB, then use the same reachable LAN for session state, keys, audio,
-assets, components, diagnostics and application OTA. The selected transport is
-remembered, live connections are not preempted, and a lost Wi-Fi session can
-fall back to the same board over USB after transaction cleanup. Initial flashing
-and ROM recovery remain USB operations. See [Wi-Fi setup](docs/WIFI.md).
-Hardware radio/latency/stability checks are still pending; previous releases have been withdrawn.
+| A4 PCB running City Radio | Enclosed device running the pet |
+| --- | --- |
+| ![A4 PCB](docs/images/a4-pcb-radio.jpg) | ![Assembled white enclosure](docs/images/a4-enclosure-pet.jpg) |
 
-## Device photos
+These are unchanged photographs of the actual assembled unit. They do not establish fit for every print material or module batch, full joystick travel, RF certification or acoustic performance.
 
-<table>
-  <tr>
-    <td align="center"><img src="docs/images/s3-device-photo.jpg" width="480" alt="ESP32-S3 device with display and speaker, showing the idle terrier" /></td>
-    <td align="center"><img src="docs/images/s3-session-photo.jpg" width="360" alt="Physical 240×240 display showing a completed task and Chinese conversation bubble" /></td>
-  </tr>
-  <tr>
-    <td align="center">ESP32-S3 device, display and speaker</td>
-    <td align="center">Completed task and Chinese conversation bubble</td>
-  </tr>
-</table>
+## Features
 
-## Adaptation scope
+- Native **320×240 composition**, 80MHz SPI, Chinese menus, session bubbles and animation/partial refresh optimizations. This unit has passed visual checks at 80MHz; other displays and cables require validation. Asset frame rate limits are not measured device FPS.
+- A4 button/joystick controls replace the former button-only fallback. The joystick navigates; button 1 confirms or holds to record, button 2 opens components, button 3 returns. Controls are configurable in the desktop app.
+- Cloud Hop, Pixel Blocks and Bloom Frog are restored. Offline human-versus-AI Gomoku and Xiangqi run on the device without a computer performing the search.
+- Xiangqi offers three difficulty levels and legal-destination cursor guidance for all seven piece types. r16c shortens AI slice waits without changing depth, work limits or evaluation. All 36 comparison positions matched; one fixed-opening hard-mode device measurement improved from about 4.60s to 2.20s. See the [validation record](docs/ESP32-S3-r16c-Xiangqi-Speed.md) for scope.
+- Agent sessions, avatar/component synchronization, USB and paired local-network Wi-Fi, configurable buttons and voice-service integration. Cloud services require the appropriate credentials and network. Linux cross-application input automation has limitations.
+- S3 chip/project checks reject P4 firmware; OTA transactions and rollback are retained. Verify the board and download checksums before updating.
 
-- ESP32-S3 N16R8: 16MiB Flash, 8MiB PSRAM, 320×240 landscape SPI display and buttons on GPIO39 / 38 / 0.
-- Chinese native menus and session bubbles, paginated text, three-button navigation and software pointer actions.
-- Shared pet animations, Agent session synchronization, 25 three-key-compatible factory components and configurable speech paths.
-- Desktop build support for Linux x86_64, Windows x64 and Apple-silicon macOS; installers are distributed through this fork's Releases.
-- Bounded S3 asset conversion to 320×240 at up to 15fps, chip-specific firmware validation and transactional resource updates.
+## Hardware and controls
 
-Current published S3 firmware: **0.7.103-s3-r1**. [S3 firmware and desktop clients](https://github.com/gmingtian/HachimoDock-esp32s3/releases) are available. Initial flashing requires the complete factory image at address `0x0`, not the application image. Preserve the old firmware for recovery.
+ESP32-S3 N16R8 (16MiB Flash, 8MiB PSRAM), 240×320 ST7789 mounted landscape at 320×240, INMP441 microphone and MAX98357A amplifier. The display ribbon is on the left when viewed from the front.
 
-See [Installation](docs/INSTALLATION.md) for setup and [Compatibility](docs/COMPATIBILITY.md) for platform support, hardware status and known limitations. The original license continues to govern the original works; third-party materials retain their respective terms.
+| Interface | GPIO |
+| --- | --- |
+| SW1 / SW2 / SW3 | 39 / 38 / 0 |
+| Joystick X / Y / center | 1 / 2 / 8 |
+| LCD CLK / MOSI / RST / DC / CS / BL | 21 / 47 / 45 / 40 / 41 / 42 |
+| Microphone WS / BCLK / DIN | 4 / 5 / 6 |
+| Amplifier DOUT / BCLK / LRCK | 7 / 15 / 16 |
 
-## Original project reference
+Release GPIO0 during boot/reset. Gomoku: button 1 start/place/restart, 2 undo, 3 exit. Xiangqi: button 1 select/place, 2 cancel selection or undo, 3 exit; up/down selects difficulty before starting. Follow each game's on-screen instructions.
 
-The following original documentation describes the upstream ESP32-P4 hardware and releases. Use the S3 links above for this adaptation.
+The [hardware index](hardware/README.md) identifies current **A4 Gerbers, editable KiCad PCB/schematic and local libraries, BOM, wiring, and R4.4 upper/lower STL and STEP**. Earlier PCB/enclosure revisions and fit-test skeletons are historical inputs, not the recommended manufacturing set.
 
-<details>
-<summary>Original HachimoDock / ESP32-P4 documentation</summary>
+## Install and build
 
-# HachimoDock
+Choose matching desktop and S3 firmware files from the [Release](https://github.com/gmingtian/HachimoDock-esp32s3/releases/tag/v0.1.202-s3-a4-r16c) and read [installation and recovery](docs/INSTALLATION.md). Installing the desktop app does not flash the board. Application-only firmware must not be written to 0x0; initial factory flashing and resource-preserving OTA are different operations.
 
-[简体中文 · Product gallery](README.md) · [Downloads](https://github.com/YizhengWw/HachimoDock/releases)
+See [S3 build/wiring](docs/ESP32-S3-Linux.md), [native Linux desktop](pc/docs/linux-native.md) and the `pc/` project. Docker is optional; native Node, Rust and ESP-IDF environments can build the respective targets. Fork macOS packages are not claimed to be Apple-notarized.
 
-HachimoDock turns Agent activity into a desktop companion: pet animations, conversation bubbles, voice dictation and interactive components on an ESP32-P4 display. Pet Manager supports macOS and Windows and integrates with agents including ChatGPT (Codex), Claude, OpenClaw, MiMoCode and WorkBuddy.
-
-Home-control capabilities are provided by [**Xiaomi MiLoCo**](https://github.com/XiaoMi/xiaomi-miloco). The relevant MiLoCo licensed works are copyrighted by Xiaomi and subject to the [Xiaomi Miloco License](licenses/Xiaomi-Miloco-LICENSE.md); copyright notices, disclaimers and the license are retained with the relevant implementation. Non-commercial use must still comply with the license's permitted scope. This project grants no additional commercial, sublicensing or trademark rights. See [Third-Party Notices](THIRD_PARTY_NOTICES.md) for details.
-
-## Source and builds
-
-- [`pc/`](pc/README.md): desktop client 0.1.167, local Agent bridge, component-generation Skill and built-in resources.
-- [`firmware/`](firmware/BUILD.md): ESP32-P4 runtime 0.7.103-p4-r1, board drivers, tests and complete factory-image tools. The 0.7.108 development branch is not included.
-- Current `main` includes its release resources in ordinary Git; a fresh checkout does not depend on Git LFS quota. Build dependencies are described in each directory.
-- For a ready-to-use app or a complete device flashing kit, visit [Downloads](https://github.com/YizhengWw/HachimoDock/releases/latest).
-- To use speech recognition or appearance generation, enter your service keys in Pet Manager’s API settings.
-
-Choose the complete v1 or v3 flashing kit for your actual chip revision; they are not interchangeable. Contact customer support if unsure. Windows and macOS use the same firmware for each chip family. The scripts require Python 3.10+ and install esptool **5.4.0**. They check the chip before erasing; a complete flash clears settings, appearances and components. Connect the display to **DSI**, not CSI, with power disconnected. The v3 24 MHz display fix restored pet animation on a physical board; input, audio and large-file transfers still require release-level hardware validation. See the [flashing guide](firmware/BUILD.md) for tool versions and instructions.
-
-## Device and voice use
-
-The current public source includes 0.1.167 improvements to dictation and task receipts, Photos import, automatic appearance generation and recovery, component resource integrity, daily-content caches and automatic playback. Generation supports human and animal characters, optional style descriptions and action-specific reference frames. Third-party components and services retain their respective licenses and conditions.
-
-This is a sanitized source export for the normal public edition, not a copy of private repository history. Public builds use user-provided credentials and do not bundle certificate contents or build-machine proxy settings. Publication checks cover tracked source, documentation and assets; they are not a guarantee about unknown external copies. Public service endpoints and license notices remain. Community web assets are included, but the operational backend is not. Existing release binaries are unchanged; historical refs were rewritten during documentation/privacy cleanup. Use `main` for the latest source. A Windows COM-port opening issue reported on some computers with this firmware is still under investigation; this source sync does not claim to fix it.
-
-Configure speech and chat-model credentials, then long-press SW2 in the pet view to start or end real-time conversation. Compatible firmware supports listening during playback and interruption. Pair your home account on the Smart Home page for natural-language control of authorized devices. The built-in stock watchlist defaults to Xiaomi and Alibaba; manage it in component details. Quotes are refreshed by the PC every two seconds and forwarded over USB, may be delayed, and do not enable trading.
-
-Public installers contain no API keys, enterprise CA certificates or fixed proxy addresses. For image moderation failures, the client explains the rejected stage and offers manual MP4 import using material you are authorized to use.
-
-Default short presses: SW1 confirms, SW2 switches the pet/component-center view, SW3 returns. Long-press SW1 records speech; releasing writes a draft, and Confirm sends it. Permissions are required to control the chosen Agent's input field. Dictation targets and desktop session switching depend on each Agent's integration. For WorkBuddy, manually open the target conversation and keep its input visible; changing the device bubble does not switch the desktop conversation. See [WorkBuddy](pc/docs/workbuddy.md) and [Agent integration](pc/docs/agent-integration-audit.md) for platform limits.
-
-Component behavior and physical bindings can be adjusted in Pet Manager. Use the bundled `petui` Skill inside an Agent to create and iterate on non-commercial components, then synchronize them to the device.
-
-## macOS installation
-
-If a downloaded app will not open, after verifying its origin and checksum run:
-
-```sh
-xattr -cr "/Applications/HachimiDock.app"
-```
-
-Enable Pet Manager in **System Settings → Privacy & Security → Accessibility** when prompted to allow Agent input and control. See each release for complete firmware flashing instructions.
-
-## License and notices
-
-**Non-commercial source available.** The [HachimoDock Project License](LICENSE) permits non-commercial use, project modifications and component creation within its scope. Commercial use, paid services, commercial integration and independent apps/services/products require prior written permission. Project branding is not licensed for misleading promotion or endorsement. Third-party code and materials retain their [own licenses](THIRD_PARTY_NOTICES.md); earlier releases retain their accompanying licenses.
-
-For authorization, use the maintainer contact published in the [Chinese README](README.md#作者--author). Report security issues privately as described in [SECURITY.md](SECURITY.md).
-
-## Working after the history cleanup
-
-Public history was cleaned on 2026-10-28. Prefer a fresh clone and do not merge or force-push old refs back into the repository. Existing Release installer and firmware attachments were not replaced. Rewriting Git history cannot recall downloaded copies or by itself purge cached GitHub views.
-
-
-</details>
+This package targets the A4 S3 board; sharing game cores with P4 does not make the S3 firmware flashable on P4. A joystick does not provide a touchscreen. S3 voice uses the half-duplex path; calibrated full-duplex/AEC is not claimed. See [compatibility](docs/COMPATIBILITY.md).

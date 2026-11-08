@@ -1,0 +1,146 @@
+{
+  "revision": "R4.4-speaker-and-smooth-rim",
+  "physical_fit_verified": false,
+  "files": {
+    "upper": {
+      "file": "a4-upper-r4.4-hachimo.stl",
+      "bytes": 10669784,
+      "sha256": "01d77478ed527ab42ce805d199b169055bbe6fa60e9182cd0038c1b7b9c5825d",
+      "watertight": true,
+      "connected_solids": 1,
+      "extents_mm": [
+        91.50000000000001,
+        97.50457000732422,
+        69.54441951951765
+      ]
+    },
+    "lower": {
+      "file": "a4-lower-r4.4-speaker.stl",
+      "bytes": 7727684,
+      "sha256": "608fb8056016b028f99e9a6d6622f4be27979261779831fed110d7f0a131031a",
+      "watertight": true,
+      "connected_solids": 1,
+      "extents_mm": [
+        83.83050537109374,
+        91.85993194580078,
+        60.88879394531251
+      ]
+    }
+  },
+  "rim_cleanup": {
+    "remaining_material_above_flat_deck_mm3": 1.2763432214746663e-07,
+    "removed_volume_mm3": 0.2297762675407739,
+    "added_volume_mm3": 0.010335153217604153,
+    "removed_outside_repair_region_mm3": 0.012198579536462514,
+    "added_outside_repair_region_mm3": 0.010335153215325446
+  },
+  "new_case_pair_interference_mm3": 7.999957085718675e-05,
+  "hardware_overlaps_mm3": {
+    "carrier": {
+      "upper": 0.0,
+      "lower": -7.111169625739236e-07
+    },
+    "lcd_pcb": {
+      "upper": 1.3147746755600286e-05,
+      "lower": 0.0
+    },
+    "spi": {
+      "upper": 0.0,
+      "lower": 0.0
+    },
+    "U1": {
+      "upper": 0.0,
+      "lower": 0.0
+    },
+    "U2": {
+      "upper": 0.0,
+      "lower": 0.0
+    },
+    "U3": {
+      "upper": 0.0,
+      "lower": 0.0
+    }
+  },
+  "lcd_screw_access": [
+    {
+      "u": 3,
+      "v": 3,
+      "driver_obstruction_mm3": 0.0,
+      "head_obstruction_mm3": 0.0
+    },
+    {
+      "u": 3,
+      "v": 48,
+      "driver_obstruction_mm3": 0.0,
+      "head_obstruction_mm3": 0.0
+    },
+    {
+      "u": 78.2,
+      "v": 3,
+      "driver_obstruction_mm3": 0.0,
+      "head_obstruction_mm3": 0.0
+    },
+    {
+      "u": 78.2,
+      "v": 48,
+      "driver_obstruction_mm3": 0.0,
+      "head_obstruction_mm3": 0.0
+    }
+  ],
+  "heat_set_insert": {
+    "thread": "M2.5",
+    "insert_length_mm": 4,
+    "insert_od_mm": 3.5,
+    "pilot_diameter_mm": 3.2,
+    "pilot_depth_mm": 4.4,
+    "boss_diameter_mm": 6.4,
+    "checks": {
+      "H3": {
+        "pilot_obstruction_mm3": 0.0,
+        "boss_wall_fraction": 1.0,
+        "pilot_end_shoulder_fraction": 0.9999999999999998
+      },
+      "H4": {
+        "pilot_obstruction_mm3": 0.0,
+        "boss_wall_fraction": 1.0,
+        "pilot_end_shoulder_fraction": 0.9999999999999998
+      }
+    }
+  },
+  "lettering": {
+    "groove_obstruction_mm3": 4.261301767990112e-06,
+    "floor_1p25mm_fraction": 1.0
+  },
+  "pcb_fixings": {
+    "H3": {
+      "front_bearing_fraction": 1.0,
+      "front_pilot_obstruction_mm3": 0.0,
+      "rear_screw_route_obstruction_mm3": 0.0,
+      "rear_head_route_obstruction_mm3": 0.0,
+      "rear_head_seat_fraction": 0.9999999999999999
+    },
+    "H4": {
+      "front_bearing_fraction": 1.0,
+      "front_pilot_obstruction_mm3": 0.0,
+      "rear_screw_route_obstruction_mm3": 0.0,
+      "rear_head_route_obstruction_mm3": 0.0,
+      "rear_head_seat_fraction": 0.9999999999999999
+    },
+    "H1_locator_fraction": 1.0
+  },
+  "original_key_profiles": [
+    {
+      "z": 11.5,
+      "max_profile_difference_mm": 0.004985310819565676
+    },
+    {
+      "z": 13.5,
+      "max_profile_difference_mm": 0.006567223923838414
+    },
+    {
+      "z": 15.8,
+      "max_profile_difference_mm": 0.006414878908145054
+    }
+  ],
+  "motion_note": "Upper changes only remove material; original accepted ball-to-key limitation remains."
+}

@@ -11,7 +11,10 @@ def test_identical_default_cues_are_embedded_only_once():
     assert (clips / "error.wav").read_bytes() == (clips / "waiting_user.wav").read_bytes()
     cmake = (ROOT / "main/CMakeLists.txt").read_text()
     assert "PET_ERROR_CUE_SHA STREQUAL PET_WAIT_CUE_SHA" in cmake
-    assert "foreach(cue done error)" in cmake
+    assert "foreach(cue done error)" not in cmake
+    assert '"pet_p4_cue_packed.c"' in cmake
+    assert 'compress_system_cues.py" "--check"' in cmake
+    assert "foreach(cue permission_request" not in cmake
     assert "../pc/public/terrier-clips/waiting_user.wav" not in (ROOT / "platformio.ini").read_text()
     source = (ROOT / "main/pet_p4_system_cues.c").read_text()
     assert "_binary_waiting_user_wav" not in source
@@ -24,15 +27,13 @@ def test_shared_cues_parse_and_preserve_unknown_custom_audio():
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-/* Link-only placeholders: host test exercises the parser on real resource bytes. */
-const unsigned char d0[1] __asm__("_binary_done_wav_start") = {0};
-const unsigned char d1[1] __asm__("_binary_done_wav_end") = {0};
-const unsigned char e0[1] __asm__("_binary_error_wav_start") = {0};
-const unsigned char e1[1] __asm__("_binary_error_wav_end") = {0};
-const unsigned char w0[1] __asm__("_binary_waiting_user_wav_start") = {0};
-const unsigned char w1[1] __asm__("_binary_waiting_user_wav_end") = {0};
+/* Host test exercises the original WAV parser on canonical resource bytes. */
+/* This test isolates the existing WAV parser; the packed decoder and complete
+ * seven-family lookup are exercised with real zlib by p4_cue_packed_test. */
+bool pet_p4_cue_packed_init(void) {return false;}
+bool pet_p4_cue_packed_pcm(unsigned index,const uint8_t **pcm,size_t *size) {(void)index;(void)pcm;(void)size;return false;}
 int main(int argc, char **argv) {
-  assert(argc==4);
+  assert(argc==9);
   for (int i=1;i<argc;i++) {
     FILE *f=fopen(argv[i],"rb"); assert(f);
     fseek(f,0,SEEK_END); size_t size=(size_t)ftell(f); rewind(f);
@@ -46,6 +47,11 @@ int main(int argc, char **argv) {
   assert(pet_p4_system_cue_family("done"));
   assert(pet_p4_system_cue_family("error"));
   assert(pet_p4_system_cue_family("waiting_user"));
+  assert(pet_p4_system_cue_family("permission_request"));
+  assert(pet_p4_system_cue_family("permission_approved"));
+  assert(pet_p4_system_cue_family("permission_denied"));
+  assert(pet_p4_system_cue_family("permission_expired"));
+  assert(pet_p4_system_cue_family("session_terminated"));
   assert(!pet_p4_system_cue_family("working"));
   assert(pet_p4_system_cue_legacy("done",UINT64_C(0x392e208e77b6a2a4)));
   assert(pet_p4_system_cue_legacy("done",UINT64_C(0x3800fd80e9e2461f)));
@@ -61,15 +67,30 @@ int main(int argc, char **argv) {
         subprocess.run(["cc", "-std=gnu11", "-Wall", "-Wextra", "-Werror", "-I", str(ROOT / "main"),
                         str(ROOT / "main/pet_p4_system_cues.c"), str(source), "-o", str(binary)], check=True)
         subprocess.run([str(binary), *[str(ROOT.parent / "pc/public/terrier-clips" / (n + ".wav"))
-                        for n in ("done", "error", "waiting_user")]], check=True)
+                        for n in ("done", "error", "waiting_user", "permission_request", "permission_approved", "permission_denied", "permission_expired", "session_terminated")]], check=True)
 
 
 def test_playback_is_not_conditioned_on_matching_animation():
     source = (ROOT / "main/pet_p4_audio.c").read_text()
     process = source.split("void pet_p4_audio_process(", 1)[1].split("esp_err_t pet_p4_audio_set_enabled", 1)[0]
     assert "pet_p4_canonical_lifecycle" in process
-    assert "pet_p4_system_cue_family(lifecycle) ? lifecycle" in process
+    assert "pet_p4_system_cue_family(lifecycle)" in process
+    assert "pet_audio_patch_global_enabled(lifecycle)" in process
+    assert 'if (!family[0]) return;' in process
+    assert "if ((!entry || !entry->audio_path[0])" not in process
     assert "if (index < 0 || index >= state->asset_catalog.count) return" not in process
     assert "pet_p4_audio_conversation_active()" in process
     assert "!request.audio_custom" in source
     assert "pet_p4_system_cue_legacy(request.family, checksum)" in source
+
+
+def test_permission_cues_are_event_driven_on_approval():
+    protocol = (ROOT / "main/pet_p4_protocol.c").read_text()
+    inp = (ROOT / "main/pet_p4_input.c").read_text()
+    audio = (ROOT / "main/pet_p4_audio.c").read_text()
+    assert 'pet_p4_audio_play_event_cue("permission_request")' in protocol
+    assert 'pet_p4_audio_play_event_cue("permission_approved")' in protocol
+    assert 'pet_p4_audio_play_event_cue("permission_denied")' in protocol
+    assert 'pet_p4_audio_play_event_cue("permission_expired")' in protocol
+    assert 'pet_p4_audio_play_event_cue(\n    allow ? "permission_approved" : "permission_denied"\n  )' in inp
+    assert "pet_p4_audio_play_event_cue(const char *family)" in audio

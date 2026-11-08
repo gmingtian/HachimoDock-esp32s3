@@ -1,0 +1,38 @@
+[
+  {
+    "action": "gomoku.place",
+    "control": "SW1",
+    "event": "button.sw1.short_press",
+    "label": "开始/落子/重开"
+  },
+  {
+    "action": "gomoku.undo",
+    "control": "SW2",
+    "event": "button.sw2.short_press",
+    "label": "悔棋一步"
+  },
+  {
+    "action": "gomoku.left",
+    "control": "前方摇杆",
+    "event": "knob.rotate_ccw",
+    "label": "向左"
+  },
+  {
+    "action": "gomoku.right",
+    "control": "前方摇杆",
+    "event": "knob.rotate_cw",
+    "label": "向右"
+  },
+  {
+    "action": "gomoku.up",
+    "control": "前方摇杆",
+    "event": "joystick.up",
+    "label": "向上"
+  },
+  {
+    "action": "gomoku.down",
+    "control": "前方摇杆",
+    "event": "joystick.down",
+    "label": "向下"
+  }
+]

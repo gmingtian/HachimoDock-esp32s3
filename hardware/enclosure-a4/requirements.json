@@ -1,0 +1,232 @@
+{
+  "revision": "R4.4-speaker-and-smooth-rim",
+  "units": "mm",
+  "status": "engineering-fit-trial-stl-exported-physical-validation-pending",
+  "appearance": "Copy original STEP geometry; preserve control dimensions, recess depths, 45 degree screen and original joint; widen 3 mm and insert 13.5 mm at V=38 mm below original vents in screen section only",
+  "pcbSource": "../s3-carrier/output/design.json",
+  "pcbModified": false,
+  "pcbBounds": [
+    0,
+    0,
+    73.47473748,
+    69.47474802
+  ],
+  "pcbThickness": 1.6,
+  "pcbFasteners": [
+    "H3",
+    "H4"
+  ],
+  "pcbSupportOnly": [
+    "H1"
+  ],
+  "leftPlasticLocator": {
+    "ref": "H1",
+    "center": [
+      11.04067642,
+      36.00313348
+    ],
+    "shape": "plastic stepped round support and short locating pin",
+    "screw": false,
+    "nominalPinDiameter": 2.6,
+    "nominalPinEngagementHeight": 0.8,
+    "pinMustNotProtrudeAbovePcb": true
+  },
+  "centerBoss": {
+    "ref": "H3",
+    "center": [
+      36.04367442,
+      36.05953418
+    ],
+    "pcbHoleDiameter": 2.99999908,
+    "shape": "round cylindrical boss; coaxial round screw bore",
+    "hardware": "M2.5; screw length and insert fit depend on measured stack",
+    "maximumScrewHeadDiameterPlanning": 5.5
+  },
+  "rightBoss": {
+    "ref": "H4",
+    "center": [
+      61.05627489,
+      36.0265345
+    ],
+    "pcbHoleDiameter": 3.00000162
+  },
+  "screen": {
+    "source": "reference/screen-user-drawing.jpg",
+    "portraitPcb": [
+      51,
+      81.2
+    ],
+    "landscapePcb": [
+      81.2,
+      51
+    ],
+    "portraitActiveArea": [
+      43.2,
+      57.6
+    ],
+    "landscapeActiveArea": [
+      57.6,
+      43.2
+    ],
+    "landscapeHolePitch": [
+      75.2,
+      45
+    ],
+    "mountingHoleDiameter": 3,
+    "mountingHoleEdgeOffset": [
+      3,
+      3
+    ],
+    "connectorSide": "left",
+    "installation": "install from inside; expose active area only",
+    "screenFasteners": "four M2 self-tapping screws installed from inside through PCB holes into blind bosses",
+    "frontBezelScrewHoles": false,
+    "spiSolderJointClearanceRequired": true,
+    "connectorPins": 8,
+    "connectorPitch": 2.54,
+    "landscapeLeftConnectorRowXFromPcbLeft": 2,
+    "portraitActiveTopOffset": 8.6,
+    "portraitActiveHorizontalOffset": 3.9,
+    "thicknessDatum": "User drawing marks 3.8, 11.3, 2.6 and 1.6; verify their datum relationships before freezing the assembled stack",
+    "bodyDimensionsFromUserDrawing": true,
+    "fitPhysicallyVerified": false,
+    "nominalPostOutsideDiameter": 5.2,
+    "nominalPilotDiameter": 1.6,
+    "nominalPilotDepth": 3.61,
+    "nominalScrewLength": 5,
+    "glassRecess": 0.6,
+    "originalControlGeometryRetained": true,
+    "postHeightBySide": {
+      "left": 4.35,
+      "right": 3.0
+    },
+    "mountingBearingPlaneNormal": -4.8,
+    "spiConnector": {
+      "housingLength": 14,
+      "installedHeightFromPcbBack": 17,
+      "source": "user measurement",
+      "additionalTailBendSpace": 4,
+      "wireDiameterAssumed": 1.2,
+      "wireBendRadiusAssumed": 3,
+      "wireRouteDirection": "right into case",
+      "physicalWireRouteVerified": false
+    },
+    "assemblySequence": "Install LCD into upper cover and tighten four M2 screws first, connect SPI, then install lower cover",
+    "driverClearanceDiameter": 4.5,
+    "lowerCoverAccessTabs": {
+      "centersUv": [
+        [
+          78.2,
+          3
+        ],
+        [
+          78.2,
+          48
+        ]
+      ],
+      "radialClearance": 0.15,
+      "reason": "Transferred upper return lip permits screwdriver access while lower is removed"
+    }
+  },
+  "usb": {
+    "side": "left",
+    "portCount": 2,
+    "ports": [
+      "Type-C USB",
+      "Type-C USB-UART"
+    ],
+    "eachPortAccessible": true,
+    "openingCentersAndHeightMeasured": false,
+    "actualCablePlugFitVerified": false
+  },
+  "microphoneInlet": {
+    "centerPcbCoordinates": [
+      46,
+      42.1
+    ],
+    "shellHoleDiameter": 2.4,
+    "location": "bottom retained, plus front above microphone",
+    "feetHeightRequired": 2,
+    "acousticGasketMustKeepHoleOpen": true,
+    "acousticPerformanceVerified": false
+  },
+  "moduleHeights": {
+    "keepAsPhotographedInitially": false,
+    "R1audioLowMounting": "Remove U2/U3 female sockets; retain 2.5 mm male header spacer. U1 keeps normal female sockets.",
+    "estimatedAudioHeightReduction": 8.5,
+    "screenBackToModuleTargetClearance": 2,
+    "actualSolderedStackMeasured": false
+  },
+  "sourceOfAuthority": "Latest user instructions override old H1/H4 assembly notes; H3 is now a round screw boss",
+  "joystickKnownLimitation": "User accepts original 14 mm cap to SW3 interference. Keep original PCB, cap, stem and keycaps; do not add external casing interference.",
+  "unresolved": [
+    "Actual PCB-to-module top heights and connector insertion heights",
+    "Two actual USB socket face positions and selected cable plug envelopes",
+    "Screen stack datums and physical wire bend routing",
+    "Joystick full sweep and click relative to screen bezel and SW3",
+    "Speaker slot printed fit and retention; actual wire routing and acoustic performance"
+  ],
+  "pcbMountingHardware": {
+    "thread": "M2.5",
+    "insertLength": 4,
+    "insertOutsideDiameter": 3.5,
+    "pilotDiameter": 3.2,
+    "pilotDepth": 4.4,
+    "screwLengthStart": 8,
+    "bossDiameter": 6.4,
+    "refs": [
+      "H3",
+      "H4"
+    ]
+  },
+  "motionAudit": {
+    "spherePoses": 18360,
+    "additionalCaseContactPoseCount": 0,
+    "conservativeUnmeasuredPivotStemExtraOverlapMm3": 0.26829752341809154,
+    "physicalFullTravelVerified": false
+  },
+  "frontWordmark": {
+    "text": "Hachimo",
+    "approvedOption": "C joystick",
+    "effect": "recessed",
+    "centerUv": [
+      37.4,
+      -5.6
+    ],
+    "nominalDepth": 0.5,
+    "nominalPanelThickness": 1.8,
+    "nominalFloorThickness": 1.3,
+    "vectorSource": "fusion/assets/hachimo-joystick-vectors.json"
+  },
+  "speakerMount": {
+    "speaker_mm": [
+      20,
+      11,
+      4.35
+    ],
+    "cavity_mm": [
+      20.4,
+      11.4,
+      4.605
+    ],
+    "wall_mm": 1.5,
+    "center_xz_mm": [
+      43.87917934636719,
+      41.81269382103565
+    ],
+    "rear_inner_y_mm": 17.974004277925435,
+    "grid_center_x_mm": 36.124942058231596,
+    "grid_right_shift_mm": 7.754237288135592,
+    "wire_port_mm": 4,
+    "wire_port_position": "right short side, upper half",
+    "outer_xz_mm": [
+      23.4,
+      14.4
+    ],
+    "rear_wall_minimum_mm": 1.995,
+    "retention": "locating slot only; no additional snap details requested",
+    "dimension_source": "user supplied measurements",
+    "physical_fit_verified": false,
+    "acoustic_performance_verified": false
+  }
+}

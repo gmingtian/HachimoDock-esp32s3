@@ -83,7 +83,7 @@ int main(int argc,char **argv){
       }
     }else{
       cJSON*j=cJSON_Parse((char*)data);assert(j);cJSON*s=cJSON_GetObjectItemCaseSensitive(j,"surface");
-      if(s){pet_surface_t out;assert(pet_surface_parse(s,&out));}
+      if(s){pet_surface_t out;if(!pet_surface_parse(s,&out)){fprintf(stderr,"invalid native surface: %s\n",argv[i]);return 1;}}
       cJSON_Delete(j);
     }
     free(data);
@@ -102,7 +102,9 @@ int main(int argc,char **argv){
 
 def test_native_jpeg_renderer_restores_exact_native_pixels(tmp_path):
     source = (ROOT/'main/pet_p4_renderer.c').read_text()
-    draw = source[source.index('static void draw_surface_image('):source.index('static void load_surface_images(')]
+    from s3_official_input_test import function
+    clip=function(source,'static bool app_clip_contains(')
+    draw = clip+source[source.index('static void draw_surface_image('):source.index('static void load_surface_images(')]
     harness = tmp_path/'draw.c'
     harness.write_text(r'''
 #include <assert.h>
@@ -120,6 +122,7 @@ static uint8_t input[100000];static uint8_t *g_jpeg_input=input;
 static size_t g_jpeg_input_capacity=sizeof(input);
 typedef int esp_err_t;
 typedef int JRESULT;
+static struct {bool active;int x,y,right,bottom;} g_app_clip;
 static pet_p4_miniapp_sprite_pack_t g_surface_images;
 static uint8_t g_surface_indices[PET_IMAGE_INDEX_CAPACITY],g_surface_alpha[4][256];
 static uint16_t g_surface_colors[4][256];

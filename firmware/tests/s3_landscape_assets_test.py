@@ -40,14 +40,19 @@ def test_all_native_landscape_families_are_safe_and_fit_flash(tmp_path):
     identity = dict(manifest, packId='')
     assert manifest['packId'] == converter.pack_id(identity, files)
     source = (ROOT/'main/pet_p4_renderer.c').read_text()
-    gate = source[source.index('static bool h264_stream_has_single_slice_access_units('):
-                  source.index('static bool start_h264_decoder(')]
+    from s3_official_input_test import function
+    start=source.index('static bool h264_stream_has_single_slice_access_units(',source.index('static bool h264_stream_has_single_slice_access_units(')+1)
+    gate=function(source[start:],'static bool h264_stream_has_single_slice_access_units(')
     harness = tmp_path/'streams.c'
     harness.write_text(r'''
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include "pet_s3_render.h"
+#define PET_P4_ASSET_PREPARE_CHUNK_BYTES 16384U
+typedef struct {int unused;} pet_p4_asset_cache_entry_t;
+static void vTaskDelay(unsigned n){(void)n;}
+static bool asset_prepare_current(const pet_p4_asset_cache_entry_t *job){(void)job;return true;}
 ''' + gate + r'''
 int main(int argc,char **argv){
   for(int i=1;i<argc;i++){
@@ -55,8 +60,8 @@ int main(int argc,char **argv){
     assert(fseek(f,0,SEEK_END)==0);long n=ftell(f);assert(n>0&&n<=384*1024);
     rewind(f);uint8_t *bytes=malloc(n);assert(bytes);
     assert(fread(bytes,1,n,f)==(size_t)n);fclose(f);
-    assert(h264_stream_has_single_slice_access_units(bytes,n,320,240));
-    assert(!h264_stream_has_single_slice_access_units(bytes,n,240,180));
+    assert(h264_stream_has_single_slice_access_units(bytes,n,320,240,NULL));
+    assert(!h264_stream_has_single_slice_access_units(bytes,n,240,180,NULL));
     free(bytes);
   }
   return 0;

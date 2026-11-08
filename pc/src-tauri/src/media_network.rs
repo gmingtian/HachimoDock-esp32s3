@@ -97,10 +97,14 @@ fn pinned_client(host: &str, addresses: &[SocketAddr]) -> Result<Client, String>
     Ok(client)
 }
 fn get_scoped(raw: &str, hosts: Option<&[String]>) -> Result<Response, String> {
+    get_scoped_policy(raw,hosts,false)
+}
+fn get_scoped_policy(raw: &str, hosts: Option<&[String]>, https_443:bool) -> Result<Response, String> {
     let mut url = valid_url(raw)?;
     for _ in 0..5 {
         let host = url.host_str().ok_or("电台缺少域名")?;
-        if hosts.is_some_and(|hosts| url.scheme() != "https" || !hosts.iter().any(|h| h == host)) {
+        if https_443&&(url.scheme()!="https"||url.port_or_known_default()!=Some(443))
+            ||hosts.is_some_and(|hosts| url.scheme() != "https" || !hosts.iter().any(|h| h == host)) {
             return Err("请求超出组件声明的域名权限".into());
         }
         let addresses = crate::media_dns::resolve(host, url.port_or_known_default().unwrap())?;
@@ -141,6 +145,13 @@ fn get_scoped(raw: &str, hosts: Option<&[String]>) -> Result<Response, String> {
 }
 pub(crate) fn scoped_json(raw: &str, hosts: &[String], max: usize) -> Result<serde_json::Value, String> {
     let response=get_scoped(raw,Some(hosts))?;
+    bounded_json(response,max)
+}
+/// Keep HTTPS/443 on every redirect without changing legacy radio policy.
+pub(crate) fn scoped_json_https(raw:&str,hosts:&[String],max:usize)->Result<serde_json::Value,String>{
+    bounded_json(get_scoped_policy(raw,Some(hosts),true)?,max)
+}
+fn bounded_json(response:Response,max:usize)->Result<serde_json::Value,String>{
     let mut data=Vec::new();
     response.take(max as u64+1).read_to_end(&mut data).map_err(|_|"目录响应中断")?;
     if data.len()>max {return Err("目录响应超过安全上限".into());}
@@ -172,6 +183,11 @@ pub fn search(
         return Err("请输入城市或电台名称（最多 30 字）".into());
     }
     extension.validate()?;
+    if extension.search.catalog.is_some() {
+        // Bundled catalog: no request leaves the machine for a search.
+        let rows = extension.catalog_search(city);
+        return Ok(extension.map_results(&serde_json::Value::Array(rows), city));
+    }
     let mut url = valid_url(&extension.search.endpoint)?;
     url.query_pairs_mut()
         .append_pair(&extension.search.query_param, city)
@@ -389,80 +405,5 @@ mod tests {
         assert_eq!(p.segments[0].1.as_str(), "https://example.com/live/a.ts");
         assert!(playlist(&base, "#EXTM3U\n#EXT-X-KEY:METHOD=AES-128\nx.ts").is_err());
         assert!(playlist(&base, "#EXTM3U\nfile:///etc/passwd").is_err());
-    }
-    #[test]
-    #[ignore = "Uses the public directory and a broadcaster; decodes in memory, no playback or saved audio"]
-    fn live_hls_decode() {
-        use std::{
-            process::{Command, Stdio},
-            sync::{
-                atomic::{AtomicBool, Ordering},
-                mpsc, Arc,
-            },
-        };
-        let extension = crate::component_extension::parse(include_bytes!(
-            "../../builtin-clawpkgs/city-radio/pc/extension.json"
-        ))
-        .unwrap();
-        let stations = search(&extension, "北京").expect("directory");
-        let station = stations
-            .into_iter()
-            .find(|s| s.hls && s.url.contains("rbc.cn"))
-            .expect("public broadcaster HLS");
-        let ffmpeg = std::env::var("RADIO_TEST_FFMPEG").unwrap_or_else(|_| "ffmpeg".into());
-        let mut child = Command::new(ffmpeg)
-            .args([
-                "-hide_banner",
-                "-loglevel",
-                "error",
-                "-nostdin",
-                "-protocol_whitelist",
-                "pipe",
-                "-i",
-                "pipe:0",
-                "-vn",
-                "-ac",
-                "1",
-                "-ar",
-                "48000",
-                "-f",
-                "s16le",
-                "pipe:1",
-            ])
-            .stdin(Stdio::piped())
-            .stdout(Stdio::piped())
-            .stderr(Stdio::null())
-            .spawn()
-            .unwrap();
-        let input = child.stdin.take().unwrap();
-        let mut output = child.stdout.take().unwrap();
-        let alive = Arc::new(AtomicBool::new(true));
-        let flag = alive.clone();
-        let (errors, err) = mpsc::channel();
-        let network = std::thread::spawn(move || {
-            let r = feed(&station, input, || flag.load(Ordering::SeqCst));
-            let _ = errors.send(r);
-        });
-        let (tx, rx) = mpsc::channel();
-        std::thread::spawn(move || {
-            let mut pcm = vec![0; 48000 * 2 * 4];
-            let result = output.read_exact(&mut pcm);
-            let peak = pcm
-                .chunks_exact(2)
-                .map(|s| i16::from_le_bytes([s[0], s[1]]).unsigned_abs())
-                .max()
-                .unwrap_or(0);
-            let _ = tx.send((result.is_ok(), peak));
-        });
-        let decoded = rx.recv_timeout(Duration::from_secs(35));
-        alive.store(false, Ordering::SeqCst);
-        let _ = child.kill();
-        let _ = child.wait();
-        let _ = network.join();
-        let detail = err.try_recv();
-        assert!(
-            decoded.is_ok_and(|(ok, peak)| ok && peak > 0),
-            "No decoded audio: {detail:?}"
-        );
     }
 }

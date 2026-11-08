@@ -16,6 +16,30 @@ const CodexLogMonitor = require("../agents/codex-log-monitor");
 const codexDefaults = require("../agents/codex");
 const { parseDesktopLogSignal } = CodexLogMonitor;
 
+test("Codex reply previews preserve Markdown line boundaries through all assistant message sources", async () => {
+  const { parseBubbleMarkdown } = await import("../../../src/lib/bubble-pixels.js");
+  const text = "普通文字，**这里加粗**。\r\n\r\n### 今日提醒\r\n- **喝水**：休息一下。\r\n> 看看远处。\r\n```js\r\nconst s = '**literal**';\r\n```";
+  for (const record of [
+    { type: "response_item", payload: { type: "message", role: "assistant", channel: "final",
+      content: [{ type: "output_text", text }] } },
+    { type: "event_msg", payload: { type: "agent_message", channel: "final", message: text } },
+    { type: "event_msg", payload: { type: "task_complete", last_agent_message: text } },
+  ]) {
+    const events = [];
+    const monitor = new CodexLogMonitor({ ...codexDefaults, SESSION_INDEX_PATH: "" },
+      (sessionId, state, event, extra) => events.push({ event, extra }));
+    monitor.getIndexedTitle = () => "设备测试";
+    const entry = monitor.createEntry("codex:markdown-test", 0, false);
+    monitor.processLine(JSON.stringify(record), entry);
+    const preview = events.at(-1)?.extra.display.content;
+    assert.equal(preview, text.replace(/\r\n/g, "\n"), record.payload.type);
+    const runs = parseBubbleMarkdown(preview);
+    assert(runs.some(run => run.bold && run.text.includes("今日提醒")));
+    assert(!runs.some(run => run.text.includes("###")));
+    assert(runs.some(run => !run.bold && run.text.includes("**literal**")));
+  }
+});
+
 test("Desktop fallback requires distinct completion flags and never overrides newer or internal rollouts", () => {
   assert.equal(parseDesktopLogSignal({
     thread_id: "test", ts: Date.now() / 1000, target: "codex_core::session::turn",
@@ -547,6 +571,26 @@ test("CodexLogMonitor discovers a new session on the fast current-day pass", () 
   }
 });
 
+test("Guardian review metadata suppresses lifecycle events from the first task start", () => {
+  const events = [];
+  const monitor = new CodexLogMonitor({ SESSION_INDEX_PATH: "", LOG_EVENT_MAP: {
+    "event_msg:task_started": "thinking", "event_msg:agent_message": "speaking",
+    "event_msg:task_complete": "attention",
+  } }, (...args) => events.push(args));
+  const entry = monitor.createEntry("codex:guardian", 0, false);
+  monitor.processLine(JSON.stringify({ type: "session_meta", payload: {
+    id: "guardian", originator: "Codex Desktop", thread_source: "guardian_review",
+    source: { subagent: { other: "guardian" } },
+  } }), entry);
+  for (const type of ["task_started", "agent_message", "task_complete"]) {
+    monitor.processLine(JSON.stringify({ type: "event_msg", payload: {
+      type, message: "正在思考", last_agent_message: "已完成",
+    } }), entry);
+  }
+  assert.equal(entry.internalSession, true);
+  assert.deepEqual(events, []);
+});
+
 test("CodexLogMonitor suppresses internal approval review lifecycle events", () => {
   const events = [];
   const monitor = new CodexLogMonitor({
@@ -780,4 +824,34 @@ test("CodexLogMonitor does not restore stale active events from a freshly touche
   } finally {
     fs.rmSync(home, { recursive: true, force: true });
   }
+});
+
+test("only successful work belonging to the completed turn makes it audible", () => {
+  const { mapCodexStateToStatus } = require("../packages/clawd-backend-service/src/headless-mqtt");
+  const states = [];
+  const monitor = new CodexLogMonitor({ ...codexDefaults, SESSION_DIR: "", SESSION_INDEX_PATH: "" },
+    (_id, state, event, extra) => {
+      if (event === "event_msg:task_complete") {
+        states.push(mapCodexStateToStatus(state, event, extra.turn.completedWork));
+      }
+    });
+  const entry = monitor.createEntry("codex:turn-scope", 0, false);
+  const push = (type, turn_id, item) =>
+    monitor.processLine(JSON.stringify({ type: "event_msg", payload: { type, turn_id, item } }), entry);
+  const edit = { type: "fileChange", status: "completed", changes: [{ kind: "update" }] };
+
+  push("task_started", "question");
+  push("item_completed", "question", { type: "mcpToolCall", status: "completed", readOnlyHint: true });
+  push("item_completed", "earlier", edit);
+  push("task_complete", "question");
+
+  push("task_started", "task");
+  push("item_completed", "task", edit);
+  push("task_complete", "task");
+
+  push("task_started", "next-question");
+  push("item_completed", "next-question", { ...edit, status: "failed" });
+  push("task_complete", "next-question");
+
+  assert.deepEqual(states, ["reply_complete", "done", "reply_complete"]);
 });

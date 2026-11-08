@@ -1,0 +1,16 @@
+{
+  "dashboard": {
+    "title": "五子棋",
+    "eyebrow": "黑先 · 无禁手",
+    "headline": "主键开始",
+    "metricLabel": "落子数",
+    "metricValue": "0",
+    "metricUnit": "",
+    "badge": "",
+    "note": "黑棋先行",
+    "footer": "摇杆选点 · 1键落子 · 2键悔棋 · 3键退出",
+    "visualStyle": "clean",
+    "visualPalette": "sunset",
+    "visualLayout": "arcade"
+  }
+}

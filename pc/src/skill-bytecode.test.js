@@ -12,7 +12,7 @@ test("packaging removes bytecode without following symlinks or deleting source",
     writeFileSync(join(cache, "validate.pyc"), "generated");
     writeFileSync(join(skill, "validate.py"), "source");
     writeFileSync(join(outside, "keep.pyc"), "external");
-    symlinkSync(outside, join(skill, "linked"));
+    symlinkSync(outside, join(skill, "linked"), process.platform === "win32" ? "junction" : "dir");
     assert.equal(cleanSkillBytecode(skill), 1);
     assert.equal(existsSync(cache), false);
     assert.equal(existsSync(join(skill, "validate.py")), true);

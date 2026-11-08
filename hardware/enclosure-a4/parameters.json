@@ -1,0 +1,35 @@
+{
+  "pcb_bottom_z": 2.70525253169416,
+  "support_radius": 3.4,
+  "locator_diameter": 2.6,
+  "locator_height": 0.8,
+  "insert_bore_diameter": 3.6,
+  "insert_bore_depth": 3.5,
+  "screw_head_diameter": 5.5,
+  "screen_front_raise_normal": 2.4,
+  "screen_shift_up_plane": 8.8,
+  "screen_mount_post_height": 6.0,
+  "screen_face_to_pcb_front": 4.2,
+  "screen_pcb_thickness": 1.6,
+  "screen_pcb_fit_clearance_per_side": 0.4,
+  "screen_bezel_thickness": 2.4,
+  "screen_screw_pilot_diameter": 1.6,
+  "screen_screw_pilot_depth": 5.4,
+  "screen_screw_nominal_length": 6.0,
+  "screen_connector_rear_allowance": 16,
+  "mic_inlet_diameter": 2.4,
+  "required_adhesive_feet_height": 2.0,
+  "module_to_shell_clearance": 2,
+  "assumed_module_board_bottom_above_carrier": 12.6,
+  "module_board_bottom_by_ref": {"U1": 12.6, "U2": 4.1, "U3": 4.1},
+  "assumed_module_board_thickness": 1.6,
+  "assumed_module_electronics_above_board": 3.5,
+  "dual_usb_y_range": [
+    1,
+    30
+  ],
+  "dual_usb_z_range": [
+    14.5,
+    24.5
+  ]
+}

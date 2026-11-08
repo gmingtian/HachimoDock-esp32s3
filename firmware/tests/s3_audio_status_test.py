@@ -25,6 +25,7 @@ def test_audio_status_agrees_with_target_and_actual_dsp(tmp_path):
 #define MALLOC_CAP_INTERNAL 1
 #define MALLOC_CAP_8BIT 2
 static atomic_bool g_conversation_starting,g_conversation_half_duplex,g_stream_active;
+static atomic_uint g_completion_cue_queued,g_completion_cue_started,g_completion_cue_suppressed;
 static atomic_uint g_capture_tx_last_us,g_capture_tx_max_us,g_stream_underruns,g_stream_received_bytes;
 static void *g_audio_task,*g_speaker;
 static bool dsp_ready,preparing,playback_ready;

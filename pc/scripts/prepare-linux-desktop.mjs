@@ -12,6 +12,12 @@ mkdirSync(stage,{recursive:true});
 const node=process.env.PET_MANAGER_NODE_BIN||process.execPath;
 if(readFileSync(node).subarray(0,4).toString()!=='\x7fELF') throw new Error('Native Linux Node ELF executable required');
 copyFileSync(node,join(stage,'node'));chmodSync(join(stage,'node'),0o755);
+// The copied Node runtime needs its exact full upstream license, independently
+// of the repository's development machine or its installed Node version.
+const notice=spawnSync('python3',['-c',
+ "import importlib.util,sys; from pathlib import Path; p=Path(sys.argv[1]); s=importlib.util.spec_from_file_location('preview',p); m=importlib.util.module_from_spec(s); s.loader.exec_module(m); m.stage_node_license(sys.argv[2],Path(sys.argv[3]))",
+ join(root,'scripts/prepare-preview-resources.py'),node,stage],{stdio:'inherit'});
+if(notice.error||notice.status!==0)throw new Error('Linux Node runtime license preparation failed');
 const bridge=join(root,'src-tauri/bridge/packages/clawd-backend-service');
 const manifest=JSON.parse(readFileSync(join(bridge,'package.json')));
 if(!Object.keys(manifest.dependencies||{}).every(name=>existsSync(join(bridge,'node_modules',name,'package.json')))){

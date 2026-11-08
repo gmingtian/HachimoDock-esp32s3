@@ -63,15 +63,21 @@ int main(int argc,char **argv){
 
 def test_catalog_text_binary_and_missing_file_reads_release_cpu_for_idle(tmp_path):
     code = (ROOT / 'main/pet_p4_miniapp.c').read_text()
-    start = code.index('static bool read_file(')
+    start = code.index('static bool read_file_kind(')
     end = code.index('bool pet_p4_miniapp_installed_id(', start)
     harness = tmp_path / 'catalog_reads.c'
     harness.write_text(r'''
+#define _POSIX_C_SOURCE 200809L
 #include <assert.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include "pet_p4_file_read.h"
+#include "pet_p4_json_source.h"
+#define PET_WIDGET_TRACE_SCOPE(a,b) int a=0
+static void pet_widget_trace_scope_end(int *s){(void)s;}
+static bool storage_work_current(void){return true;}
 static unsigned lookups,delays;
 static void vTaskDelay(unsigned ticks){assert(ticks>0);++delays;}
 static FILE *scan_open(const char*path,const char*mode){
@@ -81,7 +87,7 @@ static FILE *scan_open(const char*path,const char*mode){
 ''' + code[start:end] + r'''
 #undef fopen
 int main(int argc,char**argv){
-  assert(argc==2);char path[512];snprintf(path,sizeof(path),"%s/data",argv[1]);
+  (void)read_json_file;assert(argc==2);char path[512];snprintf(path,sizeof(path),"%s/data",argv[1]);
   FILE*f=fopen(path,"wb");assert(f);assert(fwrite("hello",1,5,f)==5);fclose(f);
   for(int i=0;i<25;i++){
     char text[16];size_t n=0;uint8_t bytes[16];
@@ -96,7 +102,7 @@ int main(int argc,char**argv){
 ''')
     exe = tmp_path / 'catalog_reads'
     subprocess.run(['cc', '-std=c11', '-Wall', '-Wextra', '-Werror',
-                    '-fsanitize=address,undefined', str(harness), '-o', str(exe)], check=True)
+                    '-fsanitize=address,undefined','-I',str(ROOT/'main'), str(harness), '-o', str(exe)], check=True)
     subprocess.run([str(exe), str(tmp_path)], check=True)
 
 
@@ -110,6 +116,8 @@ def test_usb_hello_larger_than_driver_ring_is_transmitted_without_truncation(tmp
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
+#include "pet_p4_transport_audit.h"
+#define CONFIG_IDF_TARGET_ESP32S3 1
 #define pdMS_TO_TICKS(x) (x)
 static unsigned char output[20000];
 static size_t used,calls,fail_at;
@@ -122,14 +130,14 @@ static int usb_serial_jtag_write_bytes(const void*src,size_t size,unsigned timeo
 ''' + code[start:end] + r'''
 int main(void){
   char input[12000];for(size_t i=0;i<sizeof(input);i++)input[i]=(char)(i%251);
-  usb_queue_all(input,sizeof(input));
+  usb_queue_all(input,sizeof(input),NULL);
   assert(used==sizeof(input)&&!memcmp(input,output,used));
-  used=0;calls=0;fail_at=2;usb_queue_all(input,sizeof(input));
+  used=0;calls=0;fail_at=2;usb_queue_all(input,sizeof(input),NULL);
   assert(calls==2&&used==97&&!memcmp(input,output,used));
-  used=0;calls=0;usb_queue_all(input,0);assert(!calls&&!used);return 0;
+  used=0;calls=0;usb_queue_all(input,0,NULL);assert(!calls&&!used);return 0;
 }
 ''')
     exe = tmp_path / 'usb_queue'
     subprocess.run(['cc', '-std=c11', '-Wall', '-Wextra', '-Werror',
-                    '-fsanitize=address,undefined', str(harness), '-o', str(exe)], check=True)
+                    '-fsanitize=address,undefined','-I',str(ROOT/'main'), str(harness), '-o', str(exe)], check=True)
     subprocess.run([str(exe)], check=True)

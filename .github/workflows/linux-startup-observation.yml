@@ -1,0 +1,38 @@
+name: Observe frozen Linux client startup
+on:
+  push:
+    branches: [diagnostics/linux-startup-e408705]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  observe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      WEBKIT_DISABLE_DMABUF_RENDERER: '1'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+          sparse-checkout: .github
+      - name: Install native desktop session dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-0 libgtk-3-0t64 libayatana-appindicator3-1 librsvg2-2 libasound2t64 libssl3t64 libudev1 libatomic1 ffmpeg python3 xvfb xauth dbus-x11 at-spi2-core
+      - name: Download the exact existing Linux artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh run download 42549291439 --repo gmingtian/HachimoDock-esp32s3 --name HachimoDock-esp32s3-linux --dir "$RUNNER_TEMP/frozen-linux-client"
+      - name: Observe actual WebView load and frontend readiness
+        run: xvfb-run --auto-servernum dbus-run-session -- python3 .github/scripts/observe-linux-ui.py "$RUNNER_TEMP/frozen-linux-client/HachimoDock-esp32s3_Linux-x64.tar.gz" "$RUNNER_TEMP/linux-ui-observation"
+      - name: Upload startup evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: linux-ui-observation-e408705
+          path: |
+            ${{ runner.temp }}/linux-ui-observation/linux-ui-startup.log
+            ${{ runner.temp }}/linux-ui-observation/linux-ui-acceptance.json
+          if-no-files-found: error
+          retention-days: 14

@@ -1,5 +1,7 @@
 name: Desktop clients
 on:
+  push:
+    branches: [release/s3-a4-0.1.202]
   workflow_dispatch:
     inputs:
       platform:
@@ -169,7 +171,7 @@ jobs:
           key: ${{ steps.cargo-cache.outputs.cache-primary-key }}
   linux:
     name: Linux x86_64 desktop client (system media runtime)
-    if: inputs.platform == 'all' || inputs.platform == 'linux'
+    if: github.event_name == 'push' || inputs.platform == 'all' || inputs.platform == 'linux'
     runs-on: ubuntu-24.04
     timeout-minutes: 90
     env:

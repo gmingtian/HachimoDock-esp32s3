@@ -5,9 +5,9 @@
   "firmwareVersion": "0.7.103-s3-r16c-80m-l320",
   "releaseTag": "v0.1.202-s3-a4-r16c",
   "releaseUrl": "https://github.com/gmingtian/HachimoDock-esp32s3/releases/tag/v0.1.202-s3-a4-r16c",
-  "sourceRef": "refs/heads/release/s3-a4-0.1.202",
+  "sourceRef": "refs/tags/v0.1.202-s3-a4-r16c",
   "sourcePublished": true,
-  "publicationStatus": "source-published-native-builds-pending",
+  "publicationStatus": "published-prerelease",
   "embeddedServiceKeys": false,
   "embeddedInternalCredentials": false,
   "embeddedEnterpriseCa": false,
@@ -32,14 +32,22 @@
     {
       "os": "windows",
       "arch": "x86_64",
-      "package": "NSIS exe"
+      "package": "NSIS exe",
+      "file": "HachimoDock-esp32s3_Windows-x64.exe",
+      "bytes": 141499760,
+      "sha256": "df23a1445cd683859d44d6b0c10359ff7870f065545726920c374c74d7877489",
+      "downloadUrl": "https://github.com/gmingtian/HachimoDock-esp32s3/releases/download/v0.1.202-s3-a4-r16c/HachimoDock-esp32s3_Windows-x64.exe"
     },
     {
       "os": "macos",
       "arch": "arm64",
       "package": "dmg",
       "signing": "ad-hoc-not-notarized",
-      "minimumSystemVersion": "13.5"
+      "minimumSystemVersion": "13.5",
+      "file": "HachimoDock-esp32s3_macOS-arm64.dmg",
+      "bytes": 192561582,
+      "sha256": "b708f6146e63c6ce2b1cc56644bde9c92994888892eedb90d1c1fb6b86619e46",
+      "downloadUrl": "https://github.com/gmingtian/HachimoDock-esp32s3/releases/download/v0.1.202-s3-a4-r16c/HachimoDock-esp32s3_macOS-arm64.dmg"
     },
     {
       "os": "linux",
@@ -54,18 +62,199 @@
         "FFmpeg with libx264",
         "Python 3",
         "libatomic1"
-      ]
+      ],
+      "file": "HachimoDock-esp32s3_Linux-x64.tar.gz",
+      "bytes": 130407096,
+      "sha256": "5ce59a84f81bdc65b5814bed9c0f89e786fd7345d6ec3bc98a9df6098d9c7fcf",
+      "downloadUrl": "https://github.com/gmingtian/HachimoDock-esp32s3/releases/download/v0.1.202-s3-a4-r16c/HachimoDock-esp32s3_Linux-x64.tar.gz"
     }
   ],
   "hardware": {
     "pcb": "A4",
     "enclosure": "R4.4",
-    "manifest": "hardware/release-manifest.json"
+    "manifest": "hardware/release-manifest.json",
+    "printableControls": {
+      "directory": "hardware/enclosure-a4/print-parts",
+      "count": 6,
+      "unit": "mm",
+      "scalePercent": 100,
+      "file": "HachimoDock-A4-keycaps-joystick-STL.zip",
+      "downloadUrl": "https://github.com/gmingtian/HachimoDock-esp32s3/releases/download/v0.1.202-s3-a4-r16c/HachimoDock-A4-keycaps-joystick-STL.zip",
+      "sha256": "8029b7f3620a258edb2b41658dd444328e42d732dfda27187e961c0631fcedca"
+    }
   },
   "releaseValidation": {
     "physicalFirmwareValidation": "r16c device regression passed; see docs/ESP32-S3-r16c-Xiangqi-Speed.md",
-    "sourceTests": "see release validation receipt; native installers require per-target build",
-    "allPlatformBuildsCompleted": false
+    "sourceTests": "Native Windows/macOS/Linux CI passed; see per-target receipts and verified-clients.json",
+    "allPlatformBuildsCompleted": true,
+    "nativeCi": {
+      "runId": 42549291439,
+      "url": "https://github.com/gmingtian/HachimoDock-esp32s3/actions/runs/42549291439",
+      "sourceCommit": "e408705099aae853181195dd214d3549e65bd59c"
+    },
+    "linuxFrontendAcceptance": {
+      "applicationSourceCommit": "e408705099aae853181195dd214d3549e65bd59c",
+      "appBuildId": "0.1.202+e408705099aa",
+      "artifact": "HachimoDock-esp32s3_Linux-x64.tar.gz",
+      "artifactSha256": "5ce59a84f81bdc65b5814bed9c0f89e786fd7345d6ec3bc98a9df6098d9c7fcf",
+      "binarySha256": "1f5a30d9cea1ca535336151b3fe7324dbde952ff26aae551490b89a51d8a772d",
+      "diagnosticSourceCommit": "b669441cb9142d00ca7d84908dc506b43c9495a9",
+      "diagnosticRunId": 42551898665,
+      "context": "Ubuntu 24.04 native runner; Xvfb and fresh D-Bus session; default WebKit sandbox policy",
+      "webViewFinished": true,
+      "frontendReady": true,
+      "accepted": true,
+      "observedSeconds": 10.0,
+      "url": "https://github.com/gmingtian/HachimoDock-esp32s3/actions/runs/42551898665"
+    }
   },
-  "artifacts": []
+  "artifacts": [
+    {
+      "file": "FFmpeg-8.1.2-source.tar.xz",
+      "bytes": 11710924,
+      "sha256": "464beb5e7bf0c311e68b45ae2f04e9cc2af88851abb4082231742a74d97b524c",
+      "downloadUrl": "https://github.com/gmingtian/HachimoDock-esp32s3/releases/download/v0.1.202-s3-a4-r16c/FFmpeg-8.1.2-source.tar.xz"
+    },
+    {
+      "file": "HachimoDock-A4-hardware-R4.4.zip",
+      "bytes": 16542338,
+      "sha256": "280d54d0428b5869418e31076cfa4264db84ba96ed10e602dc2b6304ce85bc6f",
+      "downloadUrl": "https://github.com/gmingtian/HachimoDock-esp32s3/releases/download/v0.1.202-s3-a4-r16c/HachimoDock-A4-hardware-R4.4.zip"
+    },
+    {
+      "file": "HachimoDock-A4-keycaps-joystick-STL.zip",
+      "bytes": 1950540,
+      "sha256": "8029b7f3620a258edb2b41658dd444328e42d732dfda27187e961c0631fcedca",
+      "downloadUrl": "https://github.com/gmingtian/HachimoDock-esp32s3/releases/download/v0.1.202-s3-a4-r16c/HachimoDock-A4-keycaps-joystick-STL.zip"
+    },
+    {
+      "file": "HachimoDock-S3-A4-r16c-OTA.bin",
+      "bytes": 2594464,
+      "sha256": "07ffa6be00feb6cb90ddd747099d20d3fa79ffbcf7bac4cbacdd8057e4496efb",
+      "downloadUrl": "https://github.com/gmingtian/HachimoDock-esp32s3/releases/download/v0.1.202-s3-a4-r16c/HachimoDock-S3-A4-r16c-OTA.bin"
+    },
+    {
+      "file": "HachimoDock-S3-A4-r16c-factory.zip",
+      "bytes": 6251635,
+      "sha256": "100f98141fb5a753db20ed4a8cde945fea000fc068a9f45371434265c6e39427",
+      "downloadUrl": "https://github.com/gmingtian/HachimoDock-esp32s3/releases/download/v0.1.202-s3-a4-r16c/HachimoDock-S3-A4-r16c-factory.zip"
+    },
+    {
+      "file": "HachimoDock-esp32s3_Linux-x64.tar.gz",
+      "bytes": 130407096,
+      "sha256": "5ce59a84f81bdc65b5814bed9c0f89e786fd7345d6ec3bc98a9df6098d9c7fcf",
+      "downloadUrl": "https://github.com/gmingtian/HachimoDock-esp32s3/releases/download/v0.1.202-s3-a4-r16c/HachimoDock-esp32s3_Linux-x64.tar.gz"
+    },
+    {
+      "file": "HachimoDock-esp32s3_Windows-x64.exe",
+      "bytes": 141499760,
+      "sha256": "df23a1445cd683859d44d6b0c10359ff7870f065545726920c374c74d7877489",
+      "downloadUrl": "https://github.com/gmingtian/HachimoDock-esp32s3/releases/download/v0.1.202-s3-a4-r16c/HachimoDock-esp32s3_Windows-x64.exe"
+    },
+    {
+      "file": "HachimoDock-esp32s3_macOS-arm64.dmg",
+      "bytes": 192561582,
+      "sha256": "b708f6146e63c6ce2b1cc56644bde9c92994888892eedb90d1c1fb6b86619e46",
+      "downloadUrl": "https://github.com/gmingtian/HachimoDock-esp32s3/releases/download/v0.1.202-s3-a4-r16c/HachimoDock-esp32s3_macOS-arm64.dmg"
+    },
+    {
+      "file": "HachimoDock-v0.1.202-s3-a4-r16c-source.zip",
+      "bytes": 102851679,
+      "sha256": "c0d4cc75f8c113ad02cefc86da671a9e29cd5f57c17996de20ec3934e6249c6c",
+      "downloadUrl": "https://github.com/gmingtian/HachimoDock-esp32s3/releases/download/v0.1.202-s3-a4-r16c/HachimoDock-v0.1.202-s3-a4-r16c-source.zip"
+    },
+    {
+      "file": "Linux-resource-manifest.json",
+      "bytes": 48073,
+      "sha256": "49c7f7adba58338e29900823950cc558a0ce3a65c3b827eaa4fcb29ec68593f4",
+      "downloadUrl": "https://github.com/gmingtian/HachimoDock-esp32s3/releases/download/v0.1.202-s3-a4-r16c/Linux-resource-manifest.json"
+    },
+    {
+      "file": "RELEASE_NOTES.md",
+      "bytes": 3781,
+      "sha256": "7b1e6a6b702772971f2a9bd2c30d7534594698e5846ddfb226e5cb61399e438f",
+      "downloadUrl": "https://github.com/gmingtian/HachimoDock-esp32s3/releases/download/v0.1.202-s3-a4-r16c/RELEASE_NOTES.md"
+    },
+    {
+      "file": "SHA256SUMS",
+      "bytes": 2125,
+      "sha256": "da388d2cdae87762b55fffff892d02ef9bcbb60b0f67ee12136fc1fb11d607d9",
+      "downloadUrl": "https://github.com/gmingtian/HachimoDock-esp32s3/releases/download/v0.1.202-s3-a4-r16c/SHA256SUMS"
+    },
+    {
+      "file": "Windows-resource-manifest.json",
+      "bytes": 53194,
+      "sha256": "62146be0324f038cbb4c627a2caff7c8b727f24ad7f339596c3979f1a9e3bd73",
+      "downloadUrl": "https://github.com/gmingtian/HachimoDock-esp32s3/releases/download/v0.1.202-s3-a4-r16c/Windows-resource-manifest.json"
+    },
+    {
+      "file": "gomoku-a4-1.0.0.clawpkg",
+      "bytes": 3167,
+      "sha256": "5c754d731dc2b617640e3919e9a955427c87e4e5fff3a1b58868905e1434f215",
+      "downloadUrl": "https://github.com/gmingtian/HachimoDock-esp32s3/releases/download/v0.1.202-s3-a4-r16c/gomoku-a4-1.0.0.clawpkg"
+    },
+    {
+      "file": "linux-build.json",
+      "bytes": 589,
+      "sha256": "18f0a8c93ea981ff16caa7bfad0a8b3300a3370ec3d29ea27a91275bb4e1d89c",
+      "downloadUrl": "https://github.com/gmingtian/HachimoDock-esp32s3/releases/download/v0.1.202-s3-a4-r16c/linux-build.json"
+    },
+    {
+      "file": "linux-ui-acceptance.json",
+      "bytes": 653,
+      "sha256": "65ef4f1e11e2bc888e6659c46ed946c92b72aec6128d72d8dd7fe2faa21fd182",
+      "downloadUrl": "https://github.com/gmingtian/HachimoDock-esp32s3/releases/download/v0.1.202-s3-a4-r16c/linux-ui-acceptance.json"
+    },
+    {
+      "file": "macOS-resource-manifest.json",
+      "bytes": 51814,
+      "sha256": "cad926d50989f679ea5923aa154adab08757bbcae610b2ab378e253e61d649ef",
+      "downloadUrl": "https://github.com/gmingtian/HachimoDock-esp32s3/releases/download/v0.1.202-s3-a4-r16c/macOS-resource-manifest.json"
+    },
+    {
+      "file": "macos-build.json",
+      "bytes": 600,
+      "sha256": "734f270b052f087a4c4d6b38ad4b89bee337626d8b81334815e925681b4f8a17",
+      "downloadUrl": "https://github.com/gmingtian/HachimoDock-esp32s3/releases/download/v0.1.202-s3-a4-r16c/macos-build.json"
+    },
+    {
+      "file": "public-assets-manifest.json",
+      "bytes": 4041,
+      "sha256": "8956deb7ace104c553179def93cc831dec5e93ad8faf1616c3afc55198565d2b",
+      "downloadUrl": "https://github.com/gmingtian/HachimoDock-esp32s3/releases/download/v0.1.202-s3-a4-r16c/public-assets-manifest.json"
+    },
+    {
+      "file": "source-build.json",
+      "bytes": 232,
+      "sha256": "89e69b6ac33559e7a918d577284fbb258bbc8cca8bfb2bdfa1385f7e855cab46",
+      "downloadUrl": "https://github.com/gmingtian/HachimoDock-esp32s3/releases/download/v0.1.202-s3-a4-r16c/source-build.json"
+    },
+    {
+      "file": "verified-clients.json",
+      "bytes": 997,
+      "sha256": "ee50340fb054a7122b1737cd3a5b2be3dce03d194a88c0369784b1400020816b",
+      "downloadUrl": "https://github.com/gmingtian/HachimoDock-esp32s3/releases/download/v0.1.202-s3-a4-r16c/verified-clients.json"
+    },
+    {
+      "file": "windows-build.json",
+      "bytes": 608,
+      "sha256": "49e795ab4350ab943168313ff3674a38a8c45d8a82ef563fd34d2e9007e76be4",
+      "downloadUrl": "https://github.com/gmingtian/HachimoDock-esp32s3/releases/download/v0.1.202-s3-a4-r16c/windows-build.json"
+    },
+    {
+      "file": "x264-baee400fa9ced6f5481a728138fed6e867b0ff7f-source.tar.gz",
+      "bytes": 942829,
+      "sha256": "436a2be54d8bc0cb05dd33ecbbcb7df9c3b57362714fcdaa3a5991189a33319b",
+      "downloadUrl": "https://github.com/gmingtian/HachimoDock-esp32s3/releases/download/v0.1.202-s3-a4-r16c/x264-baee400fa9ced6f5481a728138fed6e867b0ff7f-source.tar.gz"
+    },
+    {
+      "file": "xiangqi-a4-1.0.0.clawpkg",
+      "bytes": 4341,
+      "sha256": "c4e2da07b9ffb65ab8648c548368ba0152fa856effd533d473d805639591f072",
+      "downloadUrl": "https://github.com/gmingtian/HachimoDock-esp32s3/releases/download/v0.1.202-s3-a4-r16c/xiangqi-a4-1.0.0.clawpkg"
+    }
+  ],
+  "buildSourceCommit": "e408705099aae853181195dd214d3549e65bd59c",
+  "prerelease": true,
+  "publishedAt": "2026-11-09T02:57:03Z"
 }

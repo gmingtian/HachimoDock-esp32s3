@@ -508,7 +508,7 @@ pub(crate) fn prepare_p4_widget_media_files(widget_root: &Path, w: &Value) -> Re
                 if source.len() < 24 || &source[..8] != b"\x89PNG\r\n\x1a\n" { return Err("invalid big PNG".into()); }
                 let width = u32::from_be_bytes(source[16..20].try_into().unwrap());
                 let height = u32::from_be_bytes(source[20..24].try_into().unwrap());
-                if !(241..=1280).contains(&width) || !(1..=960).contains(&height) || big_tiles(width.into(), height.into()) > BIG_TILES.into() { return Err("big PNG dimensions exceed budget".into()); }
+                if !(241..=1280).contains(&width) || !(1..=960).contains(&height) || big_tiles(width.into(), height.into()) > u64::from(BIG_TILES) { return Err("big PNG dimensions exceed budget".into()); }
                 let mut reader = image::ImageReader::with_format(std::io::Cursor::new(&source), image::ImageFormat::Png);
                 let mut limits = image::Limits::default();
                 limits.max_image_width = Some(1280); limits.max_image_height = Some(960); limits.max_alloc = Some(16 * 1024 * 1024);

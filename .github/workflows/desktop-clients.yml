@@ -2,6 +2,7 @@ name: Desktop clients
 on:
   push:
     branches: [release/s3-a4-0.1.202]
+    paths-ignore: [latest-release.json]
   workflow_dispatch:
     inputs:
       platform:

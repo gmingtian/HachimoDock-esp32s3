@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "version": "26.7.0",
+  "shasumsSource": "https://nodejs.org/dist/v26.7.0/SHASUMS256.txt",
+  "shasumsSha256": "4533f0a43b9ba7f78a48230a0511b9dd5c931f20c3b3cac281ff9b7a2080fb2e",
+  "license": {
+    "file": "Node-26.7.0-LICENSE.txt",
+    "sha256": "5888dbb9a1d2b18f2c3e6c5f6af1b39de658372b402a0577b002777f14c62ace",
+    "bytes": 157609,
+    "source": "https://raw.githubusercontent.com/nodejs/node/v26.7.0/LICENSE",
+    "carrier": "Unmodified LF LICENSE from both official Unix archives; byte-identical to the source tag. The Windows archive carrier differs only by CRLF line endings.",
+    "windowsArchiveSha256": "ed34dd8e3f0a78dbaf00d0444ce8e285b015b765379c2e17880455f70370f8e9"
+  },
+  "targets": {
+    "windows-x64": {
+      "platform": "win32",
+      "arch": "x64",
+      "archive": "node-v26.7.0-win-x64.zip",
+      "archiveSha256": "d3bd72755141ed32bbcd841228ee81897c8a98d50dfa7dae2179399a0a7c90f8",
+      "binary": "node-v26.7.0-win-x64/node.exe",
+      "binarySha256": "e921fe5307e29bf6fd00000dd594356affd3a7b044e52720c7f10decbdc305b9"
+    },
+    "macos-arm64": {
+      "platform": "darwin",
+      "arch": "arm64",
+      "archive": "node-v26.7.0-darwin-arm64.tar.xz",
+      "archiveSha256": "595d2f934e081b82961d1a5fd41c6dbd0c5a952d9e8be5b4566ab754426968d2",
+      "binary": "node-v26.7.0-darwin-arm64/bin/node",
+      "binarySha256": "a9bd0630891c2dcdee70de88270fee2cc0c4a9e76495039dd3b4f91c5e6b71df"
+    },
+    "linux-x64": {
+      "platform": "linux",
+      "arch": "x64",
+      "archive": "node-v26.7.0-linux-x64.tar.xz",
+      "archiveSha256": "982aa24dd8be4c889c6a8ab337ddff3b0896645b20f4239356e80552c16277ee",
+      "binary": "node-v26.7.0-linux-x64/bin/node",
+      "binarySha256": "ad19784f7e90ba789a099eccba77ede8dc90a778c424f1c10a70fed3ff903fdc"
+    }
+  }
+}

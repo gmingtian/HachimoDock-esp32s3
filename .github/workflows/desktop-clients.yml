@@ -39,13 +39,14 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '26.7.0'
+          architecture: ${{ matrix.target == 'windows' && 'x64' || 'arm64' }}
           cache: npm
           cache-dependency-path: pc/package-lock.json
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: '3.12'
       - name: Verify reviewed Node vendor runtime before building
-        run: node --input-type=module -e "import {copyNodeRuntimeLicense} from './pc/scripts/dependency-license-resources.mjs'; copyNodeRuntimeLicense(process.execPath,'licenses','pc/src-tauri/generated-runtime');"
+        run: node --input-type=module -e "import {appendFileSync} from 'node:fs'; import {copyNodeRuntimeLicense} from './pc/scripts/dependency-license-resources.mjs'; copyNodeRuntimeLicense(process.execPath,'licenses','pc/src-tauri/generated-runtime'); appendFileSync(process.env.GITHUB_ENV,'PET_MANAGER_NODE_BIN='+process.execPath+'\n');"
       - name: Restore native Cargo build cache
         id: cargo-cache
         uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
@@ -123,6 +124,7 @@ jobs:
             export FFMPEG="$GITHUB_WORKSPACE/pc/src-tauri/generated-runtime/s3/s3-ffmpeg"
           fi
           python -m unittest discover -s pc/scripts/tests -p 'test_*.py' -v
+          node --test pc/scripts/node-runtime-review.test.mjs
           if [ '${{ matrix.target }}' = windows ]; then
             S3_TEST_BASH="$(cygpath -w "$BASH")" python pc/scripts/test-s3-ffmpeg-build.py
           else
@@ -192,13 +194,14 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '26.7.0'
+          architecture: x64
           cache: npm
           cache-dependency-path: pc/package-lock.json
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: '3.12'
       - name: Verify reviewed Node vendor runtime before building
-        run: node --input-type=module -e "import {copyNodeRuntimeLicense} from './pc/scripts/dependency-license-resources.mjs'; copyNodeRuntimeLicense(process.execPath,'licenses','pc/src-tauri/generated-runtime');"
+        run: node --input-type=module -e "import {appendFileSync} from 'node:fs'; import {copyNodeRuntimeLicense} from './pc/scripts/dependency-license-resources.mjs'; copyNodeRuntimeLicense(process.execPath,'licenses','pc/src-tauri/generated-runtime'); appendFileSync(process.env.GITHUB_ENV,'PET_MANAGER_NODE_BIN='+process.execPath+'\n');"
       - name: Install native Linux build and runtime dependencies
         run: |
           test "$(uname -m)" = x86_64
@@ -226,6 +229,7 @@ jobs:
         run: |
           export FFMPEG=ffmpeg
           python -m unittest discover -s pc/scripts/tests -p 'test_*.py' -v
+          node --test pc/scripts/node-runtime-review.test.mjs
           node --test pc/scripts/stage-linux-native.test.mjs
       - name: Prepare Linux resources required by native test compilation
         run: |

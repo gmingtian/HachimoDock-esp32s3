@@ -1218,8 +1218,8 @@
     {
       "path": "licenses/Node-26.7.0-LICENSE.txt",
       "role": "license-text",
-      "bytes": 143299,
-      "sha256": "e991d81497a85bb24fc6bffae0a3637a6accd6c6bc5ce1f2c5698bd555cf9d49"
+      "bytes": 157609,
+      "sha256": "5888dbb9a1d2b18f2c3e6c5f6af1b39de658372b402a0577b002777f14c62ace"
     },
     {
       "path": "licenses/Xiaomi-Miloco-LICENSE.md",
@@ -1408,12 +1408,18 @@
       "sha256": "fdb35c36379778e864c2a5ef053a832a93300751aaf9bbf67c34de8165f2fd6c"
     },
     {
+      "path": "pc/scripts/node-runtime-review.json",
+      "role": "license-provenance",
+      "bytes": 1801,
+      "sha256": "00a2af7b5946eed379faf4d7236bbbef6207e4ad1d190d50ca78523efb552ae7"
+    },
+    {
       "path": "tools/package_a4_hardware.py",
       "role": "documentation-and-license",
       "bytes": 5542,
       "sha256": "6b132aeaf249f2a640eac2b4ca1fc040df0bff5f50173bc474f99f0f238ae904"
     }
   ],
-  "fileCount": 232,
-  "totalBytes": 42626975
+  "fileCount": 233,
+  "totalBytes": 42643086
 }

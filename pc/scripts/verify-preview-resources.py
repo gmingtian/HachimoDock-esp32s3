@@ -348,14 +348,17 @@ def validate_converter_licenses(tools):
     return metadata
 
 
-def validate_node_notice(node, notice):
+def validate_node_notice(node, notice, target=None):
     if not notice.is_file() or notice.is_symlink():
         raise ValueError('Node full runtime license is missing')
     prepare = load_preparer()
+    prepare.validate_reviewed_node_binary(node, target)
     prepare.validate_node_license(notice.read_bytes())
+    if sha256(notice) != prepare.NODE_REVIEW['license']['sha256']:
+        raise ValueError('Node reviewed complete runtime license SHA-256 mismatch')
     version = run([node, '-p', 'process.versions.node']).stdout.strip()
-    if not re.fullmatch(r'\d+\.\d+\.\d+', version):
-        raise ValueError('Node runtime version is not an exact stable version')
+    if version != prepare.NODE_REVIEW['version']:
+        raise ValueError('Node runtime version is not the reviewed exact stable version')
     return {'version':version, 'source':f'https://raw.githubusercontent.com/nodejs/node/v{version}/LICENSE',
             'licenseSha256':sha256(notice)}
 
@@ -384,7 +387,7 @@ def verify(target, tools, runtime, firmware, fixture, resource_root=None):
         validate_helper_metadata(tools)
         converter_licenses = validate_converter_licenses(tools)
     node_notice = (resource_root / ('bridge/runtime/node.LICENSE' if linux else 'licenses/Node-LICENSE.txt')) if resource_root else runtime / 'node.LICENSE'
-    node_metadata = validate_node_notice(node, node_notice)
+    node_metadata = validate_node_notice(node, node_notice, target)
     help_text = run([*converter_command, '--help']).stdout
     if any(flag not in help_text for flag in ('--source', '--ffmpeg', '--width', '--height', '--crf')):
         raise ValueError('standalone converter --help contract mismatch')

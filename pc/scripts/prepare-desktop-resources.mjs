@@ -457,7 +457,7 @@ if (resolve(sourceRuntime) !== resolve(targetRuntime)) {
 }
 if (target !== "windows") chmodSync(targetRuntime, 0o755);
 
-copyNodeRuntimeLicense(targetRuntime, join(repositoryRoot, "licenses"), generatedRuntime);
+copyNodeRuntimeLicense(targetRuntime, join(repositoryRoot, "licenses"), generatedRuntime, {platform:target, arch:targetArch});
 
 const ffmpegRuntimeName = ensureBundledFfmpeg(target, targetArch);
 

@@ -15,7 +15,7 @@ export const dependencyLicenseResources = Object.freeze([
   ['serialport-4.9.0-LICENSE-NOTICE.txt', '00a4d69750686b8fcd2369b17176b4389d67f275fd22b9eab6c66155b72bd4d2'],
   ['MPL-2.0.txt', '3f3d9e0024b1921b067d6f7f88deb4a60cbe7a78e76c64e3f1d7fc3b779b9d04'],
   ['DEPENDENCY-LICENSE-NOTICE.md', '357b4e159c983730eb6fda2b312226f52b511793a223189c8e991f79396c6782'],
-  ['Node-26.7.0-LICENSE.txt', 'e991d81497a85bb24fc6bffae0a3637a6accd6c6bc5ce1f2c5698bd555cf9d49'],
+  ['Node-26.7.0-LICENSE.txt', '5888dbb9a1d2b18f2c3e6c5f6af1b39de658372b402a0577b002777f14c62ace'],
   ['DESKTOP-RUNTIME-LICENSES.txt', 'eb0b26369125089be9f247e42e2d99fa900714bcccffab18d85c100d76dd73c9'],
   ['DESKTOP-RUNTIME-DEPENDENCIES.json', 'b740ea2887515870cd341b2eb790c57eece6ae774dbc9f4c9438892b67f2a2ac'],
 ].map(([name, sha256]) => Object.freeze({ name, sha256 })));
@@ -56,16 +56,24 @@ export function copyDependencyLicenses(sourceDirectory, destinationDirectory) {
   return receipt;
 }
 
-// Reviewed Node26.7.0 inputs; a new vendor build needs an explicit license review.
-const node267Builds = new Set(["913b144fdb40638b1acef7974ab3c33fbd527cc0974cb5da467ab1e6ac51b4d4", "abdc47a6bc8b45e6272d62d4c5c0c0419fb5dbedf3fe12ddabb595634f06f81f", "e921fe5307e29bf6fd00000dd594356affd3a7b044e52720c7f10decbdc305b9"]);
-export function copyNodeRuntimeLicense(binaryPath, sourceDirectory, destinationDirectory) {
+// These records come from SHA-verified official archives, not the CI host's
+// version string. A new version, architecture or vendor build needs review.
+export const nodeRuntimeReview = JSON.parse(readFileSync(new URL('./node-runtime-review.json', import.meta.url), 'utf8'));
+export function validateReviewedNodeRuntime(binaryPath, {platform = process.platform, arch = process.arch} = {}) {
+  platform = ({windows:'win32',macos:'darwin'}[platform]) || platform;
+  arch = ({x86_64:'x64',aarch64:'arm64'}[arch]) || arch;
+  const target = Object.values(nodeRuntimeReview.targets).find(item => item.platform === platform && item.arch === arch);
   const st = lstatSync(binaryPath);
-  if (!st.isFile() || st.isSymbolicLink() || !node267Builds.has(digest(readFileSync(binaryPath)))) {
-    throw new Error('Node vendor build has no reviewed matching license carrier');
+  if (!target || !st.isFile() || st.isSymbolicLink() || digest(readFileSync(binaryPath)) !== target.binarySha256) {
+    throw new Error(`Node vendor build has no reviewed matching license carrier for ${platform}-${arch} v${nodeRuntimeReview.version}`);
   }
+  return target;
+}
+export function copyNodeRuntimeLicense(binaryPath, sourceDirectory, destinationDirectory, options) {
+  validateReviewedNodeRuntime(binaryPath, options);
   directory(sourceDirectory);
   const raw = verified(join(sourceDirectory, 'Node-26.7.0-LICENSE.txt'),
-    'e991d81497a85bb24fc6bffae0a3637a6accd6c6bc5ce1f2c5698bd555cf9d49', 'Node-26.7.0-LICENSE.txt');
+    '5888dbb9a1d2b18f2c3e6c5f6af1b39de658372b402a0577b002777f14c62ace', 'Node-26.7.0-LICENSE.txt');
   if (existsSync(destinationDirectory)) directory(destinationDirectory);
   const target = join(destinationDirectory, 'node.LICENSE');
   if (existsSync(target)) verified(target, digest(raw), 'node.LICENSE');

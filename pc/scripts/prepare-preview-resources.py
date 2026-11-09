@@ -9,6 +9,7 @@ from contextlib import contextmanager
 import hashlib
 import json
 import os
+import platform
 from pathlib import Path, PurePosixPath
 import re
 import shutil
@@ -32,6 +33,7 @@ BINARY_SHA = {
     'windows': '1cefca14ea713d5d7e7a1b948299142831185487f5efb14914d049ba9090d95f',
     'macos': 'e340c148c720888a528e7bd2e7867da3b4bea91d1f6e508c9526111257ee0468',
 }
+NODE_REVIEW = json.loads(Path(__file__).with_name('node-runtime-review.json').read_text(encoding='utf-8'))
 NODE_LICENSE_MARKERS = (
     'Node.js is licensed for use as follows:',
     'Copyright Node.js contributors. All rights reserved.',
@@ -63,20 +65,46 @@ def download_notice(url):
 
 
 def collect_node_license(version, fetch=download_notice):
-    if not re.fullmatch(r'\d+\.\d+\.\d+', version):
-        raise ValueError(f'Node license requires an exact stable runtime version: {version}')
-    url = f'https://raw.githubusercontent.com/nodejs/node/v{version}/LICENSE'
+    if version != NODE_REVIEW['version']:
+        raise ValueError(f'Node has no reviewed stable runtime version: {version}')
+    url = NODE_REVIEW['license']['source']
     data = validate_node_license(fetch(url))
+    if hashlib.sha256(data).hexdigest() != NODE_REVIEW['license']['sha256']:
+        raise ValueError('Node complete license SHA-256 mismatch')
     return data, {'version':version, 'source':url, 'sha256':hashlib.sha256(data).hexdigest()}
 
 
-def stage_node_license(node_bin, output_dir):
-    version = run([node_bin, '-p', 'process.versions.node']).stdout.strip()
-    data, metadata = collect_node_license(version)
+def validate_reviewed_node_binary(node_bin, target=None, arch=None):
+    target = target or {'win32':'windows','darwin':'macos','linux':'linux'}.get(sys.platform)
+    arch = arch or platform.machine().lower()
+    arch = {'amd64':'x64','x86_64':'x64','aarch64':'arm64'}.get(arch,arch)
+    record = NODE_REVIEW['targets'].get(f'{target}-{arch}')
+    binary = Path(node_bin)
+    if not record or not binary.is_file() or binary.is_symlink() or sha256(binary) != record['binarySha256']:
+        raise ValueError(f'Node binary has no reviewed matching vendor build for {target}-{arch}')
+    return record
+
+
+def stage_node_license(node_bin, output_dir, target=None, arch=None):
+    # Authenticate before any execution or output. Use the reviewed official LF
+    # carrier offline so preparation cannot overwrite it with a different notice.
+    validate_reviewed_node_binary(node_bin, target, arch)
+    source = ROOT / 'licenses' / NODE_REVIEW['license']['file']
+    if not source.is_file() or source.is_symlink():
+        raise ValueError('Node reviewed complete license carrier missing')
+    data = validate_node_license(source.read_bytes())
+    expected = NODE_REVIEW['license']['sha256']
+    if hashlib.sha256(data).hexdigest() != expected:
+        raise ValueError('Node complete license SHA-256 mismatch')
     output = Path(output_dir)
+    destination = output / 'node.LICENSE'
+    if destination.is_symlink() or (destination.exists() and (not destination.is_file() or sha256(destination) != expected)):
+        raise ValueError('Node existing license carrier mismatch')
     output.mkdir(parents=True, exist_ok=True)
-    (output / 'node.LICENSE').write_bytes(data)
-    return metadata
+    if not destination.exists():
+        with destination.open('xb') as stream:
+            stream.write(data)
+    return {'version':NODE_REVIEW['version'], 'source':NODE_REVIEW['license']['source'], 'sha256':expected}
 
 
 def sha256(path):
@@ -217,7 +245,7 @@ def prepare(target, cache_dir, output_dir, archive=None, node_bin=None):
     node_bin = node_bin or os.environ.get('PET_MANAGER_NODE_BIN') or shutil.which('node')
     if not node_bin:
         raise ValueError('Native Node executable required; set --node-bin or PET_MANAGER_NODE_BIN')
-    node_license = stage_node_license(node_bin, output_dir)
+    node_license = stage_node_license(node_bin, output_dir, target)
     return {'upstreamVersion': '0.1.167', 'archive': filename, 'sha256': archive_sha,
             'target': target + ('-x64' if target == 'windows' else '-arm64'),
             'nodeLicense':node_license}

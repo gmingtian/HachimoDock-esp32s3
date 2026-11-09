@@ -225,7 +225,7 @@ class RuntimeLicenseTests(unittest.TestCase):
     def test_short_node_mit_notice_cannot_replace_full_third_party_licenses(self):
         prepare = load('prepare-preview-resources')
         with self.assertRaisesRegex(ValueError, 'Node.*incomplete'):
-            prepare.collect_node_license('22.21.1', fetch=lambda url: b'Copyright Node.js contributors. All rights reserved.')
+            prepare.collect_node_license('26.7.0', fetch=lambda url: b'Copyright Node.js contributors. All rights reserved.')
 
     def test_node_license_must_match_exact_stable_runtime_version(self):
         prepare = load('prepare-preview-resources')

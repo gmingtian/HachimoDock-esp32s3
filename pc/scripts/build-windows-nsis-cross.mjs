@@ -207,7 +207,7 @@ copyTree(
 );
 mkdirSync(join(stageRoot, "bridge", "runtime"), { recursive: true });
 copyFileSync(windowsNode, join(stageRoot, "bridge", "runtime", "node.exe"));
-copyNodeRuntimeLicense(windowsNode, join(repositoryRoot, "licenses"), join(stageRoot, "bridge", "runtime"));
+copyNodeRuntimeLicense(windowsNode, join(repositoryRoot, "licenses"), join(stageRoot, "bridge", "runtime"), {platform:'windows',arch:'x64'});
 mkdirSync(join(stageRoot, "tools"), { recursive: true });
 mkdirSync(join(stageRoot, "licenses"), { recursive: true });
 copyFileSync(join(tauriRoot, 'generated-runtime', 'node.LICENSE'), join(stageRoot, 'licenses', 'Node-LICENSE.txt'));

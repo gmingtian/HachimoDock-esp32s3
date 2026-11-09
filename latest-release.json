@@ -38,7 +38,8 @@
       "os": "macos",
       "arch": "arm64",
       "package": "dmg",
-      "signing": "ad-hoc-not-notarized"
+      "signing": "ad-hoc-not-notarized",
+      "minimumSystemVersion": "13.5"
     },
     {
       "os": "linux",
@@ -51,7 +52,8 @@
         "ALSA",
         "OpenSSL",
         "FFmpeg with libx264",
-        "Python 3"
+        "Python 3",
+        "libatomic1"
       ]
     }
   ],

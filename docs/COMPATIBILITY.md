@@ -21,8 +21,10 @@
 | 平台 | 架构 | 限制 |
 | --- | --- | --- |
 | Windows | x64 | Agent 输入控制取决于集成与系统权限 |
-| macOS | Apple Silicon arm64 | macOS 12+；辅助功能与麦克风等需系统授权；本分支不声明 Apple 公证 |
-| Linux | x86_64 | 需要系统库与外部 Python/FFmpeg；不支持跨应用自动定位输入框、填入草稿或发送 |
+| macOS | Apple Silicon arm64 | macOS 13.5+；辅助功能与麦克风等需系统授权；本分支不声明 Apple 公证 |
+| Linux | x86_64 | 需要系统库（含 `libatomic1`）与外部 Python/FFmpeg；不支持跨应用自动定位输入框、填入草稿或发送 |
+
+本版附带官方 Node.js 26.7.0 运行时，因此 macOS 最低为 13.5，Linux 需要 libatomic 运行库，依据 [Node.js 官方平台与二进制说明](https://github.com/nodejs/node/blob/v26.7.0/BUILDING.md#official-binary-platforms-and-toolchains)。
 
 本次构建不提供 Intel Mac 或 Linux ARM 客户端。准确附件和系统要求见[安装与使用](INSTALLATION.md)及[Release](https://github.com/gmingtian/HachimoDock-esp32s3/releases/tag/v0.1.202-s3-a4-r16c)。服务能力仍取决于 API、账号和网络。
 

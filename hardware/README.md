@@ -9,6 +9,7 @@
 | 装配 | [BOM](s3-carrier/output/BOM.csv)、[接线表](s3-carrier/output/connections.csv)、[原理图 PDF](s3-carrier/output/HachimoDock-S3-carrier-A4-schematic.pdf)、[方向图](s3-carrier/output/assembly-orientation.png) |
 | 正式上盖 | [a4-upper-r4.4-hachimo.stl](enclosure-a4/output/r4-original-copy/full-r4.4/a4-upper-r4.4-hachimo.stl)，单位 mm |
 | 正式下盖 | [a4-lower-r4.4-speaker.stl](enclosure-a4/output/r4-original-copy/full-r4.4/a4-lower-r4.4-speaker.stl)，单位 mm |
+| 三键帽＋摇杆打印件 | [原版独立打印件](enclosure-a4/print-parts/README.md)：三键帽各一件、摇杆帽 A/B/盖板各一件，mm 原尺寸，附源 SHA 与逐件校验 |
 | 可编辑壳体实体 | [working-r4.4-full.step](enclosure-a4/output/r4-original-copy/full-r4.4/working-r4.4-full.step) |
 | 设计输入与过程源 | PCB `s3-carrier/reference/`、`tools/`、`tests/`；外壳 [原始 STEP](enclosure-a4/reference/original-assembly.STEP)、`enclosure-a4/` Python 和参数、`fusion/` 脚本、桥接插件与字标资产 |
 | 完整性 | [release-manifest.json](release-manifest.json)，按相对仓库路径记录推荐交付文件的字节数及 SHA-256 |
@@ -30,6 +31,6 @@ R4.4 使用 H3/H4 两处 M2.5 热熔铜螺母固定、H1 定位，屏幕由四�
 
 ## 文件选择
 
-只使用上表推荐的 A4 / R4.4 制造件。早期 A0–A3、R0–R4.3、试装骨架、baseline/重复 assembly STL 和历史 3MF 仍可留在开发者本机，但不推荐为当前下载。当前没有 R4.4 F3D/3MF；STEP 为可移植编辑入口，STL 为切片入口。
+只使用上表推荐的 A4 / R4.4 制造件。早期 A0–A3、R0–R4.3、试装骨架、baseline/重复 assembly STL 和历史 3MF 仍可留在开发者本机，但不推荐为当前下载。当前没有 R4.4 F3D/3MF；STEP 为可移植编辑入口，STL 为切片入口。三颗键帽及摇杆多件结构已从原始命名 3MF 单独提取到 `enclosure-a4/print-parts/`，原打印机配置不随零件公开。
 
 交付清单排除本机 Fusion IPC 队列、缓存、KiCad 本地偏好、日志和重复/历史制造输出。提供了原始几何、可编辑板图及实际制造件；Fusion 过程脚本依赖相应 CAD 和会话，不承诺一键无头复现。上游来源和许可见仓库 [LICENSE](../LICENSE)及[第三方声明](../THIRD_PARTY_NOTICES.md)，本次整理不改变其归属。

@@ -6,7 +6,7 @@ Maintained by [gmingtian](https://github.com/gmingtian), based on **Yizheng Wang
 
 [Release downloads](https://github.com/gmingtian/HachimoDock-esp32s3/releases/tag/v0.1.202-s3-a4-r16c) · [Installation](docs/INSTALLATION.md) · [A4 controls](docs/ESP32-S3-A4-Controls.md) · [PCB and enclosure](hardware/README.md) · [Compatibility](docs/COMPATIBILITY.md) · [中文](README.md)
 
-Current release sources: desktop **0.1.202**, firmware **0.7.103-s3-r16c-80m-l320**. Desktop build targets are Windows x64, Apple Silicon macOS arm64 and Linux x86_64. Available installers and checksums are listed in the Release attachments; Intel Mac and Linux ARM builds are not advertised.
+Current release sources: desktop **0.1.202**, firmware **0.7.103-s3-r16c-80m-l320**. Desktop build targets are Windows x64, Apple Silicon macOS arm64 (13.5+) and Linux x86_64 (requires the libatomic runtime). Available installers and checksums are listed in the Release attachments; Intel Mac and Linux ARM builds are not advertised.
 
 ## The assembled device
 
@@ -39,7 +39,7 @@ ESP32-S3 N16R8 (16MiB Flash, 8MiB PSRAM), 240×320 ST7789 mounted landscape at 3
 
 Release GPIO0 during boot/reset. Gomoku: button 1 start/place/restart, 2 undo, 3 exit. Xiangqi: button 1 select/place, 2 cancel selection or undo, 3 exit; up/down selects difficulty before starting. Follow each game's on-screen instructions.
 
-The [hardware index](hardware/README.md) identifies current **A4 Gerbers, editable KiCad PCB/schematic and local libraries, BOM, wiring, and R4.4 upper/lower STL and STEP**. Earlier PCB/enclosure revisions and fit-test skeletons are historical inputs, not the recommended manufacturing set.
+The [hardware index](hardware/README.md) identifies current **A4 Gerbers, editable KiCad PCB/schematic and local libraries, BOM, wiring, R4.4 upper/lower STL and STEP, plus separate original keycaps and joystick A/B/cover STL files**. Earlier PCB/enclosure revisions and fit-test skeletons are historical inputs, not the recommended manufacturing set.
 
 ## Install and build
 

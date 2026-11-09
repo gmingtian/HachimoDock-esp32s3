@@ -77,7 +77,7 @@ SPI17加厚相比早期R4，前后尺寸及高度各增加约3.54 mm。SPI 实�
 - 可编辑交换实体：[working-r4.4-full.step](output/r4-original-copy/full-r4.4/working-r4.4-full.step)，不是参数历史完整的 Fusion F3D 工程。
 - 原始输入：[original-assembly.STEP](reference/original-assembly.STEP)，以及 `fusion/` 中的建模/校验脚本和字标矢量。
 
-当前未提供 R4.4 专用 3MF 或 F3D。`reference/user-p1s-white-orange-two-plates.3mf` 和早期 R0/R1 3MF 是原版或历史切片参考，不能当成 R4.4 当前模型。将以上两个 STL 以 mm 导入自己的切片器，分别安排上下盖、检查开孔/桥接/支撑和螺丝柱，再依据实际打印机、材料与孔缩设置层高等参数；不把历史机器配置当作通用打印保证。键帽、摇杆帽沿用原版操作件，不包含在这对壳体 STL 中。
+当前未提供 R4.4 专用 3MF 或 F3D。`reference/user-p1s-white-orange-two-plates.3mf` 和早期 R0/R1 3MF 是原版或历史切片参考，不能当成 R4.4 当前模型。将以上两个 STL 以 mm 导入自己的切片器，分别安排上下盖、检查开孔/桥接/支撑和螺丝柱，再依据实际打印机、材料与孔缩设置层高等参数；不把历史机器配置当作通用打印保证。键帽、摇杆帽沿用原版操作件，不包含在这对壳体 STL 中；现已另外提供[原版三键帽＋摇杆 A/B/盖板打印件](print-parts/README.md)，每个文件各一件，源名称、尺寸与变换均可追溯。
 
 STEP/STL 可独立导入其他 CAD/切片器。`fusion/` 脚本是设计过程源：运行需要 Fusion 与本地桥接插件，记录中的 body/design 标识属于历史会话，不能宣称脱离 Fusion 即可一键无头重建全部形状。`fusion/io/` 是运行时队列，不是交付输入，不公开提交。部分可选渲染脚本使用 Windows 系统字体，跨平台渲染需自行提供匹配字体；这不影响已导出 STEP/STL。
 

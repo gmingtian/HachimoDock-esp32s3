@@ -4,12 +4,14 @@ This is the existing Tauri desktop application, with the session monitor, compon
 
 ## Build and run
 
-Use Node.js 22+ with npm, Rust **1.95 or newer** (the locked sysinfo 0.39.6 requires it), a C compiler, pkg-config and Python 3.10+. On Ubuntu/Debian the native development libraries are:
+Use the audited Node.js **26.7.0** release runtime with npm, Rust **1.95 or newer** (the locked sysinfo 0.39.6 requires it), a C compiler, pkg-config and Python 3.10+. On Ubuntu/Debian the native development libraries are:
 
 ```sh
 sudo apt install build-essential pkg-config libgtk-3-dev libwebkit2gtk-4.1-dev \
-  libayatana-appindicator3-dev libasound2-dev libudev-dev libssl-dev libbz2-dev ffmpeg python3
+  libayatana-appindicator3-dev libasound2-dev libudev-dev libssl-dev libbz2-dev libatomic1 ffmpeg python3
 ```
+
+Official Node.js 25+ Linux binaries require the libatomic runtime; on Ubuntu/Debian install `libatomic1`. See the [Node.js 26.7.0 platform requirements](https://github.com/nodejs/node/blob/v26.7.0/BUILDING.md#official-binary-platforms-and-toolchains). This is also a runtime dependency for the Node executable bundled in the client.
 
 The Linux app uses a separately installed FFmpeg with the `libx264` encoder. It does not copy that FFmpeg into the application. Check it with `ffmpeg -hide_banner -encoders`; `libx264` must appear. `PET_MANAGER_BUNDLED_FFMPEG` can explicitly select a local FFmpeg executable for development.
 
@@ -27,7 +29,7 @@ npm run build:linux
 ./dist-linux/launch.sh
 ```
 
-`build:linux` uses Tauri, then stages the ELF under `dist-linux/usr/bin/pet-manager-tauri` and its complete configured resources under `dist-linux/usr/lib/HachimiDock`. The resource directory follows Tauri's configured `productName`, which overrides the Cargo package name. The directory can be moved as a unit. It requires the host GTK/WebKitGTK, ALSA, udev and OpenSSL runtime libraries, plus FFmpeg and Python3; this is not a self-contained AppImage. No persistent service or device flashing is installed by these commands. `CARGO_TARGET_DIR` and `PET_MANAGER_LINUX_BINARY` are supported by `npm run stage:linux` for an existing native build.
+`build:linux` uses Tauri, then stages the ELF under `dist-linux/usr/bin/pet-manager-tauri` and its complete configured resources under `dist-linux/usr/lib/HachimiDock`. The resource directory follows Tauri's configured `productName`, which overrides the Cargo package name. The directory can be moved as a unit. It requires the host GTK/WebKitGTK, ALSA, udev, OpenSSL and libatomic runtime libraries, plus FFmpeg and Python3; this is not a self-contained AppImage. No persistent service or device flashing is installed by these commands. `CARGO_TARGET_DIR` and `PET_MANAGER_LINUX_BINARY` are supported by `npm run stage:linux` for an existing native build.
 
 The preparation step copies a native Node executable into application resources and installs the bridge's locked production dependencies. `PET_MANAGER_NODE_BIN` can override the Node executable. Serial access needs the normal permissions on `/dev/ttyACM*` or `/dev/ttyUSB*`; use your distribution's serial-device group if access is denied. No automatic system group/udev changes are made.
 
@@ -35,22 +37,23 @@ The preparation step copies a native Node executable into application resources 
 
 The verified hello must report `runtime: "esp-s3"` (S3 aliases and explicit S3 model metadata also normalize to this identity). Shared `p4-*` asset format names describe the file format and do not override S3 identity. Component, session and voice commands use the shared full runtime protocol. S3 uses serial/JTAG or the USB-UART connection, rather than the P4-specific native bulk path.
 
-| Physical key | Short press | Long/hold |
+| A4 control | GPIO | Default operation |
 | --- | --- | --- |
-| Previous, GPIO39 | Previous item | Back / home |
-| Next, GPIO38 | Next item | Component menu |
-| Confirm, GPIO0 | Confirm | Hold to capture voice; release to stop |
+| Button 1 / SW1 | 39 | Confirm; hold to record voice, release to stop |
+| Button 2 / SW2 | 38 | Component center; long press opens chat |
+| Button 3 / SW3 | 0 | Return / exit; release during boot/reset |
+| Joystick X / Y / center | 1 / 2 / 8 | Four-way navigation / confirm |
 
-There is no touch panel or joystick. The button editor exposes only these six gestures. Firmware-declared virtual-pointer capability permits compatible pointer scenes without claiming touch hardware.
+The current input model is `s3-a4-buttons-joystick-v1`, with 16 configurable bindings. Game controls follow their on-screen instructions. The A4 board has a joystick but no touch panel; the former button-only action menu and virtual-touch fallback are not the current controls. See [A4 controls](../../docs/ESP32-S3-A4-Controls.md).
 
-Custom appearance synchronization converts the original local family sources into a separate `s3-ready/p4/` package, validates the generated manifest, SHA-256 pack identity, H.264 streams and PCM audio, and only then starts the transactional USB transfer. The limits are 240×180 video, at most 15 fps, 384 KiB and 320 frames per video, and 3 MiB per slot including storage metadata. At 15 fps, 320 frames allow about 21.3 seconds per video. An oversized package fails with a useful error rather than being silently sent as a P4 package. The physical panel is 240×240; firmware aspect-fits the shared logical canvas.
+Custom appearance synchronization converts the original local family sources into a separate `s3-ready/p4/` package, validates the generated manifest, SHA-256 pack identity, H.264 streams and PCM audio, and only then starts the transactional USB transfer. The limits are 320×240 video, at most 15 fps, 384 KiB and 320 frames per video, and 3 MiB per slot including storage metadata. At 15 fps, 320 frames allow about 21.3 seconds per video. An oversized package fails with a useful error rather than being silently sent as a P4 package. The physical output is 320×240 landscape. Shared component layouts may still use 640×480 logical coordinates; the current firmware also retains native 320×240 composition.
 
 The standalone conversion command is:
 
 ```sh
 npm run prepare:s3-assets -- --source /path/to/appearance \
   --app-data-dir /path/to/app-data --output /path/to/s3-ready \
-  --ffmpeg /path/to/ffmpeg
+  --ffmpeg /path/to/ffmpeg --width 320 --height 240
 ```
 
 For an existing prepared P4 pack or a directory of MP4 files, omit `--app-data-dir`. The converter retains audio cues and rejects unsupported/oversized media explicitly.

@@ -1,0 +1,421 @@
+{
+  "format": "hachimo-original-print-parts-v1",
+  "unit": "millimeter",
+  "sourceProjectBasename": "user-p1s-white-orange-two-plates.3mf",
+  "sourceProjectSha256": "766b57fe7ed751a912be640ca9cb538da702cf437b72fbee112a83adadb6ca65",
+  "sourceCopyrightDesignerLicenseMetadata": "blank; preserve repository upstream attribution and license, no new license inferred",
+  "upstreamProject": "https://github.com/YizhengWw/HachimoDock",
+  "upstreamAuthor": "Yizheng Wang",
+  "geometryPolicy": "Original indexed vertices and triangles retained; original component then build transform applied; translation to XYZ minimum only; binary STL float32 quantization checked.",
+  "sourcePrinterProfileAndPrivateMetadataPublished": false,
+  "physicalPrintAndFitVerified": false,
+  "parts": [
+    {
+      "file": "keycap-1.stl",
+      "sourceObjectId": "6",
+      "sourceName": "按键1",
+      "quantity": 1,
+      "sourceModelMember": "3D/Objects/object_6.model",
+      "sourceModelSha256": "58a882857776d3d93039e14af497e8aba57d59e71d400810791dc1cc2cc4b6c6",
+      "sourceMeshObjectId": "5",
+      "componentTransform3mf": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        2.22044605e-16,
+        -1.0,
+        0.0,
+        1.0,
+        2.22044605e-16,
+        0.0,
+        8.8817842e-16,
+        0.0
+      ],
+      "buildTransform3mf": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        417.54052,
+        134.9052,
+        4.5
+      ],
+      "removedPlateTranslationMm": [
+        408.54052,
+        125.90520000000001,
+        -1.7763568394002505e-15
+      ],
+      "exportBoundsMm": [
+        [
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          18.0,
+          18.0,
+          9.000000000000004
+        ]
+      ],
+      "sourceVolumeMm3": 1042.5279635829797,
+      "bytes": 1211884,
+      "sha256": "f8b7ad232a5751704354d0c8d46a577c585d79ca6a7f6146993606667fa03f0e",
+      "verification": {
+        "float32MaxVertexErrorMm": 4.818359116143256e-07,
+        "vertices": 72708,
+        "triangles": 24236,
+        "closed": true,
+        "windingConsistent": true,
+        "connectedComponents": 1,
+        "degenerateTriangles": 0,
+        "signedVolumeMm3": 1042.5280030716074
+      }
+    },
+    {
+      "file": "keycap-2.stl",
+      "sourceObjectId": "8",
+      "sourceName": "按键2",
+      "quantity": 1,
+      "sourceModelMember": "3D/Objects/object_4.model",
+      "sourceModelSha256": "3e5c099d83fe2a7a45919f342954474dbe67627b196b6b6a38d05a94bd2bf0d1",
+      "sourceMeshObjectId": "7",
+      "componentTransform3mf": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        2.22044605e-16,
+        -1.0,
+        0.0,
+        1.0,
+        2.22044605e-16,
+        0.0,
+        8.8817842e-16,
+        0.0
+      ],
+      "buildTransform3mf": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        397.54056,
+        134.90521,
+        4.5
+      ],
+      "removedPlateTranslationMm": [
+        388.54056,
+        125.90521000000001,
+        -1.7763568394002505e-15
+      ],
+      "exportBoundsMm": [
+        [
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          18.0,
+          18.0,
+          9.000000000000004
+        ]
+      ],
+      "sourceVolumeMm3": 1042.5238389415697,
+      "bytes": 1135184,
+      "sha256": "4cb2c3d4cf4782e10701fa6063191acd565e5cbfbb108f4288cf48eb9a65663a",
+      "verification": {
+        "float32MaxVertexErrorMm": 4.81826162967991e-07,
+        "vertices": 68106,
+        "triangles": 22702,
+        "closed": true,
+        "windingConsistent": true,
+        "connectedComponents": 1,
+        "degenerateTriangles": 0,
+        "signedVolumeMm3": 1042.5238562104475
+      }
+    },
+    {
+      "file": "keycap-3.stl",
+      "sourceObjectId": "10",
+      "sourceName": "按键3",
+      "quantity": 1,
+      "sourceModelMember": "3D/Objects/object_5.model",
+      "sourceModelSha256": "61b5c8374fb84f4098aa30631592b063c32fb3546d755e0a66c7f8cf1efb7f63",
+      "sourceMeshObjectId": "9",
+      "componentTransform3mf": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        2.22044605e-16,
+        -1.0,
+        0.0,
+        1.0,
+        2.22044605e-16,
+        0.0,
+        8.8817842e-16,
+        0.0
+      ],
+      "buildTransform3mf": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        377.5406,
+        136.39398,
+        4.5
+      ],
+      "removedPlateTranslationMm": [
+        368.5406,
+        127.39398,
+        -1.7763568394002505e-15
+      ],
+      "exportBoundsMm": [
+        [
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          18.0,
+          18.0,
+          9.000000000000004
+        ]
+      ],
+      "sourceVolumeMm3": 1042.527800815659,
+      "bytes": 1211784,
+      "sha256": "1c3f4041d90708c652253a54ace7ecf290d5b342dfc415f04384380241b34041",
+      "verification": {
+        "float32MaxVertexErrorMm": 9.536474863125477e-07,
+        "vertices": 72702,
+        "triangles": 24234,
+        "closed": true,
+        "windingConsistent": true,
+        "connectedComponents": 1,
+        "degenerateTriangles": 0,
+        "signedVolumeMm3": 1042.5278757865633
+      }
+    },
+    {
+      "file": "joystick-cap-a.stl",
+      "sourceObjectId": "14",
+      "sourceName": "摇杆帽A",
+      "quantity": 1,
+      "sourceModelMember": "3D/Objects/object_9.model",
+      "sourceModelSha256": "fd502572ff8407b70a43a2df2a53c65be3873c658d45f5cd789b2d20fdd3a132",
+      "sourceMeshObjectId": "13",
+      "componentTransform3mf": [
+        0.999999829,
+        0.000413428094,
+        -0.000413548198,
+        0.000413428094,
+        0.00029055083,
+        0.999999872,
+        0.000413548198,
+        -0.999999872,
+        0.000290379857,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "buildTransform3mf": [
+        0.949558852,
+        0.31358888,
+        0.0,
+        -0.31358888,
+        0.949558852,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        379.704924,
+        102.402082,
+        5.97237789
+      ],
+      "removedPlateTranslationMm": [
+        372.70756002438014,
+        95.40468386060316,
+        -9.736419670502983e-09
+      ],
+      "exportBoundsMm": [
+        [
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          13.99268958829208,
+          13.992670319578238,
+          11.947249622938221
+        ]
+      ],
+      "sourceVolumeMm3": 1330.8633783718087,
+      "bytes": 346684,
+      "sha256": "aee09ac40108bf3b7ac162b4cfa6276f46387d957a5b394ac624c8d890cb1886",
+      "verification": {
+        "float32MaxVertexErrorMm": 4.768183714531915e-07,
+        "vertices": 20796,
+        "triangles": 6932,
+        "closed": true,
+        "windingConsistent": true,
+        "connectedComponents": 1,
+        "degenerateTriangles": 0,
+        "signedVolumeMm3": 1330.86337651271
+      }
+    },
+    {
+      "file": "joystick-cap-b.stl",
+      "sourceObjectId": "16",
+      "sourceName": "摇杆帽B",
+      "quantity": 1,
+      "sourceModelMember": "3D/Objects/object_10.model",
+      "sourceModelSha256": "356a71a2924c5ab8c2fccbb17d3dd5a28c14e619fceef376db4a91dd18590f58",
+      "sourceMeshObjectId": "15",
+      "componentTransform3mf": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        2.22044605e-16,
+        -1.0,
+        0.0,
+        1.0,
+        2.22044605e-16,
+        0.0,
+        -8.8817842e-16,
+        2.22044605e-16
+      ],
+      "buildTransform3mf": [
+        0.980512974,
+        -0.196454342,
+        0.0,
+        0.196454342,
+        0.980512974,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        421.61347,
+        203.27406,
+        3.0226264
+      ],
+      "removedPlateTranslationMm": [
+        416.6702180059928,
+        198.33080538144063,
+        -4.440892098500626e-16
+      ],
+      "exportBoundsMm": [
+        [
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          9.88650586079416,
+          9.886506989504056,
+          6.045252800000002
+        ]
+      ],
+      "sourceVolumeMm3": 135.4296401478065,
+      "bytes": 287884,
+      "sha256": "25704349cddd867816652ce24c5c862b92063ef16a07b282e6525c140834c022",
+      "verification": {
+        "float32MaxVertexErrorMm": 4.749871891363e-07,
+        "vertices": 17268,
+        "triangles": 5756,
+        "closed": true,
+        "windingConsistent": true,
+        "connectedComponents": 1,
+        "degenerateTriangles": 0,
+        "signedVolumeMm3": 135.42963867656826
+      }
+    },
+    {
+      "file": "joystick-cover.stl",
+      "sourceObjectId": "12",
+      "sourceName": "摇杆盖板",
+      "quantity": 1,
+      "sourceModelMember": "3D/Objects/object_8.model",
+      "sourceModelSha256": "923d5eba7166d96f464af9e0f022525d5f218057073ac10b84e6e6a12c6c6996",
+      "sourceMeshObjectId": "11",
+      "componentTransform3mf": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        2.22044605e-16,
+        1.0,
+        0.0,
+        -1.0,
+        2.22044605e-16,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "buildTransform3mf": [
+        -0.692343121,
+        0.721568433,
+        0.0,
+        -0.721568433,
+        -0.692343121,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        379.70176,
+        118.39551,
+        0.200000018
+      ],
+      "removedPlateTranslationMm": [
+        372.70325493350134,
+        111.39700405685515,
+        -1.5543122344752192e-15
+      ],
+      "exportBoundsMm": [
+        [
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          13.997010324153507,
+          13.99701034499411,
+          0.4000000360000031
+        ]
+      ],
+      "sourceVolumeMm3": 57.71361880602873,
+      "bytes": 45684,
+      "sha256": "a7a3e1a81d9226d84f5b67ca6a70a9f28617914ac4aaecdb6229a501e075e680",
+      "verification": {
+        "float32MaxVertexErrorMm": 4.750897204530702e-07,
+        "vertices": 2736,
+        "triangles": 912,
+        "closed": true,
+        "windingConsistent": true,
+        "connectedComponents": 1,
+        "degenerateTriangles": 0,
+        "signedVolumeMm3": 57.713619312426296
+      }
+    }
+  ],
+  "preview": {
+    "file": "parts-preview.png",
+    "sha256": "30411c8f2a9b218db639d6c823629494cc6a129eccb3e00b1d40d28408ef76db",
+    "description": "Exact exported mesh views: PRINT follows the source plate orientation, FLIP is its reverse. Colors are a display legend, not source material assignments."
+  }
+}

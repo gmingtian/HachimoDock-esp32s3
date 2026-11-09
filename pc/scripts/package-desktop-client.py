@@ -115,8 +115,8 @@ def linux(output):
     smoke(stage/'launch.sh',output/'Linux-startup.log')
     (stage/'LINUX-REQUIREMENTS.txt').write_text(
         'Linux x86_64; built on Ubuntu 24.04 (glibc 2.39 or newer).\n'
-        'Requires WebKitGTK 4.1, GTK3, ALSA, OpenSSL, system FFmpeg with libx264, and Python 3.\n'
-        'Ubuntu 24.04: sudo apt install libwebkit2gtk-4.1-0 libgtk-3-0t64 libayatana-appindicator3-1 librsvg2-2 libasound2t64 libssl3t64 libudev1 ffmpeg python3\n'
+        'Requires WebKitGTK 4.1, GTK3, ALSA, OpenSSL, libatomic, system FFmpeg with libx264, and Python 3.\n'
+        'Ubuntu 24.04: sudo apt install libwebkit2gtk-4.1-0 libgtk-3-0t64 libayatana-appindicator3-1 librsvg2-2 libasound2t64 libssl3t64 libudev1 libatomic1 ffmpeg python3\n'
         'Extract this whole directory, then run ./launch.sh. Do not move the binary alone.\n'
         'System FFmpeg/Python and their libraries are not included or redistributed.\n'
         'No root installation required; USB serial access may require dialout group membership.\n',encoding='utf-8')

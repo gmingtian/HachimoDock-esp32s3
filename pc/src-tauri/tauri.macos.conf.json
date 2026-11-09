@@ -4,7 +4,7 @@
     "macOS": {
       "signingIdentity": "-",
       "infoPlist": "Info.plist",
-      "minimumSystemVersion": "12.0"
+      "minimumSystemVersion": "13.5"
     },
     "resources": {
       "generated-runtime/node": "bridge/runtime/node",

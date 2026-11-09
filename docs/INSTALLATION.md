@@ -7,12 +7,14 @@
 | 平台 | 架构 | 安装方式 |
 | --- | --- | --- |
 | Windows | x64 | 运行 EXE 安装程序，首次安装可能需要联网准备 WebView2 |
-| macOS | Apple Silicon arm64 | 打开 DMG，拖入 Applications；macOS 12+ |
+| macOS | Apple Silicon arm64 | 打开 DMG，拖入 Applications；macOS 13.5+ |
 | Linux | x86_64 | 解压客户端压缩包，运行 `./launch.sh`；依赖见 [Linux 原生客户端](../pc/docs/linux-native.md) |
 
 本分支未声明商业代码签名或 Apple 公证。macOS 若阻止打开，在核对来源与校验值后使用系统“隐私与安全性”中针对此应用的“仍要打开”。不需要关闭整体安全保护。
 
-Linux 包需要系统 GTK3、WebKitGTK 4.1、ALSA、udev 等运行库；自定义形象转换需 Python 3.10+ 与包含 `libx264` 的 FFmpeg，具体系统库及构建环境见上述文档。Windows/macOS 资源内容以该版打包清单为准。Intel Mac 和 Linux ARM 不在本次安装包范围。
+本版附带的 Node.js 26.7.0 官方运行时要求 macOS 13.5 或更高版本，见 [Node.js 平台说明](https://github.com/nodejs/node/blob/v26.7.0/BUILDING.md#platform-list)。
+
+Linux 包需要系统 GTK3、WebKitGTK 4.1、ALSA、udev 和 libatomic 运行库（Ubuntu/Debian 包名 `libatomic1`）；自定义形象转换需 Python 3.10+ 与包含 `libx264` 的 FFmpeg，具体系统库及构建环境见上述文档。Windows/macOS 资源内容以该版打包清单为准。Intel Mac 和 Linux ARM 不在本次安装包范围。
 
 ## 首次连接
 

@@ -6,7 +6,7 @@ ESP32-S3 A4 载板适配版：**三颗按键＋四向摇杆（支持按下）**�
 
 [下载 Release](https://github.com/gmingtian/HachimoDock-esp32s3/releases/tag/v0.1.202-s3-a4-r16c) · [安装与恢复](docs/INSTALLATION.md) · [按钮与摇杆](docs/ESP32-S3-A4-Controls.md) · [PCB 与外壳](hardware/README.md) · [兼容性](docs/COMPATIBILITY.md) · [English](README.en.md)
 
-当前发行源码：客户端 **0.1.202**；配套固件 **0.7.103-s3-r16c-80m-l320**。客户端构建目标为 Windows x64、Apple 芯片 macOS arm64、Linux x86_64，实际安装包以 Release 附件及校验清单为准。
+当前发行源码：客户端 **0.1.202**；配套固件 **0.7.103-s3-r16c-80m-l320**。客户端构建目标为 Windows x64、Apple 芯片 macOS arm64（13.5+）、Linux x86_64（需要 libatomic 运行库），实际安装包以 Release 附件及校验清单为准。
 
 ## 实物
 
@@ -39,7 +39,7 @@ ESP32-S3 A4 载板适配版：**三颗按键＋四向摇杆（支持按下）**�
 
 GPIO0 上电或复位时请松开。按键可在客户端配置，具体游戏以屏幕提示为准。五子棋：1 开始/落子/重开，2 悔棋，3 退出。象棋：1 选棋/落子，2 优先取消选中、否则悔棋，3 退出；上下选择难度。
 
-[硬件交付索引](hardware/README.md)列出 **A4 Gerber、KiCad 原理图/PCB、自包含库、BOM、接线表、R4.4 上下盖 STL 与 STEP**。早期 A0–A3、R0–R4.3 与试装骨架属于过程资料，请勿混用制造文件。
+[硬件交付索引](hardware/README.md)列出 **A4 Gerber、KiCad 原理图/PCB、自包含库、BOM、接线表、R4.4 上下盖 STL 与 STEP，以及单独的三键帽和摇杆帽 A/B/盖板 STL**。早期 A0–A3、R0–R4.3 与试装骨架属于过程资料，请勿混用制造文件。
 
 ## 安装和开发
 

@@ -9,14 +9,16 @@
     "Fusion process scripts need Fusion and a new local bridge session; historical body IDs are not portable CAD history.",
     "Local IPC, caches, logs, historical duplicate meshes and private board backups are excluded.",
     "BOM and connections are supplied; no unverified pick-and-place/CPL file is invented.",
-    "Original audit physical-fit flags preserve their export-time scope; later assembly photos are separate evidence."
+    "Original audit physical-fit flags preserve their export-time scope; later assembly photos are separate evidence.",
+    "Original named keycaps 1/2/3 and joystick cap A/B/cover are included as six separate unscaled STL files, one each; source project profiles remain private."
   ],
   "verifiedAtPackaging": {
     "gerberArchiveAndAllNineManufacturingMembers": true,
     "nativeDrcBoundBoardProjectAndReport": true,
     "r44UpperAndLowerMatchExportReport": true,
     "noSelectedFileAtOrAbove90MiB": true,
-    "noPersonalAbsoluteUserPathInSelectedText": true
+    "noPersonalAbsoluteUserPathInSelectedText": true,
+    "originalControlPartsClosedSingleComponentAndOriginalTriangles": true
   },
   "files": [
     {
@@ -28,14 +30,14 @@
     {
       "path": "README.en.md",
       "role": "documentation-and-license",
-      "bytes": 4949,
-      "sha256": "f54c5a7da88d0613f7ee919df1a17033f95c69583d4a4f2016bf032cc00f108d"
+      "bytes": 5051,
+      "sha256": "76aae0ce9269124bbbbb3180b94e9bfdb9ca1a308b9b3b0a527f4b851f4f9995"
     },
     {
       "path": "README.md",
       "role": "documentation-and-license",
-      "bytes": 4618,
-      "sha256": "629944c172a32fa272b8399665ae4615a896cf08009f8e848274d7154b0b20e7"
+      "bytes": 4715,
+      "sha256": "9cbb9180740807cb8c0d170342223fad79cb1c90006164ed68ce356d373ad177"
     },
     {
       "path": "THIRD_PARTY_NOTICES.md",
@@ -46,8 +48,8 @@
     {
       "path": "docs/COMPATIBILITY.md",
       "role": "documentation-and-license",
-      "bytes": 2942,
-      "sha256": "29bc3f1694cbcef943ccc892457db4f44517a518a8138a8d74bb80e9af08a177"
+      "bytes": 3227,
+      "sha256": "a24ec0ab0f22cbc418d043d32dafd7ca6378ef380525bcaca53953654010e68a"
     },
     {
       "path": "docs/ESP32-S3-A4-Controls.md",
@@ -88,8 +90,8 @@
     {
       "path": "docs/INSTALLATION.md",
       "role": "documentation-and-license",
-      "bytes": 3390,
-      "sha256": "7660d96b1284cf36755312bd7ee7dd1d3509eb4b319f952e723ca18a186c9fdf"
+      "bytes": 3626,
+      "sha256": "232ccb3cd9bfec4087c57d4ffc5a207bfb3a46acab4eee612d8fdbdb04938c53"
     },
     {
       "path": "docs/WIFI.md",
@@ -112,14 +114,14 @@
     {
       "path": "hardware/README.md",
       "role": "documentation-and-license",
-      "bytes": 3548,
-      "sha256": "d58f99895083c1f87c7d18b215be16859a6392d66dc5a533727c356f7768aecd"
+      "bytes": 3880,
+      "sha256": "dd3621ccfe182aa92a975cf46630cf13da1445a8a91f029f892fb8f65598e774"
     },
     {
       "path": "hardware/enclosure-a4/README.md",
       "role": "enclosure-process-source",
-      "bytes": 9925,
-      "sha256": "15ee3531158543829f19c15721994bc09b73ef422925dd923901083561e26c80"
+      "bytes": 10081,
+      "sha256": "8f96950f356648b429f53190e606975d3cf32b4fa69d57d107f526414c5cd95e"
     },
     {
       "path": "hardware/enclosure-a4/build_enclosure.py",
@@ -138,6 +140,12 @@
       "role": "enclosure-process-source",
       "bytes": 3013,
       "sha256": "131e4cff2e370135b6dd5be270cc5d679c8adcedd664a3748886d22b85fd4296"
+    },
+    {
+      "path": "hardware/enclosure-a4/extract_print_parts.py",
+      "role": "original-control-print-parts",
+      "bytes": 14935,
+      "sha256": "2dd9897dfe3ee59c142f967f3412ba1d0f943254a3e07f7b4e985c1106bc7f0d"
     },
     {
       "path": "hardware/enclosure-a4/fusion/FusionEnclosureBridge/FusionEnclosureBridge.manifest",
@@ -570,6 +578,60 @@
       "role": "enclosure-process-source",
       "bytes": 1043,
       "sha256": "9a248e21a888bb13a94147cb63ee596f4e1c5d6b93d392e74d642088bdd9a0ef"
+    },
+    {
+      "path": "hardware/enclosure-a4/print-parts/README.md",
+      "role": "original-control-print-parts",
+      "bytes": 4149,
+      "sha256": "ef9d156a0e221bed9b8a676cd17696e73e411eb3ab82dd812aebe7ae0d8c3def"
+    },
+    {
+      "path": "hardware/enclosure-a4/print-parts/joystick-cap-a.stl",
+      "role": "original-control-print-parts",
+      "bytes": 346684,
+      "sha256": "aee09ac40108bf3b7ac162b4cfa6276f46387d957a5b394ac624c8d890cb1886"
+    },
+    {
+      "path": "hardware/enclosure-a4/print-parts/joystick-cap-b.stl",
+      "role": "original-control-print-parts",
+      "bytes": 287884,
+      "sha256": "25704349cddd867816652ce24c5c862b92063ef16a07b282e6525c140834c022"
+    },
+    {
+      "path": "hardware/enclosure-a4/print-parts/joystick-cover.stl",
+      "role": "original-control-print-parts",
+      "bytes": 45684,
+      "sha256": "a7a3e1a81d9226d84f5b67ca6a70a9f28617914ac4aaecdb6229a501e075e680"
+    },
+    {
+      "path": "hardware/enclosure-a4/print-parts/keycap-1.stl",
+      "role": "original-control-print-parts",
+      "bytes": 1211884,
+      "sha256": "f8b7ad232a5751704354d0c8d46a577c585d79ca6a7f6146993606667fa03f0e"
+    },
+    {
+      "path": "hardware/enclosure-a4/print-parts/keycap-2.stl",
+      "role": "original-control-print-parts",
+      "bytes": 1135184,
+      "sha256": "4cb2c3d4cf4782e10701fa6063191acd565e5cbfbb108f4288cf48eb9a65663a"
+    },
+    {
+      "path": "hardware/enclosure-a4/print-parts/keycap-3.stl",
+      "role": "original-control-print-parts",
+      "bytes": 1211784,
+      "sha256": "1c3f4041d90708c652253a54ace7ecf290d5b342dfc415f04384380241b34041"
+    },
+    {
+      "path": "hardware/enclosure-a4/print-parts/parts-preview.png",
+      "role": "original-control-print-parts",
+      "bytes": 47812,
+      "sha256": "30411c8f2a9b218db639d6c823629494cc6a129eccb3e00b1d40d28408ef76db"
+    },
+    {
+      "path": "hardware/enclosure-a4/print-parts/source-and-verification.json",
+      "role": "original-control-print-parts",
+      "bytes": 10497,
+      "sha256": "ecb653e0b03e7ca7253ebfea8af340b19340a9bc4391a6ee14f697aedca82645"
     },
     {
       "path": "hardware/enclosure-a4/reference/assembled-user-side.jpg",
@@ -1342,8 +1404,8 @@
     {
       "path": "pc/docs/linux-native.md",
       "role": "documentation-and-license",
-      "bytes": 5461,
-      "sha256": "84e4f824c9da4604a118670418f92c30e9c2ec185bf4a9d51b7e308d63cd4e71"
+      "bytes": 6214,
+      "sha256": "fdb35c36379778e864c2a5ef053a832a93300751aaf9bbf67c34de8165f2fd6c"
     },
     {
       "path": "tools/package_a4_hardware.py",
@@ -1352,6 +1414,6 @@
       "sha256": "6b132aeaf249f2a640eac2b4ca1fc040df0bff5f50173bc474f99f0f238ae904"
     }
   ],
-  "fileCount": 222,
-  "totalBytes": 38308517
+  "fileCount": 232,
+  "totalBytes": 42626975
 }

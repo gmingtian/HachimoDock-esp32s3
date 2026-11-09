@@ -4,9 +4,9 @@ ESP32-S3 A4 载板适配版：**三颗按键＋四向摇杆（支持按下）**�
 
 本仓库由 [gmingtian](https://github.com/gmingtian) 维护，基于 **Yizheng Wang / [YizhengWw/HachimoDock](https://github.com/YizhengWw/HachimoDock)**。这是非官方修改版，保留原项目署名、[许可证](LICENSE)及[第三方声明](THIRD_PARTY_NOTICES.md)，不代表上游背书。
 
-[下载 Release](https://github.com/gmingtian/HachimoDock-esp32s3/releases/tag/v0.1.202-s3-a4-r16c) · [安装与恢复](docs/INSTALLATION.md) · [按钮与摇杆](docs/ESP32-S3-A4-Controls.md) · [PCB 与外壳](hardware/README.md) · [兼容性](docs/COMPATIBILITY.md) · [English](README.en.md)
+[下载 0.1.202（预发布）](https://github.com/gmingtian/HachimoDock-esp32s3/releases/tag/v0.1.202-s3-a4-r16c) · [安装与恢复](docs/INSTALLATION.md) · [按钮与摇杆](docs/ESP32-S3-A4-Controls.md) · [PCB 与外壳](hardware/README.md) · [兼容性](docs/COMPATIBILITY.md) · [English](README.en.md)
 
-当前发行源码：客户端 **0.1.202**；配套固件 **0.7.103-s3-r16c-80m-l320**。客户端构建目标为 Windows x64、Apple 芯片 macOS arm64（13.5+）、Linux x86_64（需要 libatomic 运行库），实际安装包以 Release 附件及校验清单为准。
+当前发布：客户端 **0.1.202 A4 定制预发布版**；配套固件 **0.7.103-s3-r16c-80m-l320**。Windows x64、Apple 芯片 macOS arm64（13.5+）、Linux x86_64 安装包均已完成原生构建、资源转码和界面启动验证。
 
 ## 实物
 
@@ -15,6 +15,20 @@ ESP32-S3 A4 载板适配版：**三颗按键＋四向摇杆（支持按下）**�
 | ![A4 PCB 城市电台实物](docs/images/a4-pcb-radio.jpg) | ![A4 白色外壳整机实物](docs/images/a4-enclosure-pet.jpg) |
 
 以上为本机真实照片，保留原图。PCB 已焊接并完成这台设备的装壳使用；照片不替代其他打印材料、模块批次、极限摇杆行程或无线/声学测试。
+
+## 下载
+
+| 文件 | 直达下载 | 说明 |
+| --- | --- | --- |
+| Windows 客户端 | [Windows x64 安装包](https://github.com/gmingtian/HachimoDock-esp32s3/releases/download/v0.1.202-s3-a4-r16c/HachimoDock-esp32s3_Windows-x64.exe) | NSIS 安装程序 |
+| macOS 客户端 | [macOS ARM64 DMG](https://github.com/gmingtian/HachimoDock-esp32s3/releases/download/v0.1.202-s3-a4-r16c/HachimoDock-esp32s3_macOS-arm64.dmg) | Apple 芯片，macOS 13.5+；本地签名、未公证 |
+| Linux 客户端 | [Linux x86_64 压缩包](https://github.com/gmingtian/HachimoDock-esp32s3/releases/download/v0.1.202-s3-a4-r16c/HachimoDock-esp32s3_Linux-x64.tar.gz) | Ubuntu 24.04 基线；解压后运行 `launch.sh`，系统依赖见安装说明 |
+| PCB 与完整外壳 | [A4 硬件及 R4.4 外壳包](https://github.com/gmingtian/HachimoDock-esp32s3/releases/download/v0.1.202-s3-a4-r16c/HachimoDock-A4-hardware-R4.4.zip) | Gerber、KiCad、BOM、接线表、上下盖 STL / STEP 及操作件 |
+| 单独键帽与摇杆 | [6 件独立 STL](https://github.com/gmingtian/HachimoDock-esp32s3/releases/download/v0.1.202-s3-a4-r16c/HachimoDock-A4-keycaps-joystick-STL.zip) | 三个键帽＋摇杆外帽、连接件、盖板；mm，100% 比例 |
+| S3 应用升级 | [r16c OTA 固件](https://github.com/gmingtian/HachimoDock-esp32s3/releases/download/v0.1.202-s3-a4-r16c/HachimoDock-S3-A4-r16c-OTA.bin) | 已有匹配 A4 分区布局的设备应用升级 |
+| S3 首次刷写 / 恢复 | [r16c 干净全量包](https://github.com/gmingtian/HachimoDock-esp32s3/releases/download/v0.1.202-s3-a4-r16c/HachimoDock-S3-A4-r16c-factory.zip) | 首次改刷或完整恢复；会替换配置与资源，按包内说明刷写 |
+
+[全部附件、游戏与源码](https://github.com/gmingtian/HachimoDock-esp32s3/releases/tag/v0.1.202-s3-a4-r16c) · [SHA256SUMS 校验文件](https://github.com/gmingtian/HachimoDock-esp32s3/releases/download/v0.1.202-s3-a4-r16c/SHA256SUMS) · [安装与恢复说明](docs/INSTALLATION.md)。24 个附件均已实际回下载校验。
 
 ## 当前功能
 

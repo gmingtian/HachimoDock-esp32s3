@@ -4,9 +4,9 @@ An unofficial ESP32-S3 A4 adaptation with **three buttons and a four-way joystic
 
 Maintained by [gmingtian](https://github.com/gmingtian), based on **Yizheng Wang / [YizhengWw/HachimoDock](https://github.com/YizhengWw/HachimoDock)**. Original attribution, [LICENSE](LICENSE) and [third-party notices](THIRD_PARTY_NOTICES.md) are retained. This fork is not endorsed by the upstream project.
 
-[Release downloads](https://github.com/gmingtian/HachimoDock-esp32s3/releases/tag/v0.1.202-s3-a4-r16c) · [Installation](docs/INSTALLATION.md) · [A4 controls](docs/ESP32-S3-A4-Controls.md) · [PCB and enclosure](hardware/README.md) · [Compatibility](docs/COMPATIBILITY.md) · [中文](README.md)
+[0.1.202 prerelease downloads](https://github.com/gmingtian/HachimoDock-esp32s3/releases/tag/v0.1.202-s3-a4-r16c) · [Installation](docs/INSTALLATION.md) · [A4 controls](docs/ESP32-S3-A4-Controls.md) · [PCB and enclosure](hardware/README.md) · [Compatibility](docs/COMPATIBILITY.md) · [中文](README.md)
 
-Current release sources: desktop **0.1.202**, firmware **0.7.103-s3-r16c-80m-l320**. Desktop build targets are Windows x64, Apple Silicon macOS arm64 (13.5+) and Linux x86_64 (requires the libatomic runtime). Available installers and checksums are listed in the Release attachments; Intel Mac and Linux ARM builds are not advertised.
+Current release: desktop **0.1.202 A4 custom prerelease**, firmware **0.7.103-s3-r16c-80m-l320**. Windows x64, Apple Silicon macOS arm64 (13.5+) and Linux x86_64 packages have passed native builds, resource conversion and frontend startup validation. Intel Mac and Linux ARM builds are not advertised.
 
 ## The assembled device
 
@@ -15,6 +15,20 @@ Current release sources: desktop **0.1.202**, firmware **0.7.103-s3-r16c-80m-l32
 | ![A4 PCB](docs/images/a4-pcb-radio.jpg) | ![Assembled white enclosure](docs/images/a4-enclosure-pet.jpg) |
 
 These are unchanged photographs of the actual assembled unit. They do not establish fit for every print material or module batch, full joystick travel, RF certification or acoustic performance.
+
+## Downloads
+
+| File | Direct download | Details |
+| --- | --- | --- |
+| Windows client | [Windows x64 installer](https://github.com/gmingtian/HachimoDock-esp32s3/releases/download/v0.1.202-s3-a4-r16c/HachimoDock-esp32s3_Windows-x64.exe) | NSIS installer |
+| macOS client | [macOS ARM64 DMG](https://github.com/gmingtian/HachimoDock-esp32s3/releases/download/v0.1.202-s3-a4-r16c/HachimoDock-esp32s3_macOS-arm64.dmg) | Apple Silicon, macOS 13.5+; ad-hoc signed, not notarized |
+| Linux client | [Linux x86_64 archive](https://github.com/gmingtian/HachimoDock-esp32s3/releases/download/v0.1.202-s3-a4-r16c/HachimoDock-esp32s3_Linux-x64.tar.gz) | Ubuntu 24.04 baseline; extract and run `launch.sh`; see installation notes for system dependencies |
+| PCB and complete enclosure | [A4 hardware and R4.4 enclosure](https://github.com/gmingtian/HachimoDock-esp32s3/releases/download/v0.1.202-s3-a4-r16c/HachimoDock-A4-hardware-R4.4.zip) | Gerbers, KiCad, BOM, wiring, upper/lower STL and STEP, and control parts |
+| Separate keycaps and joystick | [6 individual STL parts](https://github.com/gmingtian/HachimoDock-esp32s3/releases/download/v0.1.202-s3-a4-r16c/HachimoDock-A4-keycaps-joystick-STL.zip) | Three keycaps, joystick outer cap, connector and cover; mm, 100% scale |
+| S3 application update | [r16c OTA firmware](https://github.com/gmingtian/HachimoDock-esp32s3/releases/download/v0.1.202-s3-a4-r16c/HachimoDock-S3-A4-r16c-OTA.bin) | Application update for an existing compatible A4 partition layout |
+| S3 initial flash / recovery | [r16c clean factory package](https://github.com/gmingtian/HachimoDock-esp32s3/releases/download/v0.1.202-s3-a4-r16c/HachimoDock-S3-A4-r16c-factory.zip) | Initial flashing or full recovery; replaces configuration and resources; follow the included instructions |
+
+[All assets, games and source](https://github.com/gmingtian/HachimoDock-esp32s3/releases/tag/v0.1.202-s3-a4-r16c) · [SHA256SUMS](https://github.com/gmingtian/HachimoDock-esp32s3/releases/download/v0.1.202-s3-a4-r16c/SHA256SUMS) · [Installation and recovery](docs/INSTALLATION.md). All 24 release assets have been downloaded back and verified.
 
 ## Features
 

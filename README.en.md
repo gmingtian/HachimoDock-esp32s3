@@ -4,9 +4,9 @@ An unofficial ESP32-S3 A4 adaptation with **three buttons and a four-way joystic
 
 Maintained by [gmingtian](https://github.com/gmingtian), based on **Yizheng Wang / [YizhengWw/HachimoDock](https://github.com/YizhengWw/HachimoDock)**. Original attribution, [LICENSE](LICENSE) and [third-party notices](THIRD_PARTY_NOTICES.md) are retained. This fork is not endorsed by the upstream project.
 
-[0.1.202 prerelease downloads](https://github.com/gmingtian/HachimoDock-esp32s3/releases/tag/v0.1.202-s3-a4-r16c) · [Installation](docs/INSTALLATION.md) · [A4 controls](docs/ESP32-S3-A4-Controls.md) · [PCB and enclosure](hardware/README.md) · [Compatibility](docs/COMPATIBILITY.md) · [中文](README.md)
+[0.1.203 prerelease downloads](https://github.com/gmingtian/HachimoDock-esp32s3/releases/tag/v0.1.203-s3-a4-r16d) · [Installation](docs/INSTALLATION.md) · [A4 controls](docs/ESP32-S3-A4-Controls.md) · [PCB and enclosure](hardware/README.md) · [Compatibility](docs/COMPATIBILITY.md) · [中文](README.md)
 
-Current release: desktop **0.1.202 A4 custom prerelease**, firmware **0.7.103-s3-r16c-80m-l320**. Windows x64, Apple Silicon macOS arm64 (13.5+) and Linux x86_64 packages have passed native builds, resource conversion and frontend startup validation. Intel Mac and Linux ARM builds are not advertised.
+Current release: desktop **0.1.203 A4 custom prerelease**, firmware **0.7.103-s3-r16d-80m-l320**. Windows x64, Apple Silicon macOS arm64 (13.5+) and Linux x86_64 packages have passed native builds, resource conversion and frontend startup validation. Intel Mac and Linux ARM builds are not advertised.
 
 ## The assembled device
 
@@ -20,15 +20,15 @@ These are unchanged photographs of the actual assembled unit. They do not establ
 
 | File | Direct download | Details |
 | --- | --- | --- |
-| Windows client | [Windows x64 installer](https://github.com/gmingtian/HachimoDock-esp32s3/releases/download/v0.1.202-s3-a4-r16c/HachimoDock-esp32s3_Windows-x64.exe) | NSIS installer |
-| macOS client | [macOS ARM64 DMG](https://github.com/gmingtian/HachimoDock-esp32s3/releases/download/v0.1.202-s3-a4-r16c/HachimoDock-esp32s3_macOS-arm64.dmg) | Apple Silicon, macOS 13.5+; ad-hoc signed, not notarized |
-| Linux client | [Linux x86_64 archive](https://github.com/gmingtian/HachimoDock-esp32s3/releases/download/v0.1.202-s3-a4-r16c/HachimoDock-esp32s3_Linux-x64.tar.gz) | Ubuntu 24.04 baseline; extract and run `launch.sh`; see installation notes for system dependencies |
+| Windows client | [Windows x64 installer](https://github.com/gmingtian/HachimoDock-esp32s3/releases/download/v0.1.203-s3-a4-r16d/HachimoDock-esp32s3_Windows-x64.exe) | NSIS installer |
+| macOS client | [macOS ARM64 DMG](https://github.com/gmingtian/HachimoDock-esp32s3/releases/download/v0.1.203-s3-a4-r16d/HachimoDock-esp32s3_macOS-arm64.dmg) | Apple Silicon, macOS 13.5+; ad-hoc signed, not notarized |
+| Linux client | [Linux x86_64 archive](https://github.com/gmingtian/HachimoDock-esp32s3/releases/download/v0.1.203-s3-a4-r16d/HachimoDock-esp32s3_Linux-x64.tar.gz) | Ubuntu 24.04 baseline; extract and run `launch.sh`; see installation notes for system dependencies |
 | PCB and complete enclosure | [A4 hardware and R4.4 enclosure](https://github.com/gmingtian/HachimoDock-esp32s3/releases/download/v0.1.202-s3-a4-r16c/HachimoDock-A4-hardware-R4.4.zip) | Gerbers, KiCad, BOM, wiring, upper/lower STL and STEP, and control parts |
 | Separate keycaps and joystick | [6 individual STL parts](https://github.com/gmingtian/HachimoDock-esp32s3/releases/download/v0.1.202-s3-a4-r16c/HachimoDock-A4-keycaps-joystick-STL.zip) | Three keycaps, joystick outer cap, connector and cover; mm, 100% scale |
-| S3 application update | [r16c OTA firmware](https://github.com/gmingtian/HachimoDock-esp32s3/releases/download/v0.1.202-s3-a4-r16c/HachimoDock-S3-A4-r16c-OTA.bin) | Application update for an existing compatible A4 partition layout |
-| S3 initial flash / recovery | [r16c clean factory package](https://github.com/gmingtian/HachimoDock-esp32s3/releases/download/v0.1.202-s3-a4-r16c/HachimoDock-S3-A4-r16c-factory.zip) | Initial flashing or full recovery; replaces configuration and resources; follow the included instructions |
+| S3 application update | [r16d OTA firmware](https://github.com/gmingtian/HachimoDock-esp32s3/releases/download/v0.1.203-s3-a4-r16d/HachimoDock-S3-A4-r16d-OTA.bin) | Application update for an existing compatible A4 partition layout |
+| S3 initial flash / recovery | [r16d clean factory package](https://github.com/gmingtian/HachimoDock-esp32s3/releases/download/v0.1.203-s3-a4-r16d/HachimoDock-S3-A4-r16d-factory.zip) | Initial flashing or full recovery; replaces configuration and resources; follow the included instructions |
 
-[All assets, games and source](https://github.com/gmingtian/HachimoDock-esp32s3/releases/tag/v0.1.202-s3-a4-r16c) · [SHA256SUMS](https://github.com/gmingtian/HachimoDock-esp32s3/releases/download/v0.1.202-s3-a4-r16c/SHA256SUMS) · [Installation and recovery](docs/INSTALLATION.md). All 24 release assets have been downloaded back and verified.
+[All assets, games and source](https://github.com/gmingtian/HachimoDock-esp32s3/releases/tag/v0.1.203-s3-a4-r16d) · [SHA256SUMS](https://github.com/gmingtian/HachimoDock-esp32s3/releases/download/v0.1.203-s3-a4-r16d/SHA256SUMS) · [Installation and recovery](docs/INSTALLATION.md). See the [release notes](docs/RELEASE-0.1.203.md) for fixes and verification scope.
 
 ## Features
 
@@ -57,7 +57,7 @@ The [hardware index](hardware/README.md) identifies current **A4 Gerbers, editab
 
 ## Install and build
 
-Choose matching desktop and S3 firmware files from the [Release](https://github.com/gmingtian/HachimoDock-esp32s3/releases/tag/v0.1.202-s3-a4-r16c) and read [installation and recovery](docs/INSTALLATION.md). Installing the desktop app does not flash the board. Application-only firmware must not be written to 0x0; initial factory flashing and resource-preserving OTA are different operations.
+Choose matching desktop and S3 firmware files from the [Release](https://github.com/gmingtian/HachimoDock-esp32s3/releases/tag/v0.1.203-s3-a4-r16d) and read [installation and recovery](docs/INSTALLATION.md). Installing the desktop app does not flash the board. Application-only firmware must not be written to 0x0; initial factory flashing and resource-preserving OTA are different operations.
 
 See [S3 build/wiring](docs/ESP32-S3-Linux.md), [native Linux desktop](pc/docs/linux-native.md) and the `pc/` project. Docker is optional; native Node, Rust and ESP-IDF environments can build the respective targets. Fork macOS packages are not claimed to be Apple-notarized.
 

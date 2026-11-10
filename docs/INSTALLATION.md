@@ -1,6 +1,6 @@
 # 安装与使用
 
-当前发行源码为客户端 **0.1.202** 与 A4 S3 固件 **0.7.103-s3-r16c-80m-l320**，面向三颗按键＋四向摇杆、320×240 横屏。下载与 SHA-256 以[对应 Release 附件](https://github.com/gmingtian/HachimoDock-esp32s3/releases/tag/v0.1.202-s3-a4-r16c)为准。
+当前发行源码为客户端 **0.1.203** 与 A4 S3 固件 **0.7.103-s3-r16d-80m-l320**，面向三颗按键＋四向摇杆、320×240 横屏。下载与 SHA-256 以[对应 Release 附件](https://github.com/gmingtian/HachimoDock-esp32s3/releases/tag/v0.1.203-s3-a4-r16d)为准。
 
 ## 客户端
 

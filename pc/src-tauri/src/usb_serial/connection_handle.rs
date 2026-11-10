@@ -13,6 +13,10 @@ use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
 
+#[cfg(not(windows))]
+#[path = "runtime_modem_lines.rs"]
+mod runtime_modem_lines;
+
 pub(super) struct ProbedSerialPort<W = Box<dyn serialport::SerialPort>, R = Box<dyn serialport::SerialPort>> {
     pub(super) writer: W,
     pub(super) reader: BufReader<R>,
@@ -103,14 +107,29 @@ fn open_serial_pair(port_name: &str, baud: u32) -> SerialPortPairResult {
 
 #[cfg(not(windows))]
 fn open_serial_pair(port_name: &str, baud: u32) -> SerialPortPairResult {
+    // Linux's native USB-Serial/JTAG path needs the runtime line state held
+    // asserted. Deasserting it here can reset the S3 and stall the first write.
+    // Resolve aliases, but never apply native USB handling to an external UART.
+    let usb_id = if cfg!(target_os = "linux") {
+        let path = std::fs::canonicalize(port_name).unwrap_or_else(|_| port_name.into());
+        serialport::available_ports().ok().and_then(|ports| ports.into_iter().find_map(|info| {
+            let candidate = std::fs::canonicalize(&info.port_name)
+                .unwrap_or_else(|_| info.port_name.clone().into());
+            match info.port_type {
+                serialport::SerialPortType::UsbPort(usb) if candidate == path => Some((usb.vid, usb.pid)),
+                _ => None,
+            }
+        }))
+    } else { None };
+    let asserted = runtime_modem_lines::assert_runtime_modem_lines(std::env::consts::OS, usb_id);
     let mut port = serialport::new(port_name, baud)
         .timeout(SERIAL_IO_TIMEOUT)
-        .dtr_on_open(false)
+        .dtr_on_open(asserted)
         .open()
         .map_err(|error| error.to_string())?;
     // Runtime discovery is not a flashing/reset operation. Best effort keeps
     // CDC drivers without modem-line ioctls compatible; do this before clone.
-    let _ = port.write_request_to_send(false);
+    let _ = port.write_request_to_send(asserted);
     let reader = port.try_clone().map_err(|error| error.to_string())?;
     Ok((port, reader))
 }

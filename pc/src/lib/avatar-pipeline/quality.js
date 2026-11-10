@@ -5,7 +5,8 @@ import { pipelineFetch, readJsonOrThrow } from "./http.js";
 import { modelOutputText, parseStrictModelJson, reviewSnapshot } from './model-json.js';
 import { recordDiagnostic } from './diagnostics.js';
 import { HUMAN_CHIBI_STYLE_ZH } from './character-style.js';
-export const QUALITY_REVIEW_VERSION = 5;
+import {uint8ToBase64} from './image.js';
+export const QUALITY_REVIEW_VERSION = 6;
 
 export async function inspectReference(file, signal) {
   if (!file?.size || file.size > 20 * 1024 * 1024) throw Error("请选择小于 20 MB 的清晰完整人物或角色图片");
@@ -121,6 +122,30 @@ export async function inspectVideo(bytes,signal) {
       ?new Uint8Array(bytes.buffer,bytes.byteOffset,bytes.byteLength):new Uint8Array(bytes);
     const ownedArrayBuffer=view.slice().buffer;
     stage='load';
+    if(globalThis.window?.__TAURI_INTERNALS__||globalThis.window?.__TAURI__){
+      // WebKitGTK can report successful playback/presentation yet return noise
+      // from video -> canvas readback. Decode the saved bytes outside the WebView.
+      let result;
+      try {
+        const {invoke}=await import('@tauri-apps/api/core');
+        if(signal?.aborted)throw new DOMException('aborted','AbortError');
+        result=await invoke('inspect_generation_video',{videoBase64:uint8ToBase64(new Uint8Array(ownedArrayBuffer))});
+      } catch(error) {
+        if(signal?.aborted||error?.name==='AbortError')throw videoInspectionError('VIDEO_INSPECTION_ABORTED',stage);
+        const code=String(error);
+        if(code==='VIDEO_INSPECTION_BLACK_FRAME')throw videoInspectionError(code,'validate','动画含明显黑屏，已保留结果');
+        if(code==='VIDEO_INSPECTION_DIMENSIONS_INVALID'||code==='VIDEO_INSPECTION_ASPECT_INVALID')throw videoInspectionError(code,'validate','动画时长或尺寸不符合要求，已保留结果');
+        throw videoInspectionError('VIDEO_INSPECTION_DECODE_ERROR',stage,'本地 FFmpeg 动画检查未完成，已有视频已保留。请确认客户端及媒体运行时完整，不要重新生成视频。');
+      }
+      if(signal?.aborted)throw videoInspectionError('VIDEO_INSPECTION_ABORTED',stage);
+      if(!Number.isFinite(result?.duration)||result.duration<1||result.duration>30||result.width<128||result.height<128
+        ||!Number.isInteger(result.width)||!Number.isInteger(result.height)||result.width>16384||result.height>16384
+        ||!Array.isArray(result.frames)||result.frames.length!==3||result.decoder!=='ffmpeg-v1'
+        ||result.frames.some(frame=>typeof frame!=='string'||frame.length>3*1024*1024||!/^data:image\/jpeg;base64,[A-Za-z0-9+/]+=*$/.test(frame))) {
+        throw videoInspectionError('VIDEO_INSPECTION_LOCAL_ERROR','validate','本地抽帧结果无效，已有视频已保留');
+      }
+      return result;
+    }
     video=document.createElement('video');video.muted=true;video.defaultMuted=true;video.preload='auto';video.playsInline=true;
     video.setAttribute('aria-hidden','true');video.tabIndex=-1;
     Object.assign(video.style,{position:'fixed',left:'-10000px',top:'0',width:'1px',height:'1px',pointerEvents:'none'});

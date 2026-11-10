@@ -33,9 +33,21 @@ npm run build:linux
 
 The preparation step copies a native Node executable into application resources and installs the bridge's locked production dependencies. `PET_MANAGER_NODE_BIN` can override the Node executable. Serial access needs the normal permissions on `/dev/ttyACM*` or `/dev/ttyUSB*`; use your distribution's serial-device group if access is denied. No automatic system group/udev changes are made.
 
+Linux runtime connection uses asserted DTR/RTS for identified Espressif native
+USB-Serial/JTAG devices (`303a:1001`), including port aliases. Deasserting these
+lines while opening that interface can interrupt the S3 runtime and time out the
+first handshake write. External USB-UART adapters retain their existing line
+state; Windows uses its separate serial implementation. Runtime discovery does
+not run a bootloader reset sequence or flash firmware.
+
 ## ESP32-S3 contract
 
 The verified hello must report `runtime: "esp-s3"` (S3 aliases and explicit S3 model metadata also normalize to this identity). Shared `p4-*` asset format names describe the file format and do not override S3 identity. Component, session and voice commands use the shared full runtime protocol. S3 uses serial/JTAG or the USB-UART connection, rather than the P4-specific native bulk path.
+
+State and speech forwarding accept the same bound Agent session as either a
+bare bus ID or that Agent's prefixed rollout ID (for example `codex:<id>`).
+Different Agent/session identities remain excluded. A completion event must
+not be dropped merely because its rollout uses the prefix.
 
 | A4 control | GPIO | Default operation |
 | --- | --- | --- |
@@ -65,3 +77,5 @@ Firmware OTA checks the application header's ESP chip ID before any erase/upload
 Linux foreground input-box discovery, draft insertion and automatic sending into other desktop applications are unsupported. The dashboard displays this limit and the backend returns an error, including draft-preservation requests. USB capture/playback, ASR and the standalone real-time voice loop are separate functions and still depend on the configured services and physical audio tests. Session monitoring remains available. ASR, voice/model and generation-provider credentials use encrypted files in the current user’s private application directory on Linux; private directories are owner-only, and existing unreadable configurations are preserved. Existing macOS and Windows composer implementations and release-specific encoders are retained.
 
 Compilation and host tests do not verify a physical board, audio quality, display timing, USB reconnect behavior or sustained software H.264 playback speed. See the task's desktop report for exact checks completed on this computer.
+
+Generated animation reviews extract frames from saved MP4 bytes using local FFmpeg, rather than WebKitGTK canvas readback (which can return noise on some Linux graphics stacks). This requires the configured FFmpeg runtime but does not require an H.264 encoder for inspection. Decoder jobs have a shared 45-second subprocess budget, accept local MP4 bytes only, and retain existing video when inspection fails. After upgrading, use “恢复已有任务” to re-extract/review saved media; this can incur a review charge and continue unfinished actions, but does not regenerate an already-saved video. Upgrading alone does not resume paid requests.

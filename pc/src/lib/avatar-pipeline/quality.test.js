@@ -7,6 +7,31 @@ import {canAutoResume} from './session.js';
 import {CUSTOM_GENERATION_FAMILIES} from './families.js';
 import {BLACK_BACKGROUND_EDIT_PROMPT} from './providers/volcano-image.js';
 
+test('desktop inspection bypasses corrupt WebView canvas and sends only the owned video bytes to native FFmpeg',async()=>{
+ const old={window:globalThis.window,document:globalThis.document};const calls=[];
+ const result={duration:4,width:736,height:544,frames:Array(3).fill('data:image/jpeg;base64,/9j/AA=='),decoder:'ffmpeg-v1'};
+ globalThis.window={__TAURI_INTERNALS__:{invoke:async(cmd,args)=>{calls.push({cmd,args});return result;}}};
+ globalThis.document={createElement(){throw Error('corrupt WebView canvas must never be used');}};
+ try{
+  const backing=new Uint8Array([99,1,2,3,88]);
+  assert.deepEqual(await inspectVideo(backing.subarray(1,4)),result);
+  assert.equal(calls.length,1);assert.equal(calls[0].cmd,'inspect_generation_video');
+  assert.equal(calls[0].args.videoBase64,'AQID');
+ }finally{globalThis.window=old.window;globalThis.document=old.document;}
+});
+
+test('desktop decode failures stop locally without falling back to WebView or exposing private diagnostics',async()=>{
+ const old={window:globalThis.window,document:globalThis.document};let calls=0;
+ globalThis.window={__TAURI_INTERNALS__:{invoke:async()=>{calls++;throw Error('private signed URL');}}};
+ globalThis.document={createElement(){throw Error('canvas fallback forbidden');}};
+ try{
+  await assert.rejects(inspectVideo(new Uint8Array([1])),e=>e.code==='VIDEO_INSPECTION_DECODE_ERROR'&&!e.message.includes('private'));
+  assert.equal(calls,1);
+  await assert.rejects(inspectVideo(new Uint8Array([1]),AbortSignal.abort()),e=>e.name==='AbortError');
+  assert.equal(calls,1);
+ }finally{globalThis.window=old.window;globalThis.document=old.document;}
+});
+
 test('background rendering wait is bounded and responds to cancellation',async()=>{
  const old=globalThis.requestAnimationFrame;globalThis.requestAnimationFrame=()=>1;
  try{await settleVideoFrame();await assert.rejects(settleVideoFrame(AbortSignal.abort()),e=>e.name==='AbortError');}

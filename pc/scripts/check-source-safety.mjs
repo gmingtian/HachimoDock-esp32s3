@@ -34,7 +34,7 @@ for (const file of new Set(paths)) {
   // with no key body. Scope the exception to its exact path AND image digest;
   // tokens, personal paths and every other check still inspect the whole image.
   const reviewedS3 = file === 'pc/src-tauri/firmware/esp32-s3/firmware.bin'
-    && createHash('sha256').update(bytes).digest('hex') === '07ffa6be00feb6cb90ddd747099d20d3fa79ffbcf7bac4cbacdd8057e4496efb';
+    && createHash('sha256').update(bytes).digest('hex') === 'bf6233fc23312dd71564fa7847c43ff5420752e16b63749836005d58cac0cc61';
   const pemText = reviewedS3
     ? text.replace(/-----BEGIN (?:RSA |EC )?PRIVATE KEY-----(?:\r?\n)?\0/g, '')
     : text;

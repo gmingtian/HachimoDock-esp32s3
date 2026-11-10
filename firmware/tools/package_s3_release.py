@@ -21,9 +21,9 @@ def release_notes(version, display_profile='landscape-left'):
     else:
         display = ('240×240 ST7789；square 是显式选择的方屏配置，\n'
                    '必须使用配套方屏应用和资源。本次发布默认包为 A4 左排线横屏。\n')
-    timing = ('r16c 的屏幕 SPI 为 80MHz，已在当前 A4 PCB、屏幕与接线上验证；\n'
+    timing = ('本包屏幕 SPI 为 80MHz，已在当前 A4 PCB、屏幕与接线上验证；\n'
               '更换屏幕或线材后需重新核验显示稳定性。\n'
-              if '-r16c-80m' in version and display_profile == 'landscape-left'
+              if '-80m' in version and display_profile == 'landscape-left'
               else '屏幕 SPI 时钟以所选固件的编译配置为准，所选屏幕需单独核验。\n')
     return f'''HachimoDock-esp32s3
 固件版本：{version}
@@ -57,6 +57,7 @@ GPIO1 / 2：摇杆 X / Y；GPIO8：摇杆中按确认。
 动画与组件
 完整包包含配套动画及组件资源；具体内容以本次包及其构建清单为准。
 横屏形象应使用配套客户端转换、同步；素材帧率不代表实机保证播放帧率。
+素材上限为 15fps、单段 320 帧及 384KiB，整包仍受应用形象分区容量限制。
 
 Wi-Fi
 先通过 USB 在配套客户端中配置 2.4GHz Wi-Fi 并绑定电脑，再选择 Wi-Fi。

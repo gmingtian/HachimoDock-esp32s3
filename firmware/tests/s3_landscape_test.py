@@ -73,7 +73,7 @@ def test_factory_zip_names_correct_panel_and_preserves_image(tmp_path, landscape
         text=z.read(mod.PREFIX+"使用说明.txt").decode("utf-8-sig")
         assert ("320×240 横屏" in text)==landscape
         assert "15fps" in text and "Wi-Fi" in text
-        assert ("本版本仍使用现有 240×240 屏幕接线" in text)==(not landscape)
+        assert ("240×240 ST7789" in text)==(not landscape)
         assert z.read(mod.PREFIX+"hachimodock-s3-factory.bin")==full
     with pytest.raises(ValueError,match="display variant"):
         mod.package(factory,application,tmp_path/"wrong.zip",display_profile="square" if landscape else "landscape-left")

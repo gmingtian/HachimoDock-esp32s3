@@ -278,7 +278,7 @@ int main(int argc,char**argv){
       }else if(!strcmp(c,"native-abort")){
         native(PET_P4_NATIVE_KIND_JSON,"{\"topic\":\"asset/abort\",\"payload\":{\"transferId\":\"tx\"}}");assert(acks==1&&positive_acks&&!g_appearance_session.active);
       }else if(!strcmp(c,"native-idle")){
-        unsigned before=io_calls;pet_p4_native_usb_process(90000);assert(before==io_calls);clock_us=90000000;native_idle_cleanup_worker();assert(!g_appearance_session.active&&!acks);
+        unsigned before=io_calls;pet_p4_native_usb_process(90000);assert(before==io_calls);assert(atomic_load_explicit(&g_native_cleanup_due,memory_order_acquire));clock_us=90000000;native_idle_cleanup_worker();assert(!g_appearance_session.active&&!state.asset_transfer_active&&!atomic_load_explicit(&g_native_cleanup_due,memory_order_acquire)&&!acks);
       }else if(strcmp(c,"native-begin"))assert(!"unknown native case");
     }
   }else assert(!"unknown case");

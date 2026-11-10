@@ -108,7 +108,12 @@ static void s3_process_bytes(const pet_p4_protocol_request_t *request) {
   while(offset<request->bytes){
     /* Only the exact owner may enter the global raw block parser. */
     if(g_s3_lease.owner==token&&pet_p4_raw_asset_chunk_active()){
-      size_t n=pet_p4_consume_raw_asset_bytes((uint8_t*)request->line+offset,request->bytes-offset,transport_send_line,(void*)token);
+      /* S3 raw ingress runs on the protocol worker, unlike the P4 RX task.
+       * Use that worker's lock/IO adapter; the legacy unscoped entry is closed
+       * and the P4 RX adapter correctly rejects a protocol-worker caller. */
+      const pet_appearance_commit_io_t raw_io={asset_query_io_begin,asset_query_io_end,NULL,NULL};
+      size_t n=pet_p4_consume_raw_asset_bytes_scoped(&g_state,(uint8_t*)request->line+offset,
+        request->bytes-offset,transport_send_line,(void*)token,&raw_io);
       if(!n){s3_cleanup_owner(token);return;}offset+=n;pet_s3_lease_accept(&g_s3_lease,token,esp_timer_get_time()/1000);continue;
     }
     if(!pet_s3_frame(f,(uint8_t*)request->line+offset,1,s3_protocol_line,(void*)token)){

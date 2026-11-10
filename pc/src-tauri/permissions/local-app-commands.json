@@ -88,6 +88,7 @@
           "download_bytes",
           "http_request_text",
           "check_ffmpeg_available",
+          "inspect_generation_video",
           "list_codex_pets",
           "import_codex_pet",
           "install_codex_community_pet",

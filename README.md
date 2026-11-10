@@ -4,9 +4,9 @@ ESP32-S3 A4 载板适配版：**三颗按键＋四向摇杆（支持按下）**�
 
 本仓库由 [gmingtian](https://github.com/gmingtian) 维护，基于 **Yizheng Wang / [YizhengWw/HachimoDock](https://github.com/YizhengWw/HachimoDock)**。这是非官方修改版，保留原项目署名、[许可证](LICENSE)及[第三方声明](THIRD_PARTY_NOTICES.md)，不代表上游背书。
 
-[下载 0.1.202（预发布）](https://github.com/gmingtian/HachimoDock-esp32s3/releases/tag/v0.1.202-s3-a4-r16c) · [安装与恢复](docs/INSTALLATION.md) · [按钮与摇杆](docs/ESP32-S3-A4-Controls.md) · [PCB 与外壳](hardware/README.md) · [兼容性](docs/COMPATIBILITY.md) · [English](README.en.md)
+[下载 0.1.203（预发布）](https://github.com/gmingtian/HachimoDock-esp32s3/releases/tag/v0.1.203-s3-a4-r16d) · [安装与恢复](docs/INSTALLATION.md) · [按钮与摇杆](docs/ESP32-S3-A4-Controls.md) · [PCB 与外壳](hardware/README.md) · [兼容性](docs/COMPATIBILITY.md) · [English](README.en.md)
 
-当前发布：客户端 **0.1.202 A4 定制预发布版**；配套固件 **0.7.103-s3-r16c-80m-l320**。Windows x64、Apple 芯片 macOS arm64（13.5+）、Linux x86_64 安装包均已完成原生构建、资源转码和界面启动验证。
+当前发布：客户端 **0.1.203 A4 定制预发布版**；配套固件 **0.7.103-s3-r16d-80m-l320**。Windows x64、Apple 芯片 macOS arm64（13.5+）、Linux x86_64 安装包均已完成原生构建、资源转码和界面启动验证。
 
 ## 实物
 
@@ -20,15 +20,15 @@ ESP32-S3 A4 载板适配版：**三颗按键＋四向摇杆（支持按下）**�
 
 | 文件 | 直达下载 | 说明 |
 | --- | --- | --- |
-| Windows 客户端 | [Windows x64 安装包](https://github.com/gmingtian/HachimoDock-esp32s3/releases/download/v0.1.202-s3-a4-r16c/HachimoDock-esp32s3_Windows-x64.exe) | NSIS 安装程序 |
-| macOS 客户端 | [macOS ARM64 DMG](https://github.com/gmingtian/HachimoDock-esp32s3/releases/download/v0.1.202-s3-a4-r16c/HachimoDock-esp32s3_macOS-arm64.dmg) | Apple 芯片，macOS 13.5+；本地签名、未公证 |
-| Linux 客户端 | [Linux x86_64 压缩包](https://github.com/gmingtian/HachimoDock-esp32s3/releases/download/v0.1.202-s3-a4-r16c/HachimoDock-esp32s3_Linux-x64.tar.gz) | Ubuntu 24.04 基线；解压后运行 `launch.sh`，系统依赖见安装说明 |
+| Windows 客户端 | [Windows x64 安装包](https://github.com/gmingtian/HachimoDock-esp32s3/releases/download/v0.1.203-s3-a4-r16d/HachimoDock-esp32s3_Windows-x64.exe) | NSIS 安装程序 |
+| macOS 客户端 | [macOS ARM64 DMG](https://github.com/gmingtian/HachimoDock-esp32s3/releases/download/v0.1.203-s3-a4-r16d/HachimoDock-esp32s3_macOS-arm64.dmg) | Apple 芯片，macOS 13.5+；本地签名、未公证 |
+| Linux 客户端 | [Linux x86_64 压缩包](https://github.com/gmingtian/HachimoDock-esp32s3/releases/download/v0.1.203-s3-a4-r16d/HachimoDock-esp32s3_Linux-x64.tar.gz) | Ubuntu 24.04 基线；解压后运行 `launch.sh`，系统依赖见安装说明 |
 | PCB 与完整外壳 | [A4 硬件及 R4.4 外壳包](https://github.com/gmingtian/HachimoDock-esp32s3/releases/download/v0.1.202-s3-a4-r16c/HachimoDock-A4-hardware-R4.4.zip) | Gerber、KiCad、BOM、接线表、上下盖 STL / STEP 及操作件 |
 | 单独键帽与摇杆 | [6 件独立 STL](https://github.com/gmingtian/HachimoDock-esp32s3/releases/download/v0.1.202-s3-a4-r16c/HachimoDock-A4-keycaps-joystick-STL.zip) | 三个键帽＋摇杆外帽、连接件、盖板；mm，100% 比例 |
-| S3 应用升级 | [r16c OTA 固件](https://github.com/gmingtian/HachimoDock-esp32s3/releases/download/v0.1.202-s3-a4-r16c/HachimoDock-S3-A4-r16c-OTA.bin) | 已有匹配 A4 分区布局的设备应用升级 |
-| S3 首次刷写 / 恢复 | [r16c 干净全量包](https://github.com/gmingtian/HachimoDock-esp32s3/releases/download/v0.1.202-s3-a4-r16c/HachimoDock-S3-A4-r16c-factory.zip) | 首次改刷或完整恢复；会替换配置与资源，按包内说明刷写 |
+| S3 应用升级 | [r16d OTA 固件](https://github.com/gmingtian/HachimoDock-esp32s3/releases/download/v0.1.203-s3-a4-r16d/HachimoDock-S3-A4-r16d-OTA.bin) | 已有匹配 A4 分区布局的设备应用升级 |
+| S3 首次刷写 / 恢复 | [r16d 干净全量包](https://github.com/gmingtian/HachimoDock-esp32s3/releases/download/v0.1.203-s3-a4-r16d/HachimoDock-S3-A4-r16d-factory.zip) | 首次改刷或完整恢复；会替换配置与资源，按包内说明刷写 |
 
-[全部附件、游戏与源码](https://github.com/gmingtian/HachimoDock-esp32s3/releases/tag/v0.1.202-s3-a4-r16c) · [SHA256SUMS 校验文件](https://github.com/gmingtian/HachimoDock-esp32s3/releases/download/v0.1.202-s3-a4-r16c/SHA256SUMS) · [安装与恢复说明](docs/INSTALLATION.md)。24 个附件均已实际回下载校验。
+[全部附件、游戏与源码](https://github.com/gmingtian/HachimoDock-esp32s3/releases/tag/v0.1.203-s3-a4-r16d) · [SHA256SUMS 校验文件](https://github.com/gmingtian/HachimoDock-esp32s3/releases/download/v0.1.203-s3-a4-r16d/SHA256SUMS) · [安装与恢复说明](docs/INSTALLATION.md)。本版修复及验证范围见[发布说明](docs/RELEASE-0.1.203.md)。
 
 ## 当前功能
 
@@ -57,7 +57,7 @@ GPIO0 上电或复位时请松开。按键可在客户端配置，具体游戏�
 
 ## 安装和开发
 
-从 [Release](https://github.com/gmingtian/HachimoDock-esp32s3/releases/tag/v0.1.202-s3-a4-r16c) 选择对应系统客户端及 S3 固件附件，先阅读[安装与恢复](docs/INSTALLATION.md)。安装客户端不会自动刷机；应用镜像不能写入 0x0，首次完整刷机与保留资源的 OTA 升级用途不同。
+从 [Release](https://github.com/gmingtian/HachimoDock-esp32s3/releases/tag/v0.1.203-s3-a4-r16d) 选择对应系统客户端及 S3 固件附件，先阅读[安装与恢复](docs/INSTALLATION.md)。安装客户端不会自动刷机；应用镜像不能写入 0x0，首次完整刷机与保留资源的 OTA 升级用途不同。
 
 开发依赖与命令见 [S3 构建/接线](docs/ESP32-S3-Linux.md)、[Linux 客户端](pc/docs/linux-native.md)及 `pc/` 工程。Docker 是可选构建方式，使用本机 Node、Rust、ESP-IDF 也可完成相应构建。
 

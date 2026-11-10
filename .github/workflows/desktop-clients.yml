@@ -146,6 +146,15 @@ jobs:
           fi
           cargo test --locked --release --target ${{ matrix.target == 'windows' && 'x86_64-pc-windows-msvc' || 'aarch64-apple-darwin' }} --lib s3_ -- --nocapture
           cargo test --locked --release --target ${{ matrix.target == 'windows' && 'x86_64-pc-windows-msvc' || 'aarch64-apple-darwin' }} --lib wifi_ -- --nocapture
+          for filter in bound_state_session follow_scope_tests runtime_modem_lines; do
+            cargo test --locked --release --target ${{ matrix.target == 'windows' && 'x86_64-pc-windows-msvc' || 'aarch64-apple-darwin' }} --lib "$filter" -- --nocapture
+          done
+          if [ '${{ matrix.target }}' = windows ]; then
+            export PET_MANAGER_VIDEO_TEST_FFMPEG="$GITHUB_WORKSPACE/pc/src-tauri/generated-runtime/ffmpeg.exe"
+          else
+            export PET_MANAGER_VIDEO_TEST_FFMPEG="$GITHUB_WORKSPACE/pc/src-tauri/generated-runtime/ffmpeg"
+          fi
+          cargo test --locked --release --target ${{ matrix.target == 'windows' && 'x86_64-pc-windows-msvc' || 'aarch64-apple-darwin' }} --lib generation_video -- --nocapture
       - name: Diagnose Windows native loader failure
         if: failure() && matrix.target == 'windows'
         run: python pc/scripts/diagnose-windows-loader.py
@@ -241,6 +250,10 @@ jobs:
         run: |
           cargo test --locked --release --lib s3_ -- --nocapture
           cargo test --locked --release --lib wifi_ -- --nocapture
+          for filter in bound_state_session follow_scope_tests runtime_modem_lines; do
+            cargo test --locked --release --lib "$filter" -- --nocapture
+          done
+          PET_MANAGER_VIDEO_TEST_FFMPEG=/usr/bin/ffmpeg cargo test --locked --release --lib generation_video -- --nocapture
       - name: Build and stage Linux client
         run: npm --prefix pc run build:linux
       - name: Verify resources, conversion and graphical startup; package Linux download

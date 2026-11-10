@@ -53,12 +53,24 @@ static void pet_p4_handle_line(pet_p4_runtime_state_t *s,const char *line,void (
 static void *heap_caps_malloc(size_t n,int flags){(void)flags;return malloc(n);}
 static int xQueueSend(int q,const void *item,int timeout){(void)q;(void)item;(void)timeout;return 0;}
 static bool pet_p4_raw_asset_chunk_active(void){return raw_active;}
-static size_t pet_p4_consume_raw_asset_bytes(const uint8_t *b,size_t n,void (*f)(const char*,void*),void *ctx){(void)b;(void)f;(void)ctx;raw_received+=n;return n;}
+/* The production legacy entry is deliberately closed. A success fake here
+ * previously hid S3's missing migration to the task-scoped storage adapter. */
+static size_t pet_p4_consume_raw_asset_bytes(const uint8_t *b,size_t n,void (*f)(const char*,void*),void *ctx){(void)b;(void)n;(void)f;(void)ctx;return 0;}
+typedef struct {bool (*begin)(void*);void (*end)(void*);bool (*current)(void*);void *context;} pet_appearance_commit_io_t;
+static unsigned io_begins,io_ends;
+static bool __attribute__((unused)) asset_query_io_begin(void *ctx){assert(!ctx);io_begins++;return true;}
+static void __attribute__((unused)) asset_query_io_end(void *ctx){assert(!ctx);io_ends++;}
+static size_t __attribute__((unused)) pet_p4_consume_raw_asset_bytes_scoped(pet_p4_runtime_state_t *s,const uint8_t *b,size_t n,void (*f)(const char*,void*),void *ctx,const pet_appearance_commit_io_t *io){
+  assert(s==&g_state&&b&&n&&ctx==(void*)g_s3_owner);
+  (void)f;assert(io&&io->begin==asset_query_io_begin&&io->end==asset_query_io_end&&!io->current);
+  assert(io->begin(io->context));raw_received+=n;io->end(io->context);return n;
+}
 static void s3_invalidate_route(uintptr_t token){g_s3_owner=0;unsigned route=token&3;if(route!=3)*(route==1?&g_s3_uart_token:&g_s3_usb_token)=pet_s3_connection_token(route);}
 #include "../s3/pet_s3_protocol.inc"
 static void feed(uintptr_t token,const char *s){s3_expire_owner();pet_p4_protocol_request_t r={.reply_ctx=(void*)token,.line=(char*)s,.bytes=strlen(s),.raw_input=true};s3_process_bytes(&r);}
 static bool last_ok(void){cJSON *r=cJSON_Parse(replies[reply_count-1]);assert(r);bool ok=cJSON_IsTrue(cJSON_GetObjectItemCaseSensitive(cJSON_GetObjectItemCaseSensitive(r,"payload"),"ok"));cJSON_Delete(r);return ok;}
 int main(void){
+  assert(pet_p4_consume_raw_asset_bytes(NULL,0,NULL,NULL)==0);
   feed(7,"{\"topic\":\"state\",\"payload\":{}}\n");assert(dispatches==0&&closed==7&&!g_s3_owner);
   feed(11,"{\"topic\":\"wifi/auth\",\"payload\":{\"token\":\"bad\",\"requestId\":\"a\"}}\n");assert(!last_ok()&&!g_s3_owner&&!hello_count);
   reply_count=0;feed(5,"{\"topic\":\"state\",\"payload\":{}}\n");assert(dispatches==1&&g_s3_owner==5);
@@ -69,6 +81,7 @@ int main(void){
   feed(19,"{\"topic\":\"asset/raw\",\"payload\":{}}\nBIN");assert(raw_received==3&&dispatches==2);
   feed(10,"not-owner-raw");assert(raw_received==3); /* USB bytes cannot consume Wi-Fi raw body */
   feed(19,"ARY");assert(raw_received==6);
+  assert(io_begins==2&&io_ends==2);
   widget_busy=ota_busy=true;clock_ms=7002;s3_expire_owner();assert(!g_s3_owner&&!raw_active&&!widget_busy&&!ota_busy&&cleanup_count==2);
   feed(23,"{\"topic\":\"wifi/auth\",\"payload\":{\"token\":\"paired\"}}\n");assert(g_s3_owner==23);
   feed(23,"{\"topic\":\"sta");

@@ -53,6 +53,7 @@
  */
 
 mod startup_policy;
+mod bound_state_session;
 mod startup_supervision;
 mod dsh_approval;
 mod dsh_auth;
@@ -132,6 +133,7 @@ mod smart_home_credentials;
 mod llm_network;
 mod generation_diagnostics;
 mod generation_http;
+mod generation_video;
 #[cfg(test)]
 mod generation_probe_tests;
 mod service_credentials;
@@ -2832,7 +2834,8 @@ fn usb_session_binding_allows(
         .and_then(|value| value.as_str())
         .map(str::trim)
         .unwrap_or_default();
-    source == binding.agent_id && session_id == binding.session_id
+    source == binding.agent_id
+        && bound_state_session::same_session(&source, &binding.session_id, session_id)
 }
 
 fn resolve_usb_inject_target(board_device_id: &str) -> (String, String) {
@@ -7434,6 +7437,25 @@ async fn check_ffmpeg_available() -> Result<bool, String> {
 }
 
 #[tauri::command]
+async fn inspect_generation_video(video_base64: String) -> Result<generation_video::Inspection, String> {
+    // One bounded local decoder job at a time; it cannot submit paid work.
+    static INSPECTION: std::sync::Mutex<()> = std::sync::Mutex::new(());
+    if video_base64.len() > (100 * 1024 * 1024_usize).div_ceil(3) * 4 {
+        return Err("VIDEO_INSPECTION_INPUT_INVALID".into());
+    }
+    tauri::async_runtime::spawn_blocking(move || {
+        use base64::Engine;
+        // Parallel animation families may finish downloading together. Queue
+        // their local checks instead of treating a healthy decoder as failure.
+        let _guard = INSPECTION.lock().map_err(|_| "VIDEO_INSPECTION_BUSY".to_string())?;
+        let bytes = base64::engine::general_purpose::STANDARD.decode(video_base64)
+            .map_err(|_| "VIDEO_INSPECTION_INPUT_INVALID".to_string())?;
+        let ffmpeg = generation_video::decoder_path();
+        generation_video::inspect_with_ffmpeg(&bytes, &ffmpeg)
+    }).await.map_err(|_| "VIDEO_INSPECTION_DECODE_ERROR".to_string())?
+}
+
+#[tauri::command]
 async fn list_codex_pets() -> Result<Vec<codex_import::CodexPetSummary>, String> {
     tauri::async_runtime::spawn_blocking(codex_import::list_codex_pets)
         .await
@@ -11728,6 +11750,7 @@ pub fn run() {
             download_bytes,
             http_request_text,
             check_ffmpeg_available,
+            inspect_generation_video,
             list_codex_pets,
             import_codex_pet,
             install_codex_community_pet,

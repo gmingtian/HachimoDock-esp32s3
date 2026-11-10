@@ -1743,11 +1743,16 @@ impl UsbFollowScope {
         }
         if topic == "session/current" { return true; }
         if let Some(session) = self.session.as_deref() {
-            return payload["sessionId"].as_str() == Some(session);
+            return payload["sessionId"].as_str().is_some_and(|incoming|
+                crate::bound_state_session::same_session(&self.agent, session, incoming));
         }
         true
     }
 }
+
+#[cfg(test)]
+#[path = "usb_serial/follow_scope_tests.rs"]
+mod follow_scope_tests;
 
 // Text is retained for bounded diagnostics, but lossy decoding must NEVER turn
 // corrupted bytes inside a JSON string into an accepted protocol payload.

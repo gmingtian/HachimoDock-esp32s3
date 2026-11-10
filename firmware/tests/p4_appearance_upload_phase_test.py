@@ -20,8 +20,14 @@ def bounds(s,name):
 def fn(t,n):
  a,b=bounds(t,n);return t[a:b]
 
+def p4_native_implementation(source):
+ # This file starts with S3 no-op stubs; the host fixture exercises P4.
+ stubs,implementation=source.split('\n#else\n',1)
+ assert '#if CONFIG_IDF_TARGET_ESP32S3' in stubs
+ return implementation
+
 def build_upload_binary(B):
- code=(S/'pet_p4_protocol.c').read_text();native=(S/'pet_p4_usb_native.c').read_text();header=(S/'pet_p4_protocol.h').read_text()
+ code=(S/'pet_p4_protocol.c').read_text();native=p4_native_implementation((S/'pet_p4_usb_native.c').read_text());header=(S/'pet_p4_protocol.h').read_text()
  fixture=(FIXTURES/'appearance_upload_prefix.inc').read_text()
  # Actual private production struct/API definitions.
  a=header.index('typedef struct {\n  pet_resource_owner_t owner;');b=header.index('bool pet_p4_appearance_phase_begin',a);fixture+=header[a:b]
@@ -137,6 +143,12 @@ def test_actual_phase_extractor_skips_helper_forward_declaration():
  from p4_control_integrity_test import _c_function
  source=(S/'pet_p4_protocol.c').read_text()
  assert fn(source,'asset_phase_send_current').strip()==_c_function(source,'asset_phase_send_current').strip()
+
+def test_native_phase_extractor_uses_p4_implementation_not_s3_noops():
+ source=(S/'pet_p4_usb_native.c').read_text()
+ implementation=p4_native_implementation(source)
+ assert 'atomic_store_explicit(&g_native_cleanup_due' in fn(implementation,'pet_p4_native_usb_process')
+ assert 'g_observation_epoch' in fn(implementation,'pet_p4_native_usb_io_snapshot')
 
 def test_cue_gate_precedes_actual_standalone_storage_admission():
  code=(S/'pet_p4_protocol.c').read_text()
